@@ -111,18 +111,18 @@
             font-size: 1.15rem; font-weight: 800; letter-spacing: 1px;
             display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
         }
-        .section-head.ft-head { background: linear-gradient(135deg, #7d5500 0%, #a87000 100%); }
+        .section-head.ft-head { background: linear-gradient(135deg, #7d0000 0%, #b80000 100%); }
         .section-head.klub-head { background: linear-gradient(135deg, #0a5e40 0%, #0f7a52 100%); }
 
         .badge-liga { background: var(--pink); font-size: 0.68rem; padding: 2px 9px; border-radius: 10px; font-weight: 700; font-family: 'Barlow', sans-serif; }
-        .badge-ft { background: #e65100; font-size: 0.68rem; padding: 2px 9px; border-radius: 10px; font-weight: 700; font-family: 'Barlow', sans-serif; }
+        .badge-ft { background: #c62828; font-size: 0.68rem; padding: 2px 9px; border-radius: 10px; font-weight: 700; font-family: 'Barlow', sans-serif; }
         .badge-klub { background: rgba(255,255,255,0.25); font-size: 0.68rem; padding: 2px 9px; border-radius: 10px; font-weight: 700; font-family: 'Barlow', sans-serif; }
 
         .alltime-sub-note {
             padding: 8px 18px; font-size: 0.77rem; color: var(--sub);
             background: #f7f0ff; border-left: 3px solid var(--purple); font-style: italic;
         }
-        .alltime-sub-note.ft-note { background: #fff8e1; border-left-color: #b8860b; }
+        .alltime-sub-note.ft-note { background: #ffebee; border-left-color: #b71c1c; }
         .alltime-sub-note.klub-note { background: #e8f5e9; border-left-color: #0a5e40; }
 
         /* EPL TABLE */
@@ -143,16 +143,16 @@
         .pos-wrap { display: flex; align-items: center; }
         .pos-bar { width: 4px; height: 34px; border-radius: 2px; margin-right: 8px; flex-shrink: 0; }
         .bar-top { background: var(--purple); }
-        .bar-ft  { background: #b8860b; }
+        .bar-ft  { background: #b71c1c; }
         .bar-klub { background: #0a5e40; }
         .bar-mid { background: #e0d0f0; }
         .pos-num { font-weight: 700; font-size: 0.85rem; color: var(--sub); width: 20px; text-align: center; }
         .pos-num.top { color: var(--purple); }
-        .pos-num.top-ft { color: #b8860b; }
+        .pos-num.top-ft { color: #b71c1c; }
         .pos-num.top-klub { color: #0a5e40; }
 
         .pts-big { font-weight: 900; font-size: 1.05rem; color: var(--purple); }
-        .pts-big-ft { font-weight: 900; font-size: 1.05rem; color: #b8860b; }
+        .pts-big-ft { font-weight: 900; font-size: 1.05rem; color: #b71c1c; }
         .pts-big-klub { font-weight: 900; font-size: 1.05rem; color: #0a5e40; }
         .gd-pos { color: #00c853; font-weight: 700; }
         .gd-neg { color: #e52b2b; font-weight: 700; }
@@ -160,8 +160,8 @@
 
         .win-row { background: #fffde7 !important; }
         .win-row:hover { background: #fff9c4 !important; }
-        .win-row-ft { background: #fff8e1 !important; }
-        .win-row-ft:hover { background: #ffecb3 !important; }
+        .win-row-ft { background: #ffebee !important; }
+        .win-row-ft:hover { background: #ffcdd2 !important; }
         .win-row-klub { background: #e8f5e9 !important; }
         .win-row-klub:hover { background: #c8e6c9 !important; }
 
@@ -177,6 +177,16 @@
             border-bottom: 1.5px dashed var(--purple); transition: 0.2s;
         }
         .clickable-name:hover { color: var(--pink); border-bottom-color: var(--pink); }
+        .clickable-name-ft {
+            cursor: pointer; color: #b71c1c; font-weight: 800; font-size: 0.95rem;
+            border-bottom: 1.5px dashed #b71c1c; transition: 0.2s;
+        }
+        .clickable-name-ft:hover { color: #ff1744; border-bottom-color: #ff1744; }
+        .clickable-name-klub {
+            cursor: pointer; color: #0a5e40; font-weight: 800; font-size: 0.95rem;
+            border-bottom: 1.5px dashed #0a5e40; transition: 0.2s;
+        }
+        .clickable-name-klub:hover { color: #00c853; border-bottom-color: #00c853; }
 
         /* MODAL */
         .info-modal {
@@ -200,6 +210,8 @@
             background: linear-gradient(135deg, var(--purple) 0%, #6a0dad 100%);
             padding: 26px 30px 22px; color: white; position: relative;
         }
+        .info-modal-header.ft-header { background: linear-gradient(135deg, #7d0000 0%, #c62828 100%); }
+        .info-modal-header.klub-header { background: linear-gradient(135deg, #0a5e40 0%, #1b7a52 100%); }
         .info-modal-header h2 { font-family: 'Barlow Condensed', sans-serif; font-size: 2.2rem; font-weight: 900; letter-spacing: 1px; margin: 0; }
         .info-modal-header p { font-size: 0.82rem; opacity: 0.65; margin-top: 4px; letter-spacing: 1px; text-transform: uppercase; }
         .info-close {
@@ -217,10 +229,9 @@
         .league-card-head { background: #f7f0ff; padding: 10px 14px; display: flex; justify-content: space-between; align-items: center; }
         .league-card-head .lc-title { font-family: 'Barlow Condensed', sans-serif; font-size: 1rem; font-weight: 800; color: var(--purple); }
         .league-card-head .lc-badge { background: var(--pink); color: white; font-size: 0.65rem; font-weight: 700; padding: 2px 8px; border-radius: 8px; }
-        .league-card-body { padding: 12px 14px; }
 
         .club-name { font-family: 'Barlow Condensed', sans-serif; font-size: 1.4rem; font-weight: 900; color: var(--purple); margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
-        .club-name .full-transfer-tag { background: #fff3e0; color: #e65100; font-size: 0.65rem; font-weight: 700; padding: 2px 7px; border-radius: 6px; border: 1px solid #ffcc80; font-family: 'Barlow', sans-serif; }
+        .club-name .full-transfer-tag { background: #ffebee; color: #c62828; font-size: 0.65rem; font-weight: 700; padding: 2px 7px; border-radius: 6px; border: 1px solid #ffcdd2; font-family: 'Barlow', sans-serif; }
 
         .stat-pills { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; }
         .stat-pill { display: flex; flex-direction: column; align-items: center; background: #f3eaff; border-radius: 10px; padding: 8px 14px; min-width: 54px; }
@@ -236,11 +247,20 @@
         .win-bar-bg { background: #f0e6ff; border-radius: 20px; height: 8px; overflow: hidden; }
         .win-bar-fill { height: 100%; border-radius: 20px; background: linear-gradient(90deg, var(--pink), #9b27af); transition: width 0.6s cubic-bezier(0.22,1,0.36,1); }
 
+        /* ADMIN CLUB EDIT - NEW DESIGN with toggle */
         .admin-club-edit { margin-top: 14px; padding-top: 14px; border-top: 1px dashed #ddd; }
-        .admin-club-edit label { font-size: 0.75rem; font-weight: 700; color: var(--sub); text-transform: uppercase; display: block; margin-bottom: 4px; }
+        .admin-club-edit label { font-size: 0.75rem; font-weight: 700; color: var(--sub); text-transform: uppercase; display: block; margin-bottom: 8px; }
+        .type-toggle { display: flex; gap: 8px; margin-bottom: 12px; }
+        .type-btn {
+            flex: 1; padding: 10px 8px; border-radius: 10px; border: 2px solid var(--border);
+            cursor: pointer; font-family: 'Barlow', sans-serif; font-size: 0.82rem; font-weight: 700;
+            text-align: center; transition: all 0.2s; background: white; color: var(--sub);
+        }
+        .type-btn.active-ft { border-color: #c62828; background: #ffebee; color: #c62828; }
+        .type-btn.active-klub { border-color: #0a5e40; background: #e8f5e9; color: #0a5e40; }
+        .klub-name-wrap { margin-bottom: 8px; }
         .admin-club-input { width: 100%; padding: 9px 12px; border-radius: 8px; border: 1.5px solid var(--border); font-family: 'Barlow', sans-serif; font-size: 0.95rem; outline: none; margin-bottom: 8px; color: var(--purple); }
         .admin-club-input:focus { border-color: var(--purple); }
-        .admin-club-check { display: flex; align-items: center; gap: 6px; font-size: 0.85rem; font-weight: 600; margin-bottom: 8px; cursor: pointer; }
         .btn-save-club { background: #00c853; color: white; border: none; padding: 9px 20px; border-radius: 8px; font-family: 'Barlow', sans-serif; font-size: 0.85rem; font-weight: 700; cursor: pointer; transition: 0.2s; }
         .btn-save-club:hover { background: #009624; }
 
@@ -390,7 +410,7 @@
 <!-- MODAL -->
 <div id="infoModal" class="info-modal" onclick="tutupInfoModalOutside(event)">
     <div class="info-modal-box">
-        <div class="info-modal-header">
+        <div class="info-modal-header" id="infoModalHeader">
             <h2 id="infoModalTitle">Player Info</h2>
             <p id="infoModalSubtitle"></p>
             <button class="info-close" onclick="tutupInfoPlayer()">&times;</button>
@@ -418,6 +438,9 @@ let editingStats = false;
 let activeSet    = new Set();
 let matchInfoData = {};
 let realtimeSub  = null;
+
+// Track current modal admin type selection per player+match
+let adminTypeSelection = {}; // key: "matchId_nama" => 'ft' | 'klub'
 
 const fix = (n) => n === "Ito" ? "Toxx" : n === "Ipo" ? "Stive" : (n || "Unknown");
 
@@ -647,9 +670,9 @@ async function renderAllTime() {
         + buildEplBlock(sortedOverall, true, false, [], true, null, 'overall')
         + '</div>';
 
-    // FULL TRANSFER
+    // FULL TRANSFER - icon 🔞
     html += '<div class="match-block">'
-        + '<div class="section-head ft-head"><span>&#127937; KLASEMEN FULL TRANSFER</span><span class="badge-ft">Full Transfer</span></div>'
+        + '<div class="section-head ft-head"><span>&#128286; KLASEMEN FULL TRANSFER</span><span class="badge-ft">Full Transfer</span></div>'
         + '<div class="alltime-sub-note ft-note">Hanya liga di mana player menggunakan <strong>Full Transfer</strong>.</div>';
     if (sortedFT.length > 0) {
         html += buildEplBlock(sortedFT, false, false, [], true, null, 'ft');
@@ -658,9 +681,9 @@ async function renderAllTime() {
     }
     html += '</div>';
 
-    // KLUB NON-FT
+    // KLUB NON-FT - icon ⚽
     html += '<div class="match-block">'
-        + '<div class="section-head klub-head"><span>&#127945; KLASEMEN KLUB</span><span class="badge-klub">Non Full Transfer</span></div>'
+        + '<div class="section-head klub-head"><span>&#9917; KLASEMEN KLUB</span><span class="badge-klub">Non Full Transfer</span></div>'
         + '<div class="alltime-sub-note klub-note">Hanya liga di mana player menggunakan <strong>Klub biasa</strong> (tanpa Full Transfer).</div>';
     if (sortedKlub.length > 0) {
         html += buildEplBlock(sortedKlub, false, false, [], true, null, 'klub');
@@ -726,12 +749,22 @@ function buildEplBlock(rowData, showForm, isEdit, rawStandings, showWinPct, matc
     const numTop  = tableType==='ft' ? 'top-ft' : tableType==='klub' ? 'top-klub' : 'top';
     const winRow  = tableType==='ft' ? 'win-row-ft' : tableType==='klub' ? 'win-row-klub' : 'win-row';
     const ptsCls  = tableType==='ft' ? 'pts-big-ft' : tableType==='klub' ? 'pts-big-klub' : 'pts-big';
+    // name click class based on tableType
+    const nameCls = tableType==='ft' ? 'clickable-name-ft' : tableType==='klub' ? 'clickable-name-klub' : 'clickable-name';
 
     const wpTh = showWinPct ? '<th>WINS%</th>' : '';
 
     function nameHtml(name, crown) {
-        if (isAllTime) return '<span class="clickable-name" onclick="bukaInfoPlayerAllTime(\''+name+'\')">'+name+crown+'</span>';
-        return '<span class="clickable-name" onclick="bukaInfoPlayerMatch(\''+name+'\',\''+matchId+'\')">'+name+crown+'</span>';
+        if (isAllTime) {
+            if (tableType === 'ft') {
+                return '<span class="'+nameCls+'" onclick="bukaInfoPlayerAllTime(\''+name+'\',\'ft\')">'+name+crown+'</span>';
+            } else if (tableType === 'klub') {
+                return '<span class="'+nameCls+'" onclick="bukaInfoPlayerAllTime(\''+name+'\',\'klub\')">'+name+crown+'</span>';
+            } else {
+                return '<span class="'+nameCls+'" onclick="bukaInfoPlayerAllTime(\''+name+'\',\'overall\')">'+name+crown+'</span>';
+            }
+        }
+        return '<span class="'+nameCls+'" onclick="bukaInfoPlayerMatch(\''+name+'\',\''+matchId+'\')">'+name+crown+'</span>';
     }
 
     const dRows = rowData.map((p,i) => {
@@ -953,6 +986,7 @@ async function saveStats() {
     else alert('&#10060; Error: ' + error.message);
 }
 
+// ── MODAL: Player match info ──────────────────────────────────
 async function bukaInfoPlayerMatch(nama, matchId) {
     const match = localData.find(m => m.id === matchId);
     if (!match) return;
@@ -962,22 +996,28 @@ async function bukaInfoPlayerMatch(nama, matchId) {
     const st = (match.standings||[]).find(p=>fix(p.player_name)===nama) || {};
     const w=parseInt(st.w)||0,d=parseInt(st.d)||0,l=parseInt(st.l)||0,pl=w+d+l,pct=winPct(w,pl);
     const hari = getNamaHari(match.tanggal, currentMonth);
+
+    // reset header style
+    const header = document.getElementById('infoModalHeader');
+    header.className = 'info-modal-header';
     document.getElementById('infoModalTitle').innerText = nama;
-    document.getElementById('infoModalSubtitle').innerText = '&#128197; '+hari+', '+match.tanggal+' '+currentMonth+' \u2014 Liga '+ligaNum;
-    const club=mi.club||'', isFT=mi.is_full_transfer||false;
+    document.getElementById('infoModalSubtitle').innerText = '📅 '+hari+', '+match.tanggal+' '+currentMonth+' — Liga '+ligaNum;
+
+    const isFT = mi.is_full_transfer || false;
+    const club = mi.club || '';
     let clubHtml = club
-        ? '<div class="club-name">&#9917; '+escHtml(club)+(isFT?'<span class="full-transfer-tag">FULL TRANSFER</span>':'')+'</div>'
-        : '<div class="no-club">Klub belum diisi'+(modeAdmin?' \u2014 isi via tombol Edit di bawah':'')+'.</div>';
+        ? '<div class="club-name">⚽ '+escHtml(club)+(isFT?'<span class="full-transfer-tag">🔞 FULL TRANSFER</span>':'')+'</div>'
+        : '<div class="no-club">Klub belum diisi'+(modeAdmin?' — isi via form di bawah':'')+'.</div>';
+
     let adminSection = '';
     if (modeAdmin) {
         const safeId = matchId.replace(/[^a-zA-Z0-9_-]/g,'_');
-        adminSection = '<div class="admin-club-edit"><label>&#9999;&#65039; Edit Klub (Admin)</label>'
-            +'<input class="admin-club-input" id="clubInput_'+safeId+'_'+nama+'" placeholder="contoh: Real Madrid" value="'+escHtml(club)+'">'
-            +'<label class="admin-club-check"><input type="checkbox" id="ftCheck_'+safeId+'_'+nama+'" '+(isFT?'checked':'')+'>Full Transfer</label>'
-            +'<button class="btn-save-club" onclick="simpanKlub(\''+matchId+'\',\''+nama+'\',\''+safeId+'\')">&#128190; Simpan Klub</button></div>';
+        const initType = isFT ? 'ft' : 'klub';
+        adminSection = buildAdminClubSection(matchId, safeId, nama, club, isFT, initType, false);
     }
+
     document.getElementById('infoModalBody').innerHTML = '<div class="league-card"><div class="league-card-head">'
-        +'<span class="lc-title">&#128203; Liga '+ligaNum+' \u2014 '+currentMonth+'</span>'
+        +'<span class="lc-title">📋 Liga '+ligaNum+' — '+currentMonth+'</span>'
         +(modeAdmin?'<span class="lc-badge">Edit Mode</span>':'')
         +'</div><div class="league-card-body">'+clubHtml
         +'<div class="stat-pills">'
@@ -992,13 +1032,57 @@ async function bukaInfoPlayerMatch(nama, matchId) {
     document.getElementById('infoModal').classList.add('on');
 }
 
-async function bukaInfoPlayerAllTime(nama) {
+// Build admin club section with FT/Klub toggle
+function buildAdminClubSection(matchId, safeId, nama, currentClub, isFT, initType, isAllTimeCtx) {
+    const keyId = safeId + '_' + nama;
+    const showKlubInput = initType === 'klub';
+    return '<div class="admin-club-edit" id="adminClubEdit_'+keyId+'">'
+        +'<label>✏️ Edit Tipe Klub (Admin)</label>'
+        +'<div class="type-toggle">'
+        +'<div class="type-btn '+(initType==='ft'?'active-ft':'')+'" id="typeBtnFT_'+keyId+'" onclick="selectType(\''+keyId+'\',\'ft\')">🔞 Full Transfer</div>'
+        +'<div class="type-btn '+(initType==='klub'?'active-klub':'')+'" id="typeBtnKlub_'+keyId+'" onclick="selectType(\''+keyId+'\',\'klub\')">⚽ Klub</div>'
+        +'</div>'
+        +'<div class="klub-name-wrap" id="klubNameWrap_'+keyId+'" style="display:'+(showKlubInput?'block':'none')+'">'
+        +'<input class="admin-club-input" id="clubInput_'+keyId+'" placeholder="Nama klub, cth: Real Madrid" value="'+escHtml(currentClub||'')+'">'
+        +'</div>'
+        +'<input type="hidden" id="ftHidden_'+keyId+'" value="'+(initType==='ft'?'true':'false')+'">'
+        +'<button class="btn-save-club" onclick="simpanKlub(\''+matchId+'\',\''+nama+'\',\''+safeId+'\')">💾 Simpan</button>'
+        +'</div>';
+}
+
+function selectType(keyId, type) {
+    const btnFT = document.getElementById('typeBtnFT_'+keyId);
+    const btnKlub = document.getElementById('typeBtnKlub_'+keyId);
+    const klubWrap = document.getElementById('klubNameWrap_'+keyId);
+    const ftHidden = document.getElementById('ftHidden_'+keyId);
+    if (!btnFT || !btnKlub) return;
+
+    btnFT.className = 'type-btn' + (type==='ft' ? ' active-ft' : '');
+    btnKlub.className = 'type-btn' + (type==='klub' ? ' active-klub' : '');
+    if (klubWrap) klubWrap.style.display = type==='klub' ? 'block' : 'none';
+    if (ftHidden) ftHidden.value = type==='ft' ? 'true' : 'false';
+}
+
+// ── MODAL: All Time per-player ────────────────────────────────
+// filterType: 'overall' | 'ft' | 'klub'
+async function bukaInfoPlayerAllTime(nama, filterType) {
+    filterType = filterType || 'overall';
+
+    const header = document.getElementById('infoModalHeader');
+    header.className = 'info-modal-header' + (filterType==='ft' ? ' ft-header' : filterType==='klub' ? ' klub-header' : '');
+
+    const subtitleMap = {
+        overall: '🏆 Statistik per Klub — All Time (Overall)',
+        ft: '🔞 Statistik — Klasemen Full Transfer',
+        klub: '⚽ Statistik — Klasemen Klub (Non-FT)'
+    };
     document.getElementById('infoModalTitle').innerText = nama;
-    document.getElementById('infoModalSubtitle').innerText = '&#127942; Statistik per Klub \u2014 All Time';
-    document.getElementById('infoModalBody').innerHTML = '<div class="no-club" style="text-align:center;padding:20px;">&#9203; Memuat data...</div>';
+    document.getElementById('infoModalSubtitle').innerText = subtitleMap[filterType];
+    document.getElementById('infoModalBody').innerHTML = '<div class="no-club" style="text-align:center;padding:20px;">⏳ Memuat data...</div>';
     document.getElementById('infoModal').classList.add('on');
 
     const { data: allMatches } = await sb.from('matches').select('*, standings(*)').eq('mode', currentMode).order('timestamp', { ascending: true });
+
     const clubStats = {};
     let gtW=0,gtD=0,gtL=0,gtPl=0,gtLiga=0,gtJuara=0;
 
@@ -1006,7 +1090,13 @@ async function bukaInfoPlayerAllTime(nama) {
         const st=(match.standings||[]).find(p=>fix(p.player_name)===nama);
         if (!st) return;
         const mi=(matchInfoData[match.id]||{})[nama]||{};
-        const club=(mi.club||'').trim()||'(Tidak Diisi)', isFT=mi.is_full_transfer||false;
+        const isFT = mi.is_full_transfer || false;
+
+        // Filter by type
+        if (filterType === 'ft' && !isFT) return;
+        if (filterType === 'klub' && isFT) return;
+
+        const club=(mi.club||'').trim()||(isFT ? '(Full Transfer - Tidak Diisi)' : '(Tidak Diisi)');
         const w=parseInt(st.w)||0,d=parseInt(st.d)||0,l=parseInt(st.l)||0,pl=w+d+l,pts=parseInt(st.pts)||(w*3+d);
         if (!clubStats[club]) clubStats[club]={liga:0,w:0,d:0,l:0,pl:0,pts:0,juara:0,isFT};
         const sorted=sortStandings(match.standings||[],match.manual_juara);
@@ -1018,14 +1108,31 @@ async function bukaInfoPlayerAllTime(nama) {
     });
 
     const clubs = Object.keys(clubStats);
-    if (!clubs.length) { document.getElementById('infoModalBody').innerHTML='<div class="no-club" style="text-align:center;padding:20px;">Belum ada data klub untuk '+nama+'.</div>'; return; }
+    if (!clubs.length) {
+        const emptyMsg = filterType==='ft'
+            ? 'Belum ada data Full Transfer untuk '+nama+'.'
+            : filterType==='klub'
+            ? 'Belum ada data Klub (Non-FT) untuk '+nama+'.'
+            : 'Belum ada data klub untuk '+nama+'.';
+        document.getElementById('infoModalBody').innerHTML='<div class="no-club" style="text-align:center;padding:20px;">'+emptyMsg+'</div>';
+        return;
+    }
+
     clubs.sort((a,b)=>{ if (clubStats[b].liga!==clubStats[a].liga) return clubStats[b].liga-clubStats[a].liga; const wa=clubStats[a].pl>0?clubStats[a].w/clubStats[a].pl:0,wb=clubStats[b].pl>0?clubStats[b].w/clubStats[b].pl:0; return wb-wa; });
 
     const gPct=winPct(gtW,gtPl), gPts=gtW*3+gtD;
-    let html='<div style="background:linear-gradient(135deg,#37003c,#6a0dad);border-radius:12px;padding:14px 16px;margin-bottom:16px;color:white;">'
-        +'<div style="font-size:0.68rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;opacity:0.7;margin-bottom:10px;">&#128202; Grand Total &mdash; '+gtLiga+' Liga</div>'
+    const headerGrad = filterType==='ft'
+        ? 'background:linear-gradient(135deg,#7d0000,#c62828)'
+        : filterType==='klub'
+        ? 'background:linear-gradient(135deg,#0a5e40,#1b7a52)'
+        : 'background:linear-gradient(135deg,#37003c,#6a0dad)';
+
+    const typeLabel = filterType==='ft' ? '🔞 Full Transfer' : filterType==='klub' ? '⚽ Klub' : 'Overall';
+
+    let html='<div style="'+headerGrad+';border-radius:12px;padding:14px 16px;margin-bottom:16px;color:white;">'
+        +'<div style="font-size:0.68rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;opacity:0.7;margin-bottom:10px;">📊 Grand Total — '+gtLiga+' Liga ('+typeLabel+')</div>'
         +'<div style="display:flex;gap:10px;flex-wrap:wrap;">'
-        +'<div style="text-align:center;background:rgba(255,215,0,0.25);border-radius:8px;padding:8px 14px;min-width:50px;border:1px solid rgba(255,215,0,0.4);"><div style="font-size:1.4rem;font-weight:900;color:#ffd700;">'+gtJuara+'</div><div style="font-size:0.58rem;font-weight:700;opacity:0.8;text-transform:uppercase;margin-top:2px;">&#127942; Juara</div></div>'
+        +'<div style="text-align:center;background:rgba(255,215,0,0.25);border-radius:8px;padding:8px 14px;min-width:50px;border:1px solid rgba(255,215,0,0.4);"><div style="font-size:1.4rem;font-weight:900;color:#ffd700;">'+gtJuara+'</div><div style="font-size:0.58rem;font-weight:700;opacity:0.8;text-transform:uppercase;margin-top:2px;">🏆 Juara</div></div>'
         +'<div style="text-align:center;background:rgba(255,255,255,0.12);border-radius:8px;padding:8px 14px;min-width:50px;"><div style="font-size:1.4rem;font-weight:900;color:#00ff85;">'+gtW+'</div><div style="font-size:0.58rem;font-weight:700;opacity:0.7;text-transform:uppercase;margin-top:2px;">Win</div></div>'
         +'<div style="text-align:center;background:rgba(255,255,255,0.12);border-radius:8px;padding:8px 14px;min-width:50px;"><div style="font-size:1.4rem;font-weight:900;color:#d0d0d0;">'+gtD+'</div><div style="font-size:0.58rem;font-weight:700;opacity:0.7;text-transform:uppercase;margin-top:2px;">Draw</div></div>'
         +'<div style="text-align:center;background:rgba(255,255,255,0.12);border-radius:8px;padding:8px 14px;min-width:50px;"><div style="font-size:1.4rem;font-weight:900;color:#ff6b6b;">'+gtL+'</div><div style="font-size:0.58rem;font-weight:700;opacity:0.7;text-transform:uppercase;margin-top:2px;">Loss</div></div>'
@@ -1033,25 +1140,25 @@ async function bukaInfoPlayerAllTime(nama) {
         +'<div style="text-align:center;background:rgba(233,0,82,0.4);border-radius:8px;padding:8px 14px;min-width:50px;"><div style="font-size:1.4rem;font-weight:900;color:#fff;">'+gPct+'%</div><div style="font-size:0.58rem;font-weight:700;opacity:0.7;text-transform:uppercase;margin-top:2px;">Win%</div></div>'
         +'<div style="text-align:center;background:rgba(255,255,255,0.12);border-radius:8px;padding:8px 14px;min-width:50px;"><div style="font-size:1.4rem;font-weight:900;color:#fdbb2d;">'+gPts+'</div><div style="font-size:0.58rem;font-weight:700;opacity:0.7;text-transform:uppercase;margin-top:2px;">Pts</div></div>'
         +'</div></div>'
-        +'<div style="font-size:0.68rem;font-weight:700;color:var(--sub);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;">&#9917; Statistik per Klub ('+clubs.length+' klub)</div>';
+        +'<div style="font-size:0.68rem;font-weight:700;color:var(--sub);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;">⚽ Statistik per Klub ('+clubs.length+' klub)</div>';
 
     clubs.forEach((club,idx) => {
-        const cs=clubStats[club], pct=winPct(cs.w,cs.pl), isUk=club==='(Tidak Diisi)', isBest=idx===0&&!isUk;
+        const cs=clubStats[club], pct=winPct(cs.w,cs.pl), isUk=club.includes('Tidak Diisi'), isBest=idx===0&&!isUk;
         html+='<div class="league-card" style="margin-bottom:10px;"><div class="league-card-head" style="'+(isBest?'background:linear-gradient(90deg,#fff9c4,#fff3e0);':'')+'"><div>'
             +'<span class="lc-title" style="'+(isUk?'color:#aaa;font-style:italic;':'')+'">'
-            +(isBest?'&#129351; ':'')+'&#9917; '+escHtml(club)
-            +(cs.isFT?'<span style="background:#fff3e0;color:#e65100;font-size:0.6rem;font-weight:700;padding:1px 6px;border-radius:5px;border:1px solid #ffcc80;margin-left:4px;">FULL TRANSFER</span>':'')
+            +(isBest?'🥇 ':'')+'⚽ '+escHtml(club)
+            +(cs.isFT?'<span style="background:#ffebee;color:#c62828;font-size:0.6rem;font-weight:700;padding:1px 6px;border-radius:5px;border:1px solid #ffcdd2;margin-left:4px;">🔞 FT</span>':'')
             +'</span><div style="font-size:0.68rem;color:var(--sub);margin-top:2px;">'+cs.liga+'x Liga dipakai</div>'
             +'</div><span class="lc-badge" style="background:'+(pct>=60?'var(--win)':pct>=40?'#888':'var(--loss)')+';">'+pct+'% WR</span></div>'
             +'<div class="league-card-body"><div class="stat-pills">'
-            +'<div class="stat-pill" style="background:'+(cs.juara>0?'#fffde7':'#f5f5f5')+';'+(cs.juara>0?'border:1px solid #ffd700;':'')+'"><span class="sp-val" style="color:'+(cs.juara>0?'#c6a000':'#bbb')+';">'+cs.juara+'&#127942;</span><span class="sp-lbl">Juara</span></div>'
+            +'<div class="stat-pill" style="background:'+(cs.juara>0?'#fffde7':'#f5f5f5')+';'+(cs.juara>0?'border:1px solid #ffd700;':'')+'"><span class="sp-val" style="color:'+(cs.juara>0?'#c6a000':'#bbb')+';">'+cs.juara+'🏆</span><span class="sp-lbl">Juara</span></div>'
             +'<div class="stat-pill"><span class="sp-val win">'+cs.w+'</span><span class="sp-lbl">Win</span></div>'
             +'<div class="stat-pill"><span class="sp-val draw">'+cs.d+'</span><span class="sp-lbl">Draw</span></div>'
             +'<div class="stat-pill"><span class="sp-val loss">'+cs.l+'</span><span class="sp-lbl">Loss</span></div>'
             +'<div class="stat-pill"><span class="sp-val">'+cs.pl+'</span><span class="sp-lbl">Main</span></div>'
             +'<div class="stat-pill"><span class="sp-val pct">'+pct+'%</span><span class="sp-lbl">Win%</span></div>'
             +'<div class="stat-pill"><span class="sp-val" style="color:#fdbb2d;">'+cs.pts+'</span><span class="sp-lbl">Pts</span></div>'
-            +'</div><div class="win-bar-wrap"><div class="win-bar-label"><span>Win Rate</span><span>'+cs.w+'W &middot; '+cs.d+'D &middot; '+cs.l+'L dari '+cs.pl+' pertandingan</span></div>'
+            +'</div><div class="win-bar-wrap"><div class="win-bar-label"><span>Win Rate</span><span>'+cs.w+'W · '+cs.d+'D · '+cs.l+'L dari '+cs.pl+' pertandingan</span></div>'
             +'<div class="win-bar-bg"><div class="win-bar-fill" style="width:'+pct+'%;background:'+(pct>=60?'linear-gradient(90deg,var(--win),#00e676)':pct>=40?'linear-gradient(90deg,#888,#bbb)':'linear-gradient(90deg,var(--loss),#ff8a80)')+'"></div></div>'
             +'</div></div></div>';
     });
@@ -1060,17 +1167,22 @@ async function bukaInfoPlayerAllTime(nama) {
 }
 
 async function simpanKlub(matchId, nama, safeId) {
-    const clubVal=(document.getElementById('clubInput_'+safeId+'_'+nama)?.value||'').trim();
-    const ftVal=document.getElementById('ftCheck_'+safeId+'_'+nama)?.checked||false;
+    const keyId = safeId + '_' + nama;
+    const ftHidden = document.getElementById('ftHidden_'+keyId);
+    const clubInput = document.getElementById('clubInput_'+keyId);
+
+    const ftVal = ftHidden ? ftHidden.value === 'true' : false;
+    const clubVal = ftVal ? '' : ((clubInput ? clubInput.value : '') || '').trim();
+
     const { error } = await sb.from('match_info').upsert(
         { match_id:matchId, player_name:nama, club:clubVal, is_full_transfer:ftVal },
         { onConflict: 'match_id,player_name' }
     );
     if (!error) {
-        alert('&#9989; Data klub '+nama+' berhasil disimpan!');
+        alert('✅ Data ' + nama + ' berhasil disimpan!' + (ftVal ? ' (Full Transfer)' : ' (Klub: '+clubVal+')'));
         if (!matchInfoData[matchId]) matchInfoData[matchId]={};
         matchInfoData[matchId][nama]={ club:clubVal, is_full_transfer:ftVal };
-    } else { alert('&#10060; Gagal: '+error.message); }
+    } else { alert('❌ Gagal: '+error.message); }
 }
 
 function tutupInfoPlayer() { document.getElementById('infoModal').classList.remove('on'); }
@@ -1080,7 +1192,7 @@ function cekAdmin() {
     window._kk=(window._kk||0)+1;
     if (window._kk>=5) {
         window._kk=0; modeAdmin=true;
-        alert('&#128275; Mode Admin Aktif! Klik nama player di klasemen untuk mengisi data klub.');
+        alert('🔓 Mode Admin Aktif! Klik nama player di klasemen untuk mengisi data klub.');
         renderAdminArea(); renderStatsCards(); loadData();
     }
 }
@@ -1094,19 +1206,19 @@ function matikanAdmin() {
 function renderAdminArea() {
     if (!modeAdmin) { document.getElementById('adminArea').innerHTML=''; return; }
     if (currentMonth==='ALL TIME STANDING') {
-        document.getElementById('adminArea').innerHTML='<div class="admin-panel"><h3>&#9881;&#65039; Admin Mode</h3>'
+        document.getElementById('adminArea').innerHTML='<div class="admin-panel"><h3>⚙️ Admin Mode</h3>'
             +'<p style="font-size:0.85rem;color:#999;margin-bottom:12px;">Pilih bulan terlebih dahulu untuk membuat liga baru.</p>'
-            +'<button class="btn-adm btn-off" onclick="matikanAdmin()">&#128274; Matikan Admin</button></div>';
+            +'<button class="btn-adm btn-off" onclick="matikanAdmin()">🔒 Matikan Admin</button></div>';
         return;
     }
     document.getElementById('adminArea').innerHTML='<div class="admin-panel">'
-        +'<h3>&#9881;&#65039; Buat Liga &mdash; '+currentMonth+'</h3>'
+        +'<h3>⚙️ Buat Liga — '+currentMonth+'</h3>'
         +'<p style="font-size:0.82rem;color:#666;margin-bottom:6px;">Centang tepat <strong>'+currentMode+' pemain</strong>:</p>'
         +'<div class="p-checks">'+ALL_PLAYERS.map(p=>'<label><input type="checkbox" class="p-check" value="'+p+'" checked> '+p+'</label>').join('')+'</div>'
         +'<select id="newDate" class="adm-select">'+Array.from({length:31},(_,i)=>'<option value="'+(i+1)+'">Tanggal '+(i+1)+'</option>').join('')+'</select>'
-        +'<button class="btn-adm btn-create" onclick="buatLiga()">&#10133; Buat Liga</button>'
-        +'<button class="btn-adm btn-off" onclick="matikanAdmin()">&#128274; Matikan Admin</button>'
-        +'<p style="font-size:0.75rem;color:#999;margin-top:10px;">&#128161; Klik nama player di tabel klasemen untuk isi data klub.</p></div>';
+        +'<button class="btn-adm btn-create" onclick="buatLiga()">➕ Buat Liga</button>'
+        +'<button class="btn-adm btn-off" onclick="matikanAdmin()">🔒 Matikan Admin</button>'
+        +'<p style="font-size:0.75rem;color:#999;margin-top:10px;">💡 Klik nama player di tabel klasemen untuk isi data klub.</p></div>';
 }
 
 async function buatLiga() {
@@ -1116,11 +1228,11 @@ async function buatLiga() {
     const { data: matchData, error: matchErr } = await sb.from('matches').insert({
         mode:currentMode, bulan:currentMonth, tanggal:tgl, timestamp:Date.now()
     }).select().single();
-    if (matchErr||!matchData) { alert('&#10060; Gagal membuat liga: '+(matchErr?.message||'unknown')); return; }
+    if (matchErr||!matchData) { alert('❌ Gagal membuat liga: '+(matchErr?.message||'unknown')); return; }
     const standingsArr=sel.map((n,i)=>({ match_id:matchData.id,player_name:n,w:0,d:0,l:0,f:0,a:0,gd:0,pts:0,manual_rank:i+1 }));
     const { error: stErr } = await sb.from('standings').insert(standingsArr);
-    if (stErr) { alert('&#10060; Gagal insert standings: '+stErr.message); return; }
-    alert('&#9989; Liga berhasil dibuat!');
+    if (stErr) { alert('❌ Gagal insert standings: '+stErr.message); return; }
+    alert('✅ Liga berhasil dibuat!');
     renderAdminArea();
     await loadMonthly();
 }
