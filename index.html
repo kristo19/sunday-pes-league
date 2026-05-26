@@ -637,48 +637,44 @@ async function getData(path) {
         // LOAD MATCHES
         // =========================
 
-        if (path.includes('/matches')) {
+if (path.includes('/matches')) {
 
-            const parts = path.split('/');
+    const parts = path.split('/');
 
-            const bulan = parts[1];
+    const bulan = parts[1];
 
-            const { data, error } = await supabaseClient
-                .from('matches')
-                .select('*')
-                console.log('CURRENT BULAN:', bulan);
+    console.log('CURRENT BULAN:', bulan);
 
-const { data, error } = await supabaseClient
-    .from('matches')
-    .select('*')
-    .eq('bulan', bulan)
-    .order('timestamp', { ascending: true });
+    const { data, error } = await supabaseClient
+        .from('matches')
+        .select('*')
+        .eq('bulan', bulan)
+        .order('timestamp', { ascending: true });
 
-            if (error) {
+    if (error) {
 
-                console.error(error);
+        console.error(error);
 
-                return {};
-            }
+        return {};
+    }
 
-            const result = {};
+    const result = {};
 
-            data.forEach(row => {
+    data.forEach(row => {
 
-                result[row.id] = {
+        result[row.id] = {
 
-                    tanggal: row.tanggal,
-                    standings: row.standings,
-                    manualJuara: row.manual_juara,
-                    timestamp: row.timestamp
+            tanggal: row.tanggal,
+            standings: row.standings,
+            manualJuara: row.manual_juara,
+            timestamp: row.timestamp
 
-                };
+        };
 
-            });
+    });
 
-            return result;
-        }
-
+    return result;
+}
         // =========================
         // PLAYER STATS
         // =========================
@@ -1095,6 +1091,7 @@ function loadData() {
     toggleSidebarMode(false);
     if (matchesRef) matchesRef.off();
     matchesRef = db.ref(`${dbPath}/${currentMonth}/matches`);
+    console.log('CURRENT MONTH:', currentMonth);
     matchesRef.on('value', snap => {
 	allMatchesCache = {};
         if (editingId) return;
