@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sunday PES League - Ultimate Sync & Info Edition</title>
+    <title>Sunday PES League</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700;800;900&family=Barlow+Condensed:wght@400;600;700;800;900&display=swap" rel="stylesheet">
     <style>
@@ -150,14 +150,13 @@
         .fc-d { background: var(--draw); }
         .fc-l { background: var(--loss); }
 
-        /* INFO PLAYER (KLIKABLE) */
         .clickable-name {
             cursor: pointer; color: var(--purple); font-weight: 800; font-size: 0.95rem;
             border-bottom: 1.5px dashed var(--purple); transition: 0.2s;
         }
         .clickable-name:hover { color: var(--pink); border-bottom-color: var(--pink); }
 
-        /* ── MODAL INFO PLAYER ── */
+        /* MODAL */
         .info-modal {
             display: none; position: fixed; inset: 0;
             background: rgba(15, 5, 30, 0.85);
@@ -165,7 +164,6 @@
             backdrop-filter: blur(6px);
         }
         .info-modal.on { display: flex; }
-
         .info-modal-box {
             background: white; width: 100%; max-width: 700px; border-radius: 20px;
             overflow: hidden; position: relative;
@@ -176,18 +174,12 @@
             from { opacity: 0; transform: translateY(30px) scale(0.95); }
             to   { opacity: 1; transform: translateY(0) scale(1); }
         }
-
         .info-modal-header {
             background: linear-gradient(135deg, var(--purple) 0%, #6a0dad 100%);
             padding: 26px 30px 22px; color: white; position: relative;
         }
-        .info-modal-header h2 {
-            font-family: 'Barlow Condensed', sans-serif;
-            font-size: 2.2rem; font-weight: 900; letter-spacing: 1px; margin: 0;
-        }
-        .info-modal-header p {
-            font-size: 0.82rem; opacity: 0.65; margin-top: 4px; letter-spacing: 1px; text-transform: uppercase;
-        }
+        .info-modal-header h2 { font-family: 'Barlow Condensed', sans-serif; font-size: 2.2rem; font-weight: 900; letter-spacing: 1px; margin: 0; }
+        .info-modal-header p { font-size: 0.82rem; opacity: 0.65; margin-top: 4px; letter-spacing: 1px; text-transform: uppercase; }
         .info-close {
             position: absolute; top: 14px; right: 14px;
             background: rgba(255,255,255,0.15); border: none;
@@ -196,49 +188,20 @@
             display: flex; justify-content: center; align-items: center; transition: 0.2s;
         }
         .info-close:hover { background: var(--pink); }
-
         .info-modal-body { padding: 24px 30px 28px; max-height: 75vh; overflow-y: auto; }
 
-        /* Kartu tiap liga di modal */
-        .league-card {
-            border: 1.5px solid var(--border); border-radius: 12px;
-            margin-bottom: 12px; overflow: hidden;
-        }
+        .league-card { border: 1.5px solid var(--border); border-radius: 12px; margin-bottom: 12px; overflow: hidden; }
         .league-card:last-child { margin-bottom: 0; }
-        .league-card-head {
-            background: #f7f0ff; padding: 10px 14px;
-            display: flex; justify-content: space-between; align-items: center;
-        }
-        .league-card-head .lc-title {
-            font-family: 'Barlow Condensed', sans-serif;
-            font-size: 1rem; font-weight: 800; color: var(--purple);
-        }
-        .league-card-head .lc-badge {
-            background: var(--pink); color: white;
-            font-size: 0.65rem; font-weight: 700; padding: 2px 8px; border-radius: 8px;
-        }
+        .league-card-head { background: #f7f0ff; padding: 10px 14px; display: flex; justify-content: space-between; align-items: center; }
+        .league-card-head .lc-title { font-family: 'Barlow Condensed', sans-serif; font-size: 1rem; font-weight: 800; color: var(--purple); }
+        .league-card-head .lc-badge { background: var(--pink); color: white; font-size: 0.65rem; font-weight: 700; padding: 2px 8px; border-radius: 8px; }
         .league-card-body { padding: 12px 14px; }
 
-        /* Nama klub besar */
-        .club-name {
-            font-family: 'Barlow Condensed', sans-serif;
-            font-size: 1.4rem; font-weight: 900; color: var(--purple);
-            margin-bottom: 10px;
-            display: flex; align-items: center; gap: 8px;
-        }
-        .club-name span { color: var(--sub); font-size: 0.9rem; font-weight: 600; }
-        .club-name .full-transfer-tag {
-            background: #fff3e0; color: #e65100;
-            font-size: 0.65rem; font-weight: 700; padding: 2px 7px; border-radius: 6px;
-            border: 1px solid #ffcc80; font-family: 'Barlow', sans-serif;
-        }
+        .club-name { font-family: 'Barlow Condensed', sans-serif; font-size: 1.4rem; font-weight: 900; color: var(--purple); margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
+        .club-name .full-transfer-tag { background: #fff3e0; color: #e65100; font-size: 0.65rem; font-weight: 700; padding: 2px 7px; border-radius: 6px; border: 1px solid #ffcc80; font-family: 'Barlow', sans-serif; }
 
-        /* Stat row */
         .stat-pills { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; }
-        .stat-pill {
-            display: flex; flex-direction: column; align-items: center;
-            background: #f3eaff; border-radius: 10px; padding: 8px 14px; min-width: 54px;
-        }
+        .stat-pill { display: flex; flex-direction: column; align-items: center; background: #f3eaff; border-radius: 10px; padding: 8px 14px; min-width: 54px; }
         .stat-pill .sp-val { font-size: 1.3rem; font-weight: 900; color: var(--purple); line-height: 1; }
         .stat-pill .sp-val.win  { color: var(--win); }
         .stat-pill .sp-val.draw { color: #888; }
@@ -246,41 +209,25 @@
         .stat-pill .sp-val.pct  { color: var(--pink); }
         .stat-pill .sp-lbl { font-size: 0.6rem; font-weight: 700; color: var(--sub); text-transform: uppercase; margin-top: 2px; }
 
-        /* Win% bar */
         .win-bar-wrap { margin-top: 8px; }
         .win-bar-label { font-size: 0.7rem; font-weight: 700; color: var(--sub); margin-bottom: 4px; display: flex; justify-content: space-between; }
         .win-bar-bg { background: #f0e6ff; border-radius: 20px; height: 8px; overflow: hidden; }
         .win-bar-fill { height: 100%; border-radius: 20px; background: linear-gradient(90deg, var(--pink), #9b27af); transition: width 0.6s cubic-bezier(0.22,1,0.36,1); }
 
-        /* Admin edit area di dalam modal */
         .admin-club-edit { margin-top: 14px; padding-top: 14px; border-top: 1px dashed #ddd; }
         .admin-club-edit label { font-size: 0.75rem; font-weight: 700; color: var(--sub); text-transform: uppercase; display: block; margin-bottom: 4px; }
-        .admin-club-input {
-            width: 100%; padding: 9px 12px; border-radius: 8px;
-            border: 1.5px solid var(--border); font-family: 'Barlow', sans-serif;
-            font-size: 0.95rem; outline: none; margin-bottom: 8px; color: var(--purple);
-        }
+        .admin-club-input { width: 100%; padding: 9px 12px; border-radius: 8px; border: 1.5px solid var(--border); font-family: 'Barlow', sans-serif; font-size: 0.95rem; outline: none; margin-bottom: 8px; color: var(--purple); }
         .admin-club-input:focus { border-color: var(--purple); }
         .admin-club-check { display: flex; align-items: center; gap: 6px; font-size: 0.85rem; font-weight: 600; margin-bottom: 8px; cursor: pointer; }
-        .btn-save-club {
-            background: #00c853; color: white; border: none;
-            padding: 9px 20px; border-radius: 8px; font-family: 'Barlow', sans-serif;
-            font-size: 0.85rem; font-weight: 700; cursor: pointer; transition: 0.2s;
-        }
+        .btn-save-club { background: #00c853; color: white; border: none; padding: 9px 20px; border-radius: 8px; font-family: 'Barlow', sans-serif; font-size: 0.85rem; font-weight: 700; cursor: pointer; transition: 0.2s; }
         .btn-save-club:hover { background: #009624; }
 
-        /* Empty match info */
         .no-club { color: #bbb; font-size: 0.9rem; font-style: italic; padding: 8px 0; }
 
         /* MOBILE TABS */
         .mob-tabs { display: none; }
         .mob-tab-btns { display: flex; border-bottom: 2px solid var(--border); }
-        .mob-tab-btn {
-            flex: 1; padding: 11px; text-align: center; font-size: 0.8rem;
-            font-weight: 700; color: var(--sub); border: none; background: white;
-            cursor: pointer; border-bottom: 3px solid transparent; margin-bottom: -2px;
-            transition: 0.15s; font-family: 'Barlow', sans-serif; text-transform: uppercase; letter-spacing: 0.5px;
-        }
+        .mob-tab-btn { flex: 1; padding: 11px; text-align: center; font-size: 0.8rem; font-weight: 700; color: var(--sub); border: none; background: white; cursor: pointer; border-bottom: 3px solid transparent; margin-bottom: -2px; transition: 0.15s; font-family: 'Barlow', sans-serif; text-transform: uppercase; letter-spacing: 0.5px; }
         .mob-tab-btn.on { color: var(--purple); border-bottom-color: var(--purple); }
         .mob-tbl { display: none; width: 100%; border-collapse: collapse; }
         .mob-tbl.on { display: table; }
@@ -326,20 +273,9 @@
         .sb-tbl tbody tr:last-child td { border-bottom: none; }
         .sb-pts { font-weight: 900; color: var(--purple); }
         .sb-r1 td:first-child { border-left: 3px solid var(--pink); }
-
-        /* Trophy count cell */
         .trophy-count { font-weight: 900; font-size: 1rem; color: #b8860b; }
-
         .empty-state { padding: 40px; text-align: center; color: #999; font-size: 0.95rem; }
 
-        /* Hide/show sidebar cards based on view mode */
-        .sb-monthly-only { display: block; }
-        .sb-alltime-only { display: block; }
-
-        /* Desktop modal responsive override */
-        @media (min-width: 901px) {
-            .info-modal-box { max-width: 700px; }
-        }
         @media (max-width: 900px) {
             .info-modal-box { max-width: 95vw; }
             .main-layout { grid-template-columns: 1fr; }
@@ -372,7 +308,6 @@
 </div>
 
 <div id="appRoot" class="app">
-
     <div class="app-header">
         <div class="app-title" onclick="cekAdmin()">SUNDAY <span>PES</span> LEAGUE</div>
         <div class="header-right">
@@ -397,69 +332,44 @@
         </div>
 
         <div class="sidebar">
-            <!-- TROPHY CARD: Monthly (hanya muncul saat view bulan) -->
-            <div class="sb-card sb-monthly-only" id="sbTrophyMonthCard">
+            <!-- Trophy Monthly -->
+            <div class="sb-card" id="sbTrophyMonthCard">
                 <div class="sb-head trophy">🏆 Trophy — <span id="sbTrophyMonthTitle">Bulan Ini</span></div>
-                <table class="sb-tbl">
-                    <thead><tr><th class="tl">Player</th><th>🏆 Juara</th></tr></thead>
-                    <tbody id="sbTrophyMonthBody"></tbody>
-                </table>
+                <table class="sb-tbl"><thead><tr><th class="tl">Player</th><th>🏆 Juara</th></tr></thead><tbody id="sbTrophyMonthBody"></tbody></table>
             </div>
-
-            <!-- TOTAL POIN BULAN (hanya muncul saat view bulan) -->
-            <div class="sb-card sb-monthly-only" id="sbMonthCard">
+            <!-- Total Poin Bulan -->
+            <div class="sb-card" id="sbMonthCard">
                 <div class="sb-head">📊 <span id="sbMonthTitle">Total Poin</span></div>
-                <table class="sb-tbl">
-                    <thead><tr><th class="tl">Player</th><th>Pts</th></tr></thead>
-                    <tbody id="sbMonthBody"></tbody>
-                </table>
+                <table class="sb-tbl"><thead><tr><th class="tl">Player</th><th>Pts</th></tr></thead><tbody id="sbMonthBody"></tbody></table>
             </div>
-
-            <!-- TROPHY CARD: All Time (hanya muncul saat view ALL TIME) -->
-            <div class="sb-card sb-alltime-only" id="sbTrophyAllCard" style="display:none;">
+            <!-- Trophy All Time -->
+            <div class="sb-card" id="sbTrophyAllCard" style="display:none;">
                 <div class="sb-head trophy">🏆 Trophy — All Time</div>
-                <table class="sb-tbl">
-                    <thead><tr><th class="tl">Player</th><th>🏆 Juara</th></tr></thead>
-                    <tbody id="sbTrophyAllBody"></tbody>
-                </table>
+                <table class="sb-tbl"><thead><tr><th class="tl">Player</th><th>🏆 Juara</th></tr></thead><tbody id="sbTrophyAllBody"></tbody></table>
             </div>
-
-            <!-- ALL TIME POINTS (hanya muncul saat view ALL TIME) -->
-            <div class="sb-card sb-alltime-only" id="sbAllTimeCard" style="display:none;">
+            <!-- All Time Points -->
+            <div class="sb-card" id="sbAllTimeCard" style="display:none;">
                 <div class="sb-head dark">📊 All Time Points</div>
-                <table class="sb-tbl">
-                    <thead><tr><th class="tl">Player</th><th>Pts</th></tr></thead>
-                    <tbody id="sbAllTimeBody"></tbody>
-                </table>
+                <table class="sb-tbl"><thead><tr><th class="tl">Player</th><th>Pts</th></tr></thead><tbody id="sbAllTimeBody"></tbody></table>
             </div>
-
             <div class="sb-card">
                 <div class="sb-head stat">⚽ Top Scores</div>
-                <table class="sb-tbl">
-                    <thead><tr><th class="tl">Player</th><th>Goals</th></tr></thead>
-                    <tbody id="sbScoresBody"></tbody>
-                </table>
+                <table class="sb-tbl"><thead><tr><th class="tl">Player</th><th>Goals</th></tr></thead><tbody id="sbScoresBody"></tbody></table>
             </div>
             <div class="sb-card">
                 <div class="sb-head stat">🎯 Top Assists</div>
-                <table class="sb-tbl">
-                    <thead><tr><th class="tl">Player</th><th>Assists</th></tr></thead>
-                    <tbody id="sbAssistsBody"></tbody>
-                </table>
+                <table class="sb-tbl"><thead><tr><th class="tl">Player</th><th>Assists</th></tr></thead><tbody id="sbAssistsBody"></tbody></table>
             </div>
             <div class="sb-card">
                 <div class="sb-head stat">📈 Form 5 Laga</div>
-                <table class="sb-tbl">
-                    <thead><tr><th class="tl">Player</th><th>Form</th></tr></thead>
-                    <tbody id="sbFormBody"></tbody>
-                </table>
+                <table class="sb-tbl"><thead><tr><th class="tl">Player</th><th>Form</th></tr></thead><tbody id="sbFormBody"></tbody></table>
             </div>
             <div id="adminStatsTool"></div>
         </div>
     </div>
 </div>
 
-<!-- ── MODAL INFO PLAYER ── -->
+<!-- MODAL -->
 <div id="infoModal" class="info-modal" onclick="tutupInfoModalOutside(event)">
     <div class="info-modal-box">
         <div class="info-modal-header">
@@ -472,504 +382,30 @@
 </div>
 
 <script>
+// ── SUPABASE INIT ─────────────────────────────────────────────
 const SUPABASE_URL = 'https://qtvptqafmurpvyfnexfr.supabase.co';
-
-const SUPABASE_ANON_KEY = 'sb_publishable_taquImSZ_-EVwERdODDAbA_62thC36K';
-
-const supabaseClient = supabase.createClient(
-    SUPABASE_URL,
-    SUPABASE_ANON_KEY
-);
-
-// TEST CONNECTION
-async function testConnection() {
-
-    const { data, error } = await supabaseClient
-        .from('matches')
-        .select('*');
-
-    console.log('SUPABASE CONNECT:', data);
-    console.log('SUPABASE ERROR:', error);
-}
-
-testConnection();
-
-/* =========================================================
-   REALTIME STATE
-========================================================= */
-
-let realtimeSubscribed = false;
-
-/* =========================================================
-   FIREBASE STYLE DB BRIDGE FOR SUPABASE
-========================================================= */
-
-const db = {
-
-    ref(path) {
-
-        return {
-
-            async once(type) {
-
-                const data = await getData(path);
-
-                return {
-                    val: () => data
-                };
-            },
-
-            on(type, callback) {
-
-                getData(path).then(data => {
-
-                    callback({
-                        val: () => data
-                    });
-
-                });
-
-            },
-
-            off() {},
-
-            async set(value) {
-
-                return saveData(path, value);
-            },
-
-            async update(value) {
-
-                return updateData(path, value);
-            },
-
-            async remove() {
-
-                return removeData(path);
-            }
-        };
-    }
-};
-
-/* =========================================================
-   REALTIME LISTENER
-========================================================= */
-
-function initRealtime() {
-
-    if (realtimeSubscribed) return;
-
-    realtimeSubscribed = true;
-
-    supabaseClient
-    .channel('pes-league-realtime')
-
-    .on(
-        'postgres_changes',
-        {
-            event: '*',
-            schema: 'public',
-            table: 'matches'
-        },
-
-        payload => {
-
-            console.log('Realtime MATCH update:', payload);
-
-            if (currentMonth === 'ALL TIME STANDING') {
-
-                renderAllTime();
-                updateSidebarAllTime();
-
-            } else {
-
-                loadData();
-            }
-        }
-    )
-
-    .on(
-        'postgres_changes',
-        {
-            event: '*',
-            schema: 'public',
-            table: 'player_stats'
-        },
-
-        payload => {
-
-            console.log('Realtime STATS update:', payload);
-
-            listenStats();
-        }
-    )
-
-    .on(
-        'postgres_changes',
-        {
-            event: '*',
-            schema: 'public',
-            table: 'match_info'
-        },
-
-        payload => {
-
-            console.log('Realtime INFO update:', payload);
-
-            listenMatchInfo();
-        }
-    )
-
-    .subscribe();
-}
-
-/* =========================================================
-   GET DATA
-========================================================= */
-
-async function getData(path) {
-
-    try {
-
-        console.log('GET:', path);
-
-        // =========================
-        // LOAD MATCHES
-        // =========================
-
-if (path.includes('/matches')) {
-
-    const parts = path.split('/');
-
-    const bulan = parts[1];
-
-    console.log('CURRENT BULAN:', bulan);
-
-    const { data, error } = await supabaseClient
-        .from('matches')
-        .select('*')
-        .eq('bulan', bulan)
-        .order('timestamp', { ascending: true });
-
-    if (error) {
-
-        console.error(error);
-
-        return {};
-    }
-
-    const result = {};
-
-    data.forEach(row => {
-
-        result[row.id] = {
-
-            tanggal: row.tanggal,
-            standings: row.standings,
-            manualJuara: row.manual_juara,
-            timestamp: row.timestamp
-
-        };
-
-    });
-
-    return result;
-}
-        // =========================
-        // PLAYER STATS
-        // =========================
-
-        if (path.includes('/allTimeStats')) {
-
-            const { data, error } = await supabaseClient
-                .from('player_stats')
-                .select('*');
-
-            if (error) {
-
-                console.error(error);
-
-                return {};
-            }
-
-            const result = {};
-
-            data.forEach(row => {
-
-                result[row.player_name] = {
-
-                    score: row.score,
-                    assist: row.assist,
-                    formText: row.form_text
-
-                };
-
-            });
-
-            return result;
-        }
-
-        // =========================
-        // MATCH INFO
-        // =========================
-
-        if (path.includes('/matchInfo')) {
-
-            const { data, error } = await supabaseClient
-                .from('match_info')
-                .select('*');
-
-            if (error) {
-
-                console.error(error);
-
-                return {};
-            }
-
-            const result = {};
-
-            data.forEach(row => {
-
-                if (!result[row.match_id]) {
-
-                    result[row.match_id] = {};
-                }
-
-                result[row.match_id][row.player_name] = {
-
-                    club: row.club,
-                    isFullTransfer: row.is_full_transfer
-
-                };
-
-            });
-
-            return result;
-        }
-
-        // =========================
-        // ROOT DATA
-        // =========================
-
-      if (
-    path === 'liga' ||
-    path === 'liga3'
-) {
-
-    const { data, error } = await supabaseClient
-        .from('matches')
-        .select('*')
-        .order('timestamp', { ascending: true });
-
-    if (error) {
-
-        console.error(error);
-
-        return {};
-    }
-
-    const result = {};
-
-    data.forEach(row => {
-
-        if (!result[row.bulan]) {
-
-            result[row.bulan] = {
-                matches: {}
-            };
-        }
-
-        result[row.bulan].matches[row.id] = {
-
-            tanggal: row.tanggal,
-            standings: row.standings,
-            manualJuara: row.manual_juara,
-            timestamp: row.timestamp
-
-        };
-
-    });
-
-    console.log('SUPABASE DATA:', result);
-
-    return result;
-}
-
-/* =========================================================
-   SAVE DATA
-========================================================= */
-
-async function saveData(path, value) {
-
-    try {
-
-        console.log('SAVE:', path);
-
-        // =========================
-        // SAVE MATCHES
-        // =========================
-
-        if (path.includes('/matches/')) {
-
-            const parts = path.split('/');
-
-            const bulan = parts[1];
-
-            const matchId = parts[parts.length - 1];
-
-            const { error } = await supabaseClient
-                .from('matches')
-                .upsert({
-
-                    id: matchId,
-                    bulan: bulan,
-                    tanggal: value.tanggal,
-                    standings: value.standings,
-                    manual_juara: value.manualJuara,
-                    timestamp: value.timestamp
-
-                });
-
-            if (error) {
-
-                console.error(error);
-            }
-
-            return;
-        }
-
-        // =========================
-        // SAVE PLAYER STATS
-        // =========================
-
-        if (path.includes('/allTimeStats/')) {
-
-            const parts = path.split('/');
-
-            const playerName = parts[2];
-
-            const { error } = await supabaseClient
-                .from('player_stats')
-                .upsert({
-
-                    player_name: playerName,
-                    score: value.score || 0,
-                    assist: value.assist || 0,
-                    form_text: value.formText || ''
-
-                });
-
-            if (error) {
-
-                console.error(error);
-            }
-
-            return;
-        }
-
-        // =========================
-        // SAVE MATCH INFO
-        // =========================
-
-        if (path.includes('/matchInfo/')) {
-
-            const parts = path.split('/');
-
-            const matchId = parts[2];
-
-            const playerName = parts[3];
-
-            const { error } = await supabaseClient
-                .from('match_info')
-                .upsert({
-
-                    match_id: matchId,
-                    player_name: playerName,
-                    club: value.club || '',
-                    is_full_transfer: value.isFullTransfer || false
-
-                });
-
-            if (error) {
-
-                console.error(error);
-            }
-
-            return;
-        }
-
-    } catch (err) {
-
-        console.error(err);
-    }
-}
-
-/* =========================================================
-   UPDATE DATA
-========================================================= */
-
-async function updateData(path, value) {
-
-    return saveData(path, value);
-}
-
-/* =========================================================
-   REMOVE DATA
-========================================================= */
-
-async function removeData(path) {
-
-    try {
-
-        console.log('DELETE:', path);
-
-        if (path.includes('/matches/')) {
-
-            const parts = path.split('/');
-
-            const matchId = parts[parts.length - 1];
-
-            const { error } = await supabaseClient
-                .from('matches')
-                .delete()
-                .eq('id', matchId);
-
-            if (error) {
-
-                console.error(error);
-            }
-        }
-
-    } catch (err) {
-
-        console.error(err);
-    }
-}
-// ── CONSTANTS & STATE ─────────────────────────────────────────
+const SUPABASE_KEY = 'sb_publishable_taquImSZ_-EVwERdODDAbA_62thC36K';
+const { createClient } = supabase;
+const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+// ── CONSTANTS ─────────────────────────────────────────────────
 const MONTHS = ["Januari","Februari","Maret","April","Mei","Juni","Juli","Agustus","September","Oktober","November","Desember"];
-// CHANGED: Ipo → Stive
-const ALL_PLAYERS = ["Alfa","Toxx","Stive","Kobe"];
+const ALL_PLAYERS = ["Toxx","Stive","Alfa","Kobe"];
 
-// CHANGED: Default to ALL TIME STANDING on first open
 let currentMonth = 'ALL TIME STANDING';
-
 let currentMode  = null;
-let dbPath       = 'liga';
-let matchesRef   = null;
-let statsRef     = null;
 let modeAdmin    = false;
 let editingId    = null;
-let localData    = {};
+let localData    = [];       // array of match objects (for current month)
 let statsData    = {};
 let editingStats = false;
 let activeSet    = new Set();
+let matchInfoData = {};      // { match_id: { player_name: {club, is_full_transfer} } }
 
-// Cache semua data match untuk digunakan modal
-let allMatchesCache = {};
-let matchInfoData  = {};
+// Realtime subscription handle
+let realtimeSub = null;
 
 // ── HELPERS ───────────────────────────────────────────────────
-// CHANGED: added Ipo → Stive mapping so legacy data is also renamed
 const fix = (n) => n === "Ito" ? "Toxx" : n === "Ipo" ? "Stive" : (n || "Unknown");
 
 function getNamaHari(tanggal, bulan) {
@@ -987,15 +423,8 @@ function formCircles(arr) {
     return arr.map(f => `<div class="fc fc-${f.toLowerCase()}">${f}</div>`).join('');
 }
 
-function sortStandings(match) {
-    let s = match.standings.map(p => ({...p, name: fix(p.name)}));
-    const j = fix(match.manualJuara);
-    s.sort((a,b) => {
-        if (j) { if (a.name===j) return -1; if (b.name===j) return 1; }
-        if ((b.pts||0) !== (a.pts||0)) return (b.pts||0)-(a.pts||0);
-        return (a.manualRank||99)-(b.manualRank||99);
-    });
-    return s;
+function escHtml(str) {
+    return (str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 }
 
 function winPct(w, pl) {
@@ -1003,12 +432,26 @@ function winPct(w, pl) {
     return Math.round((w / pl) * 100);
 }
 
-// ── TOGGLE SIDEBAR CARDS based on view ───────────────────────
+// Sort standings: manual juara first, then by pts, then manualRank
+function sortStandings(standings, manualJuara) {
+    const j = fix(manualJuara || '');
+    return [...standings].sort((a, b) => {
+        if (j) { if (fix(a.player_name) === j) return -1; if (fix(b.player_name) === j) return 1; }
+        if ((b.pts||0) !== (a.pts||0)) return (b.pts||0) - (a.pts||0);
+        return (a.manual_rank||99) - (b.manual_rank||99);
+    });
+}
+
+// ── SIDEBAR TOGGLE ────────────────────────────────────────────
 function toggleSidebarMode(isAllTime) {
-    const monthlyCards = document.querySelectorAll('.sb-monthly-only');
-    const alltimeCards = document.querySelectorAll('.sb-alltime-only');
-    monthlyCards.forEach(c => c.style.display = isAllTime ? 'none' : 'block');
-    alltimeCards.forEach(c => c.style.display = isAllTime ? 'block' : 'none');
+    ['sbTrophyMonthCard','sbMonthCard'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.style.display = isAllTime ? 'none' : 'block';
+    });
+    ['sbTrophyAllCard','sbAllTimeCard'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.style.display = isAllTime ? 'block' : 'none';
+    });
 }
 
 // ── MODE & INIT ───────────────────────────────────────────────
@@ -1019,430 +462,165 @@ function setMode(m) {
         document.getElementById('landingPage').style.display = 'none';
         document.getElementById('appRoot').classList.add('on');
         applyMode();
-
-initRealtime();
     }, 500);
 }
 
 function kembaliKeMenuAwal() {
-    if (matchesRef) matchesRef.off();
-    if (statsRef)   statsRef.off();
+    if (realtimeSub) { sb.removeChannel(realtimeSub); realtimeSub = null; }
     document.getElementById('appRoot').classList.remove('on');
     document.getElementById('landingPage').style.display = 'flex';
     setTimeout(() => { document.getElementById('landingPage').style.opacity = '1'; }, 10);
 }
 
 function applyMode() {
-    dbPath = currentMode === '3' ? 'liga3' : 'liga';
     document.getElementById('modeBadge').innerText = `🔥 ${currentMode} Player Mode`;
     editingId = null; editingStats = false;
-    // CHANGED: always start at ALL TIME STANDING
     currentMonth = 'ALL TIME STANDING';
     buildMonthSelect();
     loadData();
-    listenStats();
-    listenMatchInfo();
+    loadStats();
+    subscribeRealtime();
+}
+
+// ── REALTIME SUBSCRIPTION ─────────────────────────────────────
+function subscribeRealtime() {
+    if (realtimeSub) sb.removeChannel(realtimeSub);
+    realtimeSub = sb.channel('pes-league-changes')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'matches' }, () => { if (!editingId) loadData(); })
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'standings' }, () => { if (!editingId) loadData(); })
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'match_info' }, () => loadMatchInfo())
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'all_time_stats' }, () => loadStats())
+        .subscribe();
 }
 
 // ── NAVIGATION ────────────────────────────────────────────────
 function buildMonthSelect() {
     const sel = document.getElementById('monthSelect');
     sel.innerHTML = MONTHS.map(m =>
-        `<option value="${m}" ${m === currentMonth && currentMonth !== 'ALL TIME STANDING' ? 'selected' : ''}>${m}</option>`
+        `<option value="${m}">${m}</option>`
     ).join('');
     document.getElementById('btnAllTime').classList.toggle('active', currentMonth === 'ALL TIME STANDING');
 }
 
 function gantiBulan(m) {
     currentMonth = m;
-    if (m !== 'ALL TIME STANDING') {
-        try { localStorage.setItem('activeMonth', m); } catch(e) {}
-        document.getElementById('monthSelect').value = m;
-    }
     document.getElementById('btnAllTime').classList.toggle('active', m === 'ALL TIME STANDING');
+    if (m !== 'ALL TIME STANDING') document.getElementById('monthSelect').value = m;
     editingId = null;
     loadData();
     renderAdminArea();
 }
 
-// ── DATA ──────────────────────────────────────────────────────
-function loadData() {
+// ── LOAD DATA ─────────────────────────────────────────────────
+async function loadData() {
     const banner = document.getElementById('champBanner');
+    document.getElementById('mainContent').innerHTML = `<div class="empty-state">⏳ Memuat data...</div>`;
+
     if (currentMonth === 'ALL TIME STANDING') {
-        document.getElementById('sbMonthTitle').innerText = 'All Time Standing';
         banner.classList.add('hidden');
         toggleSidebarMode(true);
-        if (matchesRef) matchesRef.off();
-        renderAllTime();
-        updateSidebarAllTime();
-        return;
-    }
-    document.getElementById('sbMonthTitle').innerText = `Total Poin ${currentMonth}`;
-    document.getElementById('sbTrophyMonthTitle').innerText = currentMonth;
-    banner.classList.remove('hidden');
-    banner.innerHTML = '⏳ Memuat...';
-    toggleSidebarMode(false);
-    if (matchesRef) matchesRef.off();
-    matchesRef = db.ref(`${dbPath}/${currentMonth}/matches`);
-    console.log('CURRENT MONTH:', currentMonth);
-    matchesRef.on('value', snap => {
-	allMatchesCache = {};
-        if (editingId) return;
-        localData = snap.val() || {};
-        const counters = {};
-        Object.keys(localData).sort((a,b)=>(localData[a].timestamp||0)-(localData[b].timestamp||0)).forEach(id => {
-            const m = localData[id];
-            if (!m) return;
-            counters[m.tanggal] = (counters[m.tanggal]||0) + 1;
-            allMatchesCache[id] = {
-                bulan: currentMonth,
-                tanggal: m.tanggal,
-                ligaNum: counters[m.tanggal],
-                standings: m.standings,
-                manualJuara: m.manualJuara
-            };
-        });
-        renderMonthly(localData);
-        updateSidebar(localData);
-    });
-}
-
-// ── LISTEN MATCH INFO ─────────────────────────────────────────
-function listenMatchInfo() {
-    db.ref(`${dbPath}/matchInfo`).on('value', snap => {
-        matchInfoData = snap.val() || {};
-    });
-}
-
-function listenStats() {
-    if (statsRef) statsRef.off();
-    statsRef = db.ref(`${dbPath}/allTimeStats`);
-    statsRef.on('value', snap => {
-        const raw = snap.val() || {};
-        statsData = {};
-        ALL_PLAYERS.forEach(p => statsData[p] = { score:0, assist:0, formText:"" });
-        Object.keys(raw).forEach(k => {
-            const ck = fix(k);
-            if (!statsData[ck]) statsData[ck] = { score:0, assist:0, formText:"" };
-            statsData[ck].score    += raw[k].score  || 0;
-            statsData[ck].assist   += raw[k].assist  || 0;
-            statsData[ck].formText = raw[k].formText || "";
-        });
-        renderStatsCards();
-    });
-}
-
-// ── MODAL INFO PLAYER ─────────────────────────────────────────
-function bukaInfoPlayerMatch(nama, matchId) {
-    const mc = allMatchesCache[matchId];
-    if (!mc) return;
-    const mi = (matchInfoData[matchId] || {})[nama] || {};
-    const st = (mc.standings || []).find(p => fix(p.name) === nama) || {};
-
-    const w   = parseInt(st.w)  || 0;
-    const d   = parseInt(st.d)  || 0;
-    const l   = parseInt(st.l)  || 0;
-    const pl  = w + d + l;
-    const pct = winPct(w, pl);
-    const hari = getNamaHari(mc.tanggal, mc.bulan);
-
-    document.getElementById('infoModalTitle').innerText = nama;
-    document.getElementById('infoModalSubtitle').innerText = `📅 ${hari}, ${mc.tanggal} ${mc.bulan} — Liga ${mc.ligaNum}`;
-
-    let clubSection = buildClubDisplay(mi, w, d, l, pl, pct);
-    let adminSection = '';
-    if (modeAdmin) {
-        adminSection = buildAdminClubEdit(matchId, nama, mi);
-    }
-
-    document.getElementById('infoModalBody').innerHTML = `
-        <div class="league-card">
-            <div class="league-card-head">
-                <span class="lc-title">📋 Liga ${mc.ligaNum} — ${mc.bulan}</span>
-                <span class="lc-badge">Klik nama untuk edit</span>
-            </div>
-            <div class="league-card-body">
-                ${clubSection}
-                ${adminSection}
-            </div>
-        </div>
-    `;
-    document.getElementById('infoModal').classList.add('on');
-}
-
-function bukaInfoPlayerAllTime(nama) {
-    document.getElementById('infoModalTitle').innerText = nama;
-    document.getElementById('infoModalSubtitle').innerText = '🏆 Statistik per Klub — All Time';
-    document.getElementById('infoModalBody').innerHTML = `<div class="no-club" style="text-align:center;padding:20px;">⏳ Memuat data...</div>`;
-    document.getElementById('infoModal').classList.add('on');
-
-    db.ref(dbPath).once('value', snap => {
-        const root = snap.val() || {};
-
-        const clubStats = {};
-        let grandTotalW=0, grandTotalD=0, grandTotalL=0, grandTotalPl=0, grandLiga=0, grandJuara=0;
-
-        MONTHS.forEach(bulan => {
-            if (!root[bulan] || !root[bulan].matches) return;
-            const matches = root[bulan].matches;
-            Object.keys(matches).forEach(id => {
-                const match = matches[id];
-                if (!match || !match.standings || !Array.isArray(match.standings)) return;
-                const st = match.standings.find(p => fix(p.name) === nama);
-                if (!st) return;
-
-                const mi    = (matchInfoData[id] || {})[nama] || {};
-                const club  = (mi.club || '').trim() || '(Tidak Diisi)';
-                const isFT  = mi.isFullTransfer || false;
-                const w     = parseInt(st.w) || 0;
-                const d     = parseInt(st.d) || 0;
-                const l     = parseInt(st.l) || 0;
-                const pl    = w + d + l;
-                const pts   = parseInt(st.pts) || (w*3+d);
-
-                if (!clubStats[club]) {
-                    clubStats[club] = { liga:0, w:0, d:0, l:0, pl:0, pts:0, juara:0, isFT };
-                }
-                const sorted = sortStandings(match);
-                const isJuara = sorted.length > 0 && fix(sorted[0].name) === nama && (sorted[0].pts||0) > 0;
-
-                clubStats[club].liga  += 1;
-                clubStats[club].w     += w;
-                clubStats[club].d     += d;
-                clubStats[club].l     += l;
-                clubStats[club].pl    += pl;
-                clubStats[club].pts   += pts;
-                clubStats[club].juara += isJuara ? 1 : 0;
-                if (isFT) clubStats[club].isFT = true;
-
-                grandTotalW  += w;
-                grandTotalD  += d;
-                grandTotalL  += l;
-                grandTotalPl += pl;
-                grandLiga    += 1;
-                if (isJuara) grandJuara += 1;
-            });
-        });
-
-        const clubs = Object.keys(clubStats);
-
-        if (!clubs.length) {
-            document.getElementById('infoModalBody').innerHTML =
-                `<div class="no-club" style="text-align:center;padding:20px;">Belum ada data klub untuk ${nama}.</div>`;
-            return;
-        }
-
-        clubs.sort((a,b) => {
-            if (clubStats[b].liga !== clubStats[a].liga) return clubStats[b].liga - clubStats[a].liga;
-            const wrA = clubStats[a].pl > 0 ? clubStats[a].w / clubStats[a].pl : 0;
-            const wrB = clubStats[b].pl > 0 ? clubStats[b].w / clubStats[b].pl : 0;
-            return wrB - wrA;
-        });
-
-        const grandPct  = winPct(grandTotalW, grandTotalPl);
-        const grandPts  = grandTotalW * 3 + grandTotalD;
-
-        // CHANGED: Juara stat moved to FIRST position in grand total
-        let html = `
-            <div style="background:linear-gradient(135deg,#37003c,#6a0dad);border-radius:12px;padding:14px 16px;margin-bottom:16px;color:white;">
-                <div style="font-size:0.68rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;opacity:0.7;margin-bottom:10px;">📊 Grand Total — ${grandLiga} Liga</div>
-                <div style="display:flex;gap:10px;flex-wrap:wrap;">
-                    <div style="text-align:center;background:rgba(255,215,0,0.25);border-radius:8px;padding:8px 14px;min-width:50px;border:1px solid rgba(255,215,0,0.4);">
-                        <div style="font-size:1.4rem;font-weight:900;color:#ffd700;">${grandJuara}</div>
-                        <div style="font-size:0.58rem;font-weight:700;opacity:0.8;text-transform:uppercase;margin-top:2px;">🏆 Juara</div>
-                    </div>
-                    <div style="text-align:center;background:rgba(255,255,255,0.12);border-radius:8px;padding:8px 14px;min-width:50px;">
-                        <div style="font-size:1.4rem;font-weight:900;color:#00ff85;">${grandTotalW}</div>
-                        <div style="font-size:0.58rem;font-weight:700;opacity:0.7;text-transform:uppercase;margin-top:2px;">Win</div>
-                    </div>
-                    <div style="text-align:center;background:rgba(255,255,255,0.12);border-radius:8px;padding:8px 14px;min-width:50px;">
-                        <div style="font-size:1.4rem;font-weight:900;color:#d0d0d0;">${grandTotalD}</div>
-                        <div style="font-size:0.58rem;font-weight:700;opacity:0.7;text-transform:uppercase;margin-top:2px;">Draw</div>
-                    </div>
-                    <div style="text-align:center;background:rgba(255,255,255,0.12);border-radius:8px;padding:8px 14px;min-width:50px;">
-                        <div style="font-size:1.4rem;font-weight:900;color:#ff6b6b;">${grandTotalL}</div>
-                        <div style="font-size:0.58rem;font-weight:700;opacity:0.7;text-transform:uppercase;margin-top:2px;">Loss</div>
-                    </div>
-                    <div style="text-align:center;background:rgba(255,255,255,0.12);border-radius:8px;padding:8px 14px;min-width:50px;">
-                        <div style="font-size:1.4rem;font-weight:900;color:white;">${grandTotalPl}</div>
-                        <div style="font-size:0.58rem;font-weight:700;opacity:0.7;text-transform:uppercase;margin-top:2px;">Main</div>
-                    </div>
-                    <div style="text-align:center;background:rgba(233,0,82,0.4);border-radius:8px;padding:8px 14px;min-width:50px;">
-                        <div style="font-size:1.4rem;font-weight:900;color:#fff;">${grandPct}%</div>
-                        <div style="font-size:0.58rem;font-weight:700;opacity:0.7;text-transform:uppercase;margin-top:2px;">Win%</div>
-                    </div>
-                    <div style="text-align:center;background:rgba(255,255,255,0.12);border-radius:8px;padding:8px 14px;min-width:50px;">
-                        <div style="font-size:1.4rem;font-weight:900;color:#fdbb2d;">${grandPts}</div>
-                        <div style="font-size:0.58rem;font-weight:700;opacity:0.7;text-transform:uppercase;margin-top:2px;">Pts</div>
-                    </div>
-                </div>
-            </div>
-            <div style="font-size:0.68rem;font-weight:700;color:var(--sub);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;">⚽ Statistik per Klub (${clubs.length} klub)</div>`;
-
-        clubs.forEach((club, idx) => {
-            const cs  = clubStats[club];
-            const pct = winPct(cs.w, cs.pl);
-            const isUnknown = club === '(Tidak Diisi)';
-            const isBest = idx === 0 && !isUnknown;
-
-            // CHANGED: Juara stat pill first in per-club cards too
-            html += `
-                <div class="league-card" style="margin-bottom:10px;">
-                    <div class="league-card-head" style="${isBest ? 'background:linear-gradient(90deg,#fff9c4,#fff3e0);' : ''}">
-                        <div>
-                            <span class="lc-title" style="${isUnknown ? 'color:#aaa;font-style:italic;' : ''}">
-                                ${isBest ? '🥇 ' : ''}⚽ ${escHtml(club)}
-                                ${cs.isFT ? '<span style="background:#fff3e0;color:#e65100;font-size:0.6rem;font-weight:700;padding:1px 6px;border-radius:5px;border:1px solid #ffcc80;margin-left:4px;font-family:Barlow,sans-serif;">FULL TRANSFER</span>' : ''}
-                            </span>
-                            <div style="font-size:0.68rem;color:var(--sub);margin-top:2px;">${cs.liga}x Liga dipakai</div>
-                        </div>
-                        <span class="lc-badge" style="background:${pct>=60?'var(--win)':pct>=40?'#888':'var(--loss)'};">${pct}% WR</span>
-                    </div>
-                    <div class="league-card-body">
-                        <div class="stat-pills">
-                            <div class="stat-pill" style="background:${cs.juara>0?'#fffde7':'#f5f5f5'};${cs.juara>0?'border:1px solid #ffd700;':''}">
-                                <span class="sp-val" style="color:${cs.juara>0?'#c6a000':'#bbb'};">${cs.juara}🏆</span>
-                                <span class="sp-lbl">Juara</span>
-                            </div>
-                            <div class="stat-pill"><span class="sp-val win">${cs.w}</span><span class="sp-lbl">Win</span></div>
-                            <div class="stat-pill"><span class="sp-val draw">${cs.d}</span><span class="sp-lbl">Draw</span></div>
-                            <div class="stat-pill"><span class="sp-val loss">${cs.l}</span><span class="sp-lbl">Loss</span></div>
-                            <div class="stat-pill"><span class="sp-val">${cs.pl}</span><span class="sp-lbl">Main</span></div>
-                            <div class="stat-pill"><span class="sp-val pct">${pct}%</span><span class="sp-lbl">Win%</span></div>
-                            <div class="stat-pill"><span class="sp-val" style="color:#fdbb2d;">${cs.pts}</span><span class="sp-lbl">Pts</span></div>
-                        </div>
-                        <div class="win-bar-wrap">
-                            <div class="win-bar-label">
-                                <span>Win Rate</span>
-                                <span>${cs.w}W · ${cs.d}D · ${cs.l}L dari ${cs.pl} pertandingan</span>
-                            </div>
-                            <div class="win-bar-bg">
-                                <div class="win-bar-fill" style="width:${pct}%;background:${pct>=60?'linear-gradient(90deg,var(--win),#00e676)':pct>=40?'linear-gradient(90deg,#888,#bbb)':'linear-gradient(90deg,var(--loss),#ff8a80)'};"></div>
-                            </div>
-                        </div>
-                    </div>
-                </div>`;
-        });
-
-        document.getElementById('infoModalBody').innerHTML = html;
-    });
-}
-
-function buildClubDisplay(mi, w, d, l, pl, pct) {
-    const club = mi.club || '';
-    const isFT = mi.isFullTransfer || false;
-
-    let clubHtml = '';
-    if (club) {
-        clubHtml = `
-            <div class="club-name">
-                ⚽ ${escHtml(club)}
-                ${isFT ? '<span class="full-transfer-tag">FULL TRANSFER</span>' : ''}
-            </div>`;
+        await renderAllTime();
+        await updateSidebarAllTime();
     } else {
-        clubHtml = `<div class="no-club">Klub belum diisi${modeAdmin ? ' — isi via tombol Edit di bawah' : ''}.</div>`;
+        banner.classList.remove('hidden');
+        banner.innerHTML = '⏳ Memuat...';
+        toggleSidebarMode(false);
+        document.getElementById('sbMonthTitle').innerText = `Total Poin ${currentMonth}`;
+        document.getElementById('sbTrophyMonthTitle').innerText = currentMonth;
+        await loadMonthly();
     }
-
-    return `
-        ${clubHtml}
-        <div class="stat-pills">
-            <div class="stat-pill"><span class="sp-val win">${w}</span><span class="sp-lbl">Win</span></div>
-            <div class="stat-pill"><span class="sp-val draw">${d}</span><span class="sp-lbl">Draw</span></div>
-            <div class="stat-pill"><span class="sp-val loss">${l}</span><span class="sp-lbl">Loss</span></div>
-            <div class="stat-pill"><span class="sp-val">${pl}</span><span class="sp-lbl">Main</span></div>
-            <div class="stat-pill"><span class="sp-val pct">${pct}%</span><span class="sp-lbl">Win%</span></div>
-        </div>
-        <div class="win-bar-wrap">
-            <div class="win-bar-label"><span>Win Rate</span><span>${pct}%</span></div>
-            <div class="win-bar-bg"><div class="win-bar-fill" style="width:${pct}%"></div></div>
-        </div>`;
+    await loadMatchInfo();
 }
 
-function buildAdminClubEdit(matchId, nama, mi) {
-    const safeId  = matchId.replace(/[^a-zA-Z0-9_-]/g, '_');
-    const curClub = escHtml(mi.club || '');
-    const isFT    = mi.isFullTransfer || false;
-    return `
-        <div class="admin-club-edit">
-            <label>✏️ Edit Klub (Admin)</label>
-            <input class="admin-club-input" id="clubInput_${safeId}_${nama}"
-                placeholder="contoh: Real Madrid" value="${curClub}">
-            <label class="admin-club-check">
-                <input type="checkbox" id="ftCheck_${safeId}_${nama}" ${isFT?'checked':''}>
-                Full Transfer
-            </label>
-            <button class="btn-save-club" onclick="simpanKlub('${matchId}','${nama}','${safeId}')">💾 Simpan Klub</button>
-        </div>`;
+async function loadMonthly() {
+    const { data: matches, error } = await sb
+        .from('matches')
+        .select('*, standings(*)')
+        .eq('mode', currentMode)
+        .eq('bulan', currentMonth)
+        .order('timestamp', { ascending: true });
+
+    if (error) { console.error(error); document.getElementById('mainContent').innerHTML = `<div class="empty-state">❌ Error: ${error.message}</div>`; return; }
+
+    localData = matches || [];
+    renderMonthly(localData);
+    await updateSidebar(localData);
 }
 
-function simpanKlub(matchId, nama, safeId) {
-    const clubVal = (document.getElementById(`clubInput_${safeId}_${nama}`)?.value || '').trim();
-    const ftVal   = document.getElementById(`ftCheck_${safeId}_${nama}`)?.checked || false;
-    db.ref(`${dbPath}/matchInfo/${matchId}/${nama}`).set({ club: clubVal, isFullTransfer: ftVal })
-      .then(() => {
-          alert(`✅ Data klub ${nama} berhasil disimpan!`);
-          if (!matchInfoData[matchId]) matchInfoData[matchId] = {};
-          matchInfoData[matchId][nama] = { club: clubVal, isFullTransfer: ftVal };
-      })
-      .catch(e => alert('❌ Gagal: ' + e.message));
+async function loadMatchInfo() {
+    // Load match_info for all matches of current mode
+    const { data, error } = await sb
+        .from('match_info')
+        .select('match_id, player_name, club, is_full_transfer');
+
+    if (!error && data) {
+        matchInfoData = {};
+        data.forEach(r => {
+            if (!matchInfoData[r.match_id]) matchInfoData[r.match_id] = {};
+            matchInfoData[r.match_id][r.player_name] = { club: r.club, is_full_transfer: r.is_full_transfer };
+        });
+    }
 }
 
-function tutupInfoPlayer() {
-    document.getElementById('infoModal').classList.remove('on');
-}
+async function loadStats() {
+    const { data, error } = await sb
+        .from('all_time_stats')
+        .select('*')
+        .eq('mode', currentMode);
 
-function tutupInfoModalOutside(e) {
-    if (e.target === document.getElementById('infoModal')) tutupInfoPlayer();
-}
-
-function escHtml(str) {
-    return (str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+    statsData = {};
+    ALL_PLAYERS.forEach(p => statsData[p] = { score: 0, assist: 0, form_text: '' });
+    if (!error && data) {
+        data.forEach(r => {
+            const n = fix(r.player_name);
+            statsData[n] = { score: r.score || 0, assist: r.assist || 0, form_text: r.form_text || '' };
+        });
+    }
+    renderStatsCards();
 }
 
 // ── ALL TIME STANDING ─────────────────────────────────────────
-function renderAllTime() {
-    document.getElementById('mainContent').innerHTML = `<div class="empty-state">Memuat data...</div>`;
-    db.ref(dbPath).once('value', snap => {
-        const root = snap.val() || {};
-        const stats = {};
-        ALL_PLAYERS.forEach(p => { stats[p] = { pl:0,w:0,d:0,l:0,gf:0,ga:0,gd:0,pts:0,form:[] }; });
+async function renderAllTime() {
+    const { data: matches, error } = await sb
+        .from('matches')
+        .select('*, standings(*)')
+        .eq('mode', currentMode)
+        .order('timestamp', { ascending: true });
 
-        let allMatches = [];
-        MONTHS.forEach(m => {
-            if (root[m] && root[m].matches)
-                Object.values(root[m].matches).forEach(match => {
-                    if (match && match.standings && Array.isArray(match.standings)) allMatches.push(match);
-                });
+    if (error || !matches || !matches.length) {
+        document.getElementById('mainContent').innerHTML = `<div class="empty-state">Belum ada data untuk Mode ${currentMode} Player.</div>`;
+        return;
+    }
+
+    const stats = {};
+    ALL_PLAYERS.forEach(p => { stats[p] = { pl:0,w:0,d:0,l:0,gf:0,ga:0,gd:0,pts:0,form:[] }; });
+
+    matches.forEach(match => {
+        (match.standings || []).forEach(p => {
+            const n = fix(p.player_name);
+            if (!stats[n]) return;
+            const w=parseInt(p.w)||0, d=parseInt(p.d)||0, l=parseInt(p.l)||0;
+            const f=parseInt(p.f)||0, a=parseInt(p.a)||0;
+            stats[n].pl += w+d+l; stats[n].w += w; stats[n].d += d; stats[n].l += l;
+            stats[n].gf += f; stats[n].ga += a; stats[n].gd += f-a;
+            stats[n].pts += parseInt(p.pts)||0;
         });
-        allMatches.sort((a,b) => (a.timestamp||0)-(b.timestamp||0));
-
-        allMatches.forEach(match => {
-            match.standings.forEach(p => {
-                const n = fix(p.name);
-                if (!stats[n]) return;
-                const w=parseInt(p.w)||0, d=parseInt(p.d)||0, l=parseInt(p.l)||0;
-                const f=parseInt(p.f)||0, a=parseInt(p.a)||0;
-                stats[n].pl += w+d+l; stats[n].w += w; stats[n].d += d; stats[n].l += l;
-                stats[n].gf += f; stats[n].ga += a; stats[n].gd += f-a;
-                stats[n].pts += parseInt(p.pts)||0;
-            });
-        });
-
-        Object.keys(stats).forEach(n => {
-            const cForm = statsData[n] && statsData[n].formText ? statsData[n].formText : "";
-            stats[n].form = cForm.toUpperCase().replace(/[^WDL]/g, '').split('').slice(-5);
-        });
-
-        const sorted = Object.keys(stats).map(name => ({name, ...stats[name]}))
-            .filter(p => p.pl > 0)
-            .sort((a,b) => b.pts-a.pts || b.gd-a.gd || b.gf-a.gf);
-
-        if (!sorted.length) {
-            document.getElementById('mainContent').innerHTML = `<div class="empty-state">Belum ada data untuk Mode ${currentMode} Player.</div>`;
-            return;
-        }
-        document.getElementById('mainContent').innerHTML = buildEplBlock(sorted, 'ALL TIME STANDING', true, false, [], true, null);
     });
+
+    Object.keys(stats).forEach(n => {
+        const ft = (statsData[n] && statsData[n].form_text) ? statsData[n].form_text : "";
+        stats[n].form = ft.toUpperCase().replace(/[^WDL]/g, '').split('').slice(-5);
+    });
+
+    const sorted = Object.keys(stats).map(name => ({ name, ...stats[name] }))
+        .filter(p => p.pl > 0)
+        .sort((a,b) => b.pts-a.pts || b.gd-a.gd || b.gf-a.gf);
+
+    if (!sorted.length) {
+        document.getElementById('mainContent').innerHTML = `<div class="empty-state">Belum ada data untuk Mode ${currentMode} Player.</div>`;
+        return;
+    }
+    document.getElementById('mainContent').innerHTML = buildEplBlock(sorted, true, false, [], true, null);
 }
 
 // ── MONTHLY MATCHES ───────────────────────────────────────────
@@ -1450,80 +628,73 @@ function renderMonthly(matches) {
     const el = document.getElementById('mainContent');
     el.innerHTML = '';
 
-    if (!matches || !Object.keys(matches).length) {
+    if (!matches || !matches.length) {
         el.innerHTML = `<div class="empty-state">Belum ada klasemen di bulan <strong>${currentMonth}</strong> untuk Mode <strong>${currentMode} Player</strong>.</div>`;
         return;
     }
 
-    const ids = Object.keys(matches).sort((a,b) => (matches[a].timestamp||0)-(matches[b].timestamp||0));
     const counters = {};
-
-    ids.forEach(id => {
-        const m = matches[id];
-        if (!m || !m.standings || !Array.isArray(m.standings)) return;
-
+    matches.forEach(m => {
         counters[m.tanggal] = (counters[m.tanggal]||0) + 1;
         const ligaNum = counters[m.tanggal];
-        const isEdit  = editingId === id;
-        const s       = sortStandings(m);
-        const winner  = (s[0] && (s[0].pts||0) > 0) ? s[0].name : '-';
-        const hari    = getNamaHari(m.tanggal||1, currentMonth);
+        const isEdit  = editingId === m.id;
+        const standings = m.standings || [];
+        const s = sortStandings(standings, m.manual_juara);
+        const winner = (s[0] && (s[0].pts||0) > 0) ? fix(s[0].player_name) : '-';
+        const hari = getNamaHari(m.tanggal||1, currentMonth);
 
         const heading = isEdit
             ? `<select id="editTgl" style="padding:4px 8px;border-radius:6px;border:none;font-family:'Barlow',sans-serif;font-weight:700;">${Array.from({length:31},(_,i)=>`<option value="${i+1}" ${m.tanggal==i+1?'selected':''}>Tgl ${i+1}</option>`).join('')}</select>`
             : `📅 ${hari}, ${m.tanggal||1} ${currentMonth}`;
 
-        let html = `<div class="match-block" id="mb-${id}">
+        const rowData = s.map((p,i) => {
+            const gd = (p.f||0)-(p.a||0);
+            return { name: fix(p.player_name), pos: i+1, pl:(p.w||0)+(p.d||0)+(p.l||0), w:p.w||0, d:p.d||0, l:p.l||0, gf:p.f||0, ga:p.a||0, gd, pts:p.pts||0, form:[], manualRank:p.manual_rank, isWin:i===0&&(p.pts||0)>0 };
+        });
+
+        let html = `<div class="match-block" id="mb-${m.id}">
             <div class="section-head">
                 <span>${heading}</span>
                 <span class="badge-liga">Liga ${ligaNum}</span>
                 <span style="margin-left:auto;display:flex;align-items:center;gap:4px;">
                     <span style="background:rgba(255,255,255,0.15);padding:3px 10px;border-radius:10px;font-size:0.72rem;font-weight:600;">🏆 ${winner}</span>
-                    ${modeAdmin && !isEdit ? `<button class="btn-del" onclick="hapus('${id}')">🗑️</button>` : ''}
-                    ${modeAdmin ? `<button class="${isEdit?'btn-save':'btn-edit'}" onclick="${isEdit?`simpan('${id}')`:`edit('${id}')`}">${isEdit?'💾 Simpan':'✏️ Edit'}</button>` : ''}
+                    ${modeAdmin && !isEdit ? `<button class="btn-del" onclick="hapus('${m.id}')">🗑️</button>` : ''}
+                    ${modeAdmin ? `<button class="${isEdit?'btn-save':'btn-edit'}" onclick="${isEdit?`simpan('${m.id}')`:`edit('${m.id}')`}">${isEdit?'💾 Simpan':'✏️ Edit'}</button>` : ''}
                 </span>
             </div>`;
 
-        const rowData = s.map((p,i) => {
-            const gd = p.gd||0;
-            return { name: p.name, pos: i+1, pl: (p.w||0)+(p.d||0)+(p.l||0), w: p.w||0, d: p.d||0, l: p.l||0, gf: p.f||0, ga: p.a||0, gd, pts: p.pts||0, form: [], manualRank: p.manualRank, isWin: i===0&&(p.pts||0)>0 };
-        });
-
-        html += buildEplBlock(rowData, null, false, isEdit, s, false, id);
+        html += buildEplBlock(rowData, false, isEdit, s, false, m.id);
         html += `</div>`;
         el.innerHTML += html;
     });
 }
 
-// ── SHARED EPL TABLE BUILDER ──────────────────────────────────
-function buildEplBlock(rowData, title, showForm, isEdit=false, rawStandings=[], showWinPct=false, matchId=null) {
-
+// ── EPL TABLE BUILDER ─────────────────────────────────────────
+function buildEplBlock(rowData, showForm, isEdit=false, rawStandings=[], showWinPct=false, matchId=null) {
     const topN = Math.min(rowData.length, 3);
+    const isAllTime = (matchId === null);
     const winPctThDesktop = showWinPct ? '<th>WINS%</th>' : '';
 
-    const makeNameHtml = (name, crown, isAllTime) => {
+    const makeNameHtml = (name, crown) => {
         if (isAllTime) {
-            return `<span class="clickable-name" onclick="bukaInfoPlayerAllTime('${name}')" title="Klik untuk lihat semua rekap">${name}${crown}</span>`;
+            return `<span class="clickable-name" onclick="bukaInfoPlayerAllTime('${name}')">${name}${crown}</span>`;
         } else {
-            return `<span class="clickable-name" onclick="bukaInfoPlayerMatch('${name}','${matchId}')" title="Klik untuk info klub liga ini">${name}${crown}</span>`;
+            return `<span class="clickable-name" onclick="bukaInfoPlayerMatch('${name}','${matchId}')">${name}${crown}</span>`;
         }
     };
 
-    const isAllTime = (matchId === null);
-
     const dRows = rowData.map((p,i) => {
         const barCls = i < topN ? 'bar-top' : 'bar-mid';
-        const posCls = i < topN ? 'top' : '';
-        const gd     = p.gd;
+        const gd = p.gd;
         const winCls = p.isWin ? 'win-row' : '';
         const crown  = p.isWin ? ' 👑' : '';
         const formHtml = showForm ? `<td><div class="form-row">${formCircles(p.form)}</div></td>` : '';
-        const winPctCell = showWinPct ? `<td style="font-weight:700; color:var(--purple);">${p.pl > 0 ? winPct(p.w,p.pl) : 0}%</td>` : '';
-        const pNameHtml = makeNameHtml(p.name, crown, isAllTime);
+        const winPctCell = showWinPct ? `<td style="font-weight:700;color:var(--purple);">${p.pl>0?winPct(p.w,p.pl):0}%</td>` : '';
+        const pNameHtml = makeNameHtml(p.name, crown);
 
         let wCell, dCell, lCell, fCell, aCell;
         if (isEdit) {
-            const raw = rawStandings[i] || {};
+            const raw = rawStandings.find(r => fix(r.player_name) === p.name) || {};
             wCell = `<td><input type="number" class="tbl-in w-in" data-n="${p.name}" value="${raw.w||0}" oninput="recalc(this)"></td>`;
             dCell = `<td><input type="number" class="tbl-in d-in" data-n="${p.name}" value="${raw.d||0}" oninput="recalc(this)"></td>`;
             lCell = `<td><input type="number" class="tbl-in l-in" data-n="${p.name}" value="${raw.l||0}"></td>`;
@@ -1533,68 +704,60 @@ function buildEplBlock(rowData, title, showForm, isEdit=false, rawStandings=[], 
             wCell = `<td>${p.w}</td>`; dCell = `<td>${p.d}</td>`; lCell = `<td>${p.l}</td>`;
             fCell = `<td>${p.gf}</td>`; aCell = `<td>${p.ga}</td>`;
         }
-        const rankCell = isEdit ? `<td><select class="tbl-in rank-in" data-n="${p.name}" style="width:48px;">${[1,2,3,4].map(n=>`<option value="${n}" ${(rawStandings[i]||{}).manualRank==n?'selected':''}>${n}</option>`).join('')}</select></td>` : '';
-        const ptsCell  = isEdit
+        const rankCell = isEdit ? `<td><select class="tbl-in rank-in" data-n="${p.name}" style="width:48px;">${[1,2,3,4].map(n=>`<option value="${n}" ${(rawStandings.find(r=>fix(r.player_name)===p.name)||{}).manual_rank==n?'selected':''}>${n}</option>`).join('')}</select></td>` : '';
+        const ptsCell = isEdit
             ? `<td><input class="tbl-in tbl-in-pts pts-in" data-n="${p.name}" value="${p.pts}" readonly></td>`
             : `<td class="pts-big">${p.pts}</td>`;
 
         return `<tr class="${winCls}">
-            <td><div class="pos-wrap"><div class="pos-bar ${barCls}"></div><span class="pos-num ${posCls}">${i+1}</span></div></td>
+            <td><div class="pos-wrap"><div class="pos-bar ${barCls}"></div><span class="pos-num ${i<topN?'top':''}">${i+1}</span></div></td>
             <td class="tl">${pNameHtml}</td>
             <td>${p.pl}</td>
             ${wCell}${dCell}${lCell}${fCell}${aCell}
             <td class="${gdClass(gd)}">${gdStr(gd)}</td>
-            ${ptsCell}
-            ${winPctCell}
-            ${formHtml}
-            ${rankCell}
+            ${ptsCell}${winPctCell}${formHtml}${rankCell}
         </tr>`;
     }).join('');
 
     const mShort = rowData.map((p,i) => {
         const barCls = i < topN ? 'bar-top' : 'bar-mid';
         const crown  = p.isWin ? ' 👑' : '';
-        const pNameHtml = makeNameHtml(p.name, crown, isAllTime);
         const winPctCellMob = showWinPct ? `<td style="font-weight:700;color:var(--purple);">${p.pl>0?winPct(p.w,p.pl):0}%</td>` : '';
         return `<tr class="${p.isWin?'win-row':''}">
             <td><div class="pos-wrap"><div class="pos-bar ${barCls}"></div><span class="pos-num ${i<topN?'top':''}">${i+1}</span></div></td>
-            <td class="tl">${pNameHtml}</td>
+            <td class="tl">${makeNameHtml(p.name,crown)}</td>
             <td>${p.pl}</td><td>${p.w}</td><td>${p.d}</td><td>${p.l}</td>
-            <td class="pts-big">${p.pts}</td>
-            ${winPctCellMob}
+            <td class="pts-big">${p.pts}</td>${winPctCellMob}
         </tr>`;
     }).join('');
 
     const mFull = rowData.map((p,i) => {
         const barCls = i < topN ? 'bar-top' : 'bar-mid';
         const crown  = p.isWin ? ' 👑' : '';
-        const pNameHtml = makeNameHtml(p.name, crown, isAllTime);
         const winPctCellMob = showWinPct ? `<td style="font-weight:700;color:var(--purple);">${p.pl>0?winPct(p.w,p.pl):0}%</td>` : '';
         return `<tr class="${p.isWin?'win-row':''}">
             <td><div class="pos-wrap"><div class="pos-bar ${barCls}"></div><span class="pos-num ${i<topN?'top':''}">${i+1}</span></div></td>
-            <td class="tl">${pNameHtml}</td>
+            <td class="tl">${makeNameHtml(p.name,crown)}</td>
             <td>${p.pl}</td><td>${p.w}</td><td>${p.d}</td><td>${p.l}</td>
             <td>${p.gf}</td><td>${p.ga}</td>
             <td class="${gdClass(p.gd)}">${gdStr(p.gd)}</td>
-            <td class="pts-big">${p.pts}</td>
-            ${winPctCellMob}
+            <td class="pts-big">${p.pts}</td>${winPctCellMob}
         </tr>`;
     }).join('');
 
     const mForm = showForm ? rowData.map((p,i) => {
         const barCls = i < topN ? 'bar-top' : 'bar-mid';
         const crown  = p.isWin ? ' 👑' : '';
-        const pNameHtml = makeNameHtml(p.name, crown, isAllTime);
         return `<tr class="${p.isWin?'win-row':''}">
             <td><div class="pos-wrap"><div class="pos-bar ${barCls}"></div><span class="pos-num ${i<topN?'top':''}">${i+1}</span></div></td>
-            <td class="tl">${pNameHtml}</td>
+            <td class="tl">${makeNameHtml(p.name,crown)}</td>
             <td><div class="form-row" style="justify-content:flex-start;">${formCircles(p.form)}</div></td>
         </tr>`;
     }).join('') : '';
 
     const tid = 'tbl' + Math.random().toString(36).slice(2,7);
     const formThDesktop = showForm ? '<th>Form</th>' : '';
-    const rankThDesktop = isEdit   ? '<th>Rank</th>' : '';
+    const rankThDesktop = isEdit ? '<th>Rank</th>' : '';
 
     return `
         <div class="tbl-wrap desktop-only">
@@ -1609,7 +772,6 @@ function buildEplBlock(rowData, title, showForm, isEdit=false, rawStandings=[], 
                 <tbody>${dRows}</tbody>
             </table>
         </div>
-
         <div class="mob-tabs">
             <div class="mob-tab-btns">
                 <button class="mob-tab-btn on" onclick="swTab(this,'${tid}','short')">Short</button>
@@ -1628,8 +790,7 @@ function buildEplBlock(rowData, title, showForm, isEdit=false, rawStandings=[], 
                 <thead><tr><th style="width:38px;">Pos</th><th class="tl">Player</th><th>Form</th></tr></thead>
                 <tbody>${mForm}</tbody>
             </table>` : ''}
-        </div>
-    `;
+        </div>`;
 }
 
 function swTab(btn, tid, tab) {
@@ -1652,7 +813,7 @@ function recalc(el) {
     if (pts) pts.value = w*3+d;
 }
 
-function simpan(id) {
+async function simpan(matchId) {
     const tgl  = document.getElementById('editTgl').value;
     const wEls = document.querySelectorAll('.w-in');
     const dEls = document.querySelectorAll('.d-in');
@@ -1661,132 +822,130 @@ function simpan(id) {
     const aEls = document.querySelectorAll('.a-in');
     const rEls = document.querySelectorAll('.rank-in');
 
-    const standings = Array.from(wEls).map((el,i) => {
+    // Update match tanggal
+    await sb.from('matches').update({ tanggal: parseInt(tgl) }).eq('id', matchId);
+
+    // Update each standing
+    const updates = Array.from(wEls).map((el,i) => {
         const n = el.getAttribute('data-n');
         const w=parseInt(el.value)||0, d=parseInt(dEls[i].value)||0, l=parseInt(lEls[i].value)||0;
         const f=parseInt(fEls[i].value)||0, a=parseInt(aEls[i].value)||0;
-        return { name:n, w, d, l, f, a, gd:f-a, pts:w*3+d, manualRank:parseInt(rEls[i].value)||1 };
+        return sb.from('standings').update({
+            w, d, l, f, a, gd: f-a, pts: w*3+d, manual_rank: parseInt(rEls[i].value)||1
+        }).eq('match_id', matchId).eq('player_name', n);
     });
 
-    db.ref(`${dbPath}/${currentMonth}/matches/${id}`).update({ tanggal:parseInt(tgl), standings, manualJuara:null })
-      .then(() => { editingId = null; loadData(); });
+    await Promise.all(updates);
+    editingId = null;
+    await loadMonthly();
 }
 
-function hapus(id) { if (confirm("Hapus liga ini?")) db.ref(`${dbPath}/${currentMonth}/matches/${id}`).remove(); }
+async function hapus(id) {
+    if (!confirm("Hapus liga ini?")) return;
+    await sb.from('matches').delete().eq('id', id);
+    await loadMonthly();
+}
 
 // ── SIDEBAR ───────────────────────────────────────────────────
-function updateSidebar(monthlyMatches) {
-    db.ref(dbPath).once('value', snap => {
-        const root = snap.val() || {};
-        let ptsAll={}, trophyAll={}, ptsMonth={}, trophyMonth={};
-        activeSet = new Set();
+async function updateSidebar(monthMatches) {
+    // All time data
+    const { data: allMatches } = await sb.from('matches').select('*, standings(*)').eq('mode', currentMode);
 
-        Object.values(root).forEach(m => {
-            if (!m || !m.matches) return;
-            Object.values(m.matches).forEach(match => {
-                if (!match || !match.standings || !Array.isArray(match.standings)) return;
-                const s = sortStandings(match);
-                match.standings.forEach(p => {
-                    const n = fix(p.name);
-                    activeSet.add(n);
-                    ptsAll[n] = (ptsAll[n]||0) + (p.pts||0);
-                });
-                if (s[0] && (s[0].pts||0) > 0) {
-                    const wn = fix(s[0].name);
-                    trophyAll[wn] = (trophyAll[wn]||0)+1;
-                }
-            });
+    let ptsAll={}, trophyAll={}, ptsMonth={}, trophyMonth={};
+    activeSet = new Set();
+
+    (allMatches || []).forEach(match => {
+        const s = sortStandings(match.standings || [], match.manual_juara);
+        (match.standings || []).forEach(p => {
+            const n = fix(p.player_name);
+            activeSet.add(n);
+            ptsAll[n] = (ptsAll[n]||0) + (p.pts||0);
         });
-
-        if (monthlyMatches) {
-            Object.values(monthlyMatches).forEach(match => {
-                if (!match || !match.standings || !Array.isArray(match.standings)) return;
-                const s = sortStandings(match);
-                match.standings.forEach(p => { const n=fix(p.name); ptsMonth[n]=(ptsMonth[n]||0)+(p.pts||0); });
-                if (s[0] && (s[0].pts||0) > 0) { const wn=fix(s[0].name); trophyMonth[wn]=(trophyMonth[wn]||0)+1; }
-            });
+        if (s[0] && (s[0].pts||0) > 0) {
+            const wn = fix(s[0].player_name);
+            trophyAll[wn] = (trophyAll[wn]||0)+1;
         }
-
-        const list = modeAdmin ? ALL_PLAYERS : Array.from(activeSet);
-
-        const trophyMonthSorted = list.map(n => [n, trophyMonth[n]||0]).sort((a,b) => b[1]-a[1]);
-        document.getElementById('sbTrophyMonthBody').innerHTML = trophyMonthSorted.map(([n,t],i) =>
-            `<tr class="${i===0&&t>0?'sb-r1':''}"><td class="tl">${i===0&&t>0?'👑 ':''}<strong>${n}</strong></td><td class="trophy-count">${t>0?t+'x 🏆':'—'}</td></tr>`
-        ).join('');
-
-        const sm = list.map(n => [n, ptsMonth[n]||0]).sort((a,b) => b[1]-a[1]);
-        document.getElementById('sbMonthBody').innerHTML = sm.map(([n,p],i) =>
-            `<tr class="${i===0?'sb-r1':''}"><td class="tl">${i===0&&p>0?'👑 ':''}<strong>${n}</strong></td><td class="sb-pts">${p}</td></tr>`
-        ).join('');
-
-        const tList = Object.entries(trophyMonth).sort((a,b) => b[1]-a[1]);
-        const banner = document.getElementById('champBanner');
-        if (tList.length > 0 && tList[0][1] > 0) {
-            const max = tList[0][1];
-            const winners = tList.filter(t=>t[1]===max).map(t=>`${t[0]} (${t[1]}x🏆)`);
-            banner.innerHTML = `🌟 CHAMPION ${currentMonth.toUpperCase()}: ${winners.join(' & ')} 🌟`;
-        } else {
-            banner.innerHTML = `Belum ada juara di bulan ${currentMonth}`;
-        }
-
-        renderStatsCards();
     });
+
+    (monthMatches || []).forEach(match => {
+        const s = sortStandings(match.standings || [], match.manual_juara);
+        (match.standings || []).forEach(p => { const n=fix(p.player_name); ptsMonth[n]=(ptsMonth[n]||0)+(p.pts||0); });
+        if (s[0] && (s[0].pts||0) > 0) { const wn=fix(s[0].player_name); trophyMonth[wn]=(trophyMonth[wn]||0)+1; }
+    });
+
+    const list = modeAdmin ? ALL_PLAYERS : Array.from(activeSet);
+
+    // Trophy month
+    const trophyMonthSorted = list.map(n => [n, trophyMonth[n]||0]).sort((a,b) => b[1]-a[1]);
+    document.getElementById('sbTrophyMonthBody').innerHTML = trophyMonthSorted.map(([n,t],i) =>
+        `<tr class="${i===0&&t>0?'sb-r1':''}"><td class="tl">${i===0&&t>0?'👑 ':''}<strong>${n}</strong></td><td class="trophy-count">${t>0?t+'x 🏆':'—'}</td></tr>`
+    ).join('');
+
+    // Points month
+    const sm = list.map(n => [n, ptsMonth[n]||0]).sort((a,b) => b[1]-a[1]);
+    document.getElementById('sbMonthBody').innerHTML = sm.map(([n,p],i) =>
+        `<tr class="${i===0?'sb-r1':''}"><td class="tl">${i===0&&p>0?'👑 ':''}<strong>${n}</strong></td><td class="sb-pts">${p}</td></tr>`
+    ).join('');
+
+    // Champion banner
+    const tList = Object.entries(trophyMonth).sort((a,b) => b[1]-a[1]);
+    const banner = document.getElementById('champBanner');
+    if (tList.length > 0 && tList[0][1] > 0) {
+        const max = tList[0][1];
+        const winners = tList.filter(t=>t[1]===max).map(t=>`${t[0]} (${t[1]}x🏆)`);
+        banner.innerHTML = `🌟 CHAMPION ${currentMonth.toUpperCase()}: ${winners.join(' & ')} 🌟`;
+    } else {
+        banner.innerHTML = `Belum ada juara di bulan ${currentMonth}`;
+    }
+
+    renderStatsCards();
 }
 
-// ── SIDEBAR ALL TIME ──────────────────────────────────────────
-function updateSidebarAllTime() {
-    db.ref(dbPath).once('value', snap => {
-        const root = snap.val() || {};
-        let ptsAll={}, trophyAll={};
-        activeSet = new Set();
+async function updateSidebarAllTime() {
+    const { data: allMatches } = await sb.from('matches').select('*, standings(*)').eq('mode', currentMode);
+    let ptsAll={}, trophyAll={};
+    activeSet = new Set();
 
-        Object.values(root).forEach(m => {
-            if (!m || !m.matches) return;
-            Object.values(m.matches).forEach(match => {
-                if (!match || !match.standings || !Array.isArray(match.standings)) return;
-                const s = sortStandings(match);
-                match.standings.forEach(p => {
-                    const n = fix(p.name);
-                    activeSet.add(n);
-                    ptsAll[n] = (ptsAll[n]||0) + (p.pts||0);
-                });
-                if (s[0] && (s[0].pts||0) > 0) {
-                    const wn = fix(s[0].name);
-                    trophyAll[wn] = (trophyAll[wn]||0)+1;
-                }
-            });
+    (allMatches || []).forEach(match => {
+        const s = sortStandings(match.standings || [], match.manual_juara);
+        (match.standings || []).forEach(p => {
+            const n = fix(p.player_name);
+            activeSet.add(n);
+            ptsAll[n] = (ptsAll[n]||0) + (p.pts||0);
         });
-
-        const list = modeAdmin ? ALL_PLAYERS : Array.from(activeSet);
-
-        const trophyAllSorted = list.map(n => [n, trophyAll[n]||0]).sort((a,b) => b[1]-a[1]);
-        document.getElementById('sbTrophyAllBody').innerHTML = trophyAllSorted.map(([n,t],i) =>
-            `<tr class="${i===0&&t>0?'sb-r1':''}"><td class="tl">${i===0&&t>0?'👑 ':''}<strong>${n}</strong></td><td class="trophy-count">${t>0?t+'x 🏆':'—'}</td></tr>`
-        ).join('');
-
-        const sa = list.map(n => [n, ptsAll[n]||0]).sort((a,b) => b[1]-a[1]);
-        document.getElementById('sbAllTimeBody').innerHTML = sa.map(([n,p],i) =>
-            `<tr class="${i===0?'sb-r1':''}"><td class="tl">${i===0&&p>0?'👑 ':''}<strong>${n}</strong></td><td class="sb-pts">${p}</td></tr>`
-        ).join('');
-
-        renderStatsCards();
+        if (s[0] && (s[0].pts||0) > 0) {
+            const wn = fix(s[0].player_name);
+            trophyAll[wn] = (trophyAll[wn]||0)+1;
+        }
     });
+
+    const list = modeAdmin ? ALL_PLAYERS : Array.from(activeSet);
+
+    const trophyAllSorted = list.map(n => [n, trophyAll[n]||0]).sort((a,b) => b[1]-a[1]);
+    document.getElementById('sbTrophyAllBody').innerHTML = trophyAllSorted.map(([n,t],i) =>
+        `<tr class="${i===0&&t>0?'sb-r1':''}"><td class="tl">${i===0&&t>0?'👑 ':''}<strong>${n}</strong></td><td class="trophy-count">${t>0?t+'x 🏆':'—'}</td></tr>`
+    ).join('');
+
+    const sa = list.map(n => [n, ptsAll[n]||0]).sort((a,b) => b[1]-a[1]);
+    document.getElementById('sbAllTimeBody').innerHTML = sa.map(([n,p],i) =>
+        `<tr class="${i===0?'sb-r1':''}"><td class="tl">${i===0&&p>0?'👑 ':''}<strong>${n}</strong></td><td class="sb-pts">${p}</td></tr>`
+    ).join('');
+
+    renderStatsCards();
 }
 
-// ── STATS ─────────────────────────────────────────────────────
+// ── STATS CARDS ───────────────────────────────────────────────
 function renderStatsCards() {
     if (editingStats) return;
     const list = modeAdmin ? ALL_PLAYERS : (activeSet.size > 0 ? Array.from(activeSet) : ALL_PLAYERS);
-    const gs = (n) => statsData[n] || { score:0, assist:0, formText:"" };
+    const gs = (n) => statsData[n] || { score:0, assist:0, form_text:'' };
 
     document.getElementById('sbScoresBody').innerHTML = [...list].sort((a,b)=>gs(b).score-gs(a).score)
         .map((n,i) => `<tr><td class="tl">${i===0&&gs(n).score>0?'🥇 ':''}<strong>${n}</strong></td><td style="font-weight:700;">${gs(n).score}x</td></tr>`).join('');
-
     document.getElementById('sbAssistsBody').innerHTML = [...list].sort((a,b)=>gs(b).assist-gs(a).assist)
         .map((n,i) => `<tr><td class="tl">${i===0&&gs(n).assist>0?'🥇 ':''}<strong>${n}</strong></td><td style="font-weight:700;">${gs(n).assist}x</td></tr>`).join('');
-
     document.getElementById('sbFormBody').innerHTML = [...list].map(n => {
-        const fArr = (gs(n).formText||'').toUpperCase().replace(/[^WDL]/g, '').split('').slice(-5);
+        const fArr = (gs(n).form_text||'').toUpperCase().replace(/[^WDL]/g, '').split('').slice(-5);
         return `<tr><td class="tl"><strong>${n}</strong></td><td><div class="form-row" style="justify-content:center;">${formCircles(fArr)}</div></td></tr>`;
     }).join('');
 
@@ -1795,35 +954,259 @@ function renderStatsCards() {
         : '';
 }
 
-function editStats() {
+async function editStats() {
     editingStats = true;
-    const gs = (n) => statsData[n] || { score:0, assist:0, formText:"" };
+    const gs = (n) => statsData[n] || { score:0, assist:0, form_text:'' };
     document.getElementById('sbScoresBody').innerHTML = ALL_PLAYERS.map(n =>
         `<tr><td class="tl"><strong>${n}</strong></td><td><input type="number" id="es-${n}" value="${gs(n).score}" style="width:48px;padding:3px;border:1px solid #ccc;border-radius:4px;"></td></tr>`).join('');
     document.getElementById('sbAssistsBody').innerHTML = ALL_PLAYERS.map(n =>
         `<tr><td class="tl"><strong>${n}</strong></td><td><input type="number" id="ea-${n}" value="${gs(n).assist}" style="width:48px;padding:3px;border:1px solid #ccc;border-radius:4px;"></td></tr>`).join('');
     document.getElementById('sbFormBody').innerHTML = ALL_PLAYERS.map(n =>
-        `<tr><td class="tl"><strong>${n}</strong></td><td><input type="text" id="ef-${n}" value="${gs(n).formText}" placeholder="WDL..." style="width:65px;padding:3px;border:1px solid #ccc;border-radius:4px;text-transform:uppercase;"></td></tr>`).join('');
-
+        `<tr><td class="tl"><strong>${n}</strong></td><td><input type="text" id="ef-${n}" value="${gs(n).form_text}" placeholder="WDL..." style="width:65px;padding:3px;border:1px solid #ccc;border-radius:4px;text-transform:uppercase;"></td></tr>`).join('');
     document.getElementById('adminStatsTool').innerHTML = `<div style="padding:10px;"><button onclick="saveStats()" style="width:100%;padding:9px;border-radius:8px;border:none;background:#00c853;color:white;font-weight:700;cursor:pointer;font-family:'Barlow',sans-serif;">💾 Simpan Stats</button></div>`;
 }
 
-function saveStats() {
-    const data = {};
-    ALL_PLAYERS.forEach(n => {
-        data[n] = {
-            score: parseInt(document.getElementById(`es-${n}`).value)||0,
-            assist: parseInt(document.getElementById(`ea-${n}`).value)||0,
-            formText: (document.getElementById(`ef-${n}`).value||'').toUpperCase().replace(/[^WDL]/g, '')
-        };
-    });
-    db.ref(`${dbPath}/allTimeStats`).set(data).then(() => { editingStats = false; });
+async function saveStats() {
+    const upserts = ALL_PLAYERS.map(n => ({
+        mode: currentMode,
+        player_name: n,
+        score: parseInt(document.getElementById(`es-${n}`).value)||0,
+        assist: parseInt(document.getElementById(`ea-${n}`).value)||0,
+        form_text: (document.getElementById(`ef-${n}`).value||'').toUpperCase().replace(/[^WDL]/g, '')
+    }));
+    const { error } = await sb.from('all_time_stats').upsert(upserts, { onConflict: 'mode,player_name' });
+    if (!error) { editingStats = false; await loadStats(); }
+    else alert('❌ Error: ' + error.message);
 }
+
+// ── MODAL INFO PLAYER ─────────────────────────────────────────
+async function bukaInfoPlayerMatch(nama, matchId) {
+    const match = localData.find(m => m.id === matchId);
+    if (!match) return;
+
+    const mi = (matchInfoData[matchId] || {})[nama] || {};
+    const standings = sortStandings(match.standings || [], match.manual_juara);
+    const counters = {};
+    localData.forEach(m => { counters[m.tanggal] = (counters[m.tanggal]||0)+1; });
+    // Determine ligaNum by counting matches with same tanggal up to this one
+    let ligaNum = 0;
+    localData.forEach(m => { if (m.tanggal === match.tanggal) ligaNum++; if (m.id === matchId) return; });
+    // recalculate properly
+    ligaNum = 0;
+    for (const m of localData) { if (m.tanggal === match.tanggal) ligaNum++; if (m.id === matchId) break; }
+
+    const st = (match.standings || []).find(p => fix(p.player_name) === nama) || {};
+    const w=parseInt(st.w)||0, d=parseInt(st.d)||0, l=parseInt(st.l)||0;
+    const pl=w+d+l, pct=winPct(w,pl);
+    const hari = getNamaHari(match.tanggal, currentMonth);
+
+    document.getElementById('infoModalTitle').innerText = nama;
+    document.getElementById('infoModalSubtitle').innerText = `📅 ${hari}, ${match.tanggal} ${currentMonth} — Liga ${ligaNum}`;
+
+    const club = mi.club || '';
+    const isFT = mi.is_full_transfer || false;
+    let clubHtml = club
+        ? `<div class="club-name">⚽ ${escHtml(club)}${isFT?'<span class="full-transfer-tag">FULL TRANSFER</span>':''}</div>`
+        : `<div class="no-club">Klub belum diisi${modeAdmin?' — isi via tombol Edit di bawah':''}.</div>`;
+
+    let adminSection = '';
+    if (modeAdmin) {
+        const safeId = matchId.replace(/[^a-zA-Z0-9_-]/g,'_');
+        adminSection = `
+            <div class="admin-club-edit">
+                <label>✏️ Edit Klub (Admin)</label>
+                <input class="admin-club-input" id="clubInput_${safeId}_${nama}" placeholder="contoh: Real Madrid" value="${escHtml(club)}">
+                <label class="admin-club-check"><input type="checkbox" id="ftCheck_${safeId}_${nama}" ${isFT?'checked':''}> Full Transfer</label>
+                <button class="btn-save-club" onclick="simpanKlub('${matchId}','${nama}','${safeId}')">💾 Simpan Klub</button>
+            </div>`;
+    }
+
+    document.getElementById('infoModalBody').innerHTML = `
+        <div class="league-card">
+            <div class="league-card-head">
+                <span class="lc-title">📋 Liga ${ligaNum} — ${currentMonth}</span>
+                ${modeAdmin?'<span class="lc-badge">Edit Mode</span>':''}
+            </div>
+            <div class="league-card-body">
+                ${clubHtml}
+                <div class="stat-pills">
+                    <div class="stat-pill"><span class="sp-val win">${w}</span><span class="sp-lbl">Win</span></div>
+                    <div class="stat-pill"><span class="sp-val draw">${d}</span><span class="sp-lbl">Draw</span></div>
+                    <div class="stat-pill"><span class="sp-val loss">${l}</span><span class="sp-lbl">Loss</span></div>
+                    <div class="stat-pill"><span class="sp-val">${pl}</span><span class="sp-lbl">Main</span></div>
+                    <div class="stat-pill"><span class="sp-val pct">${pct}%</span><span class="sp-lbl">Win%</span></div>
+                </div>
+                <div class="win-bar-wrap">
+                    <div class="win-bar-label"><span>Win Rate</span><span>${pct}%</span></div>
+                    <div class="win-bar-bg"><div class="win-bar-fill" style="width:${pct}%"></div></div>
+                </div>
+                ${adminSection}
+            </div>
+        </div>`;
+    document.getElementById('infoModal').classList.add('on');
+}
+
+async function bukaInfoPlayerAllTime(nama) {
+    document.getElementById('infoModalTitle').innerText = nama;
+    document.getElementById('infoModalSubtitle').innerText = '🏆 Statistik per Klub — All Time';
+    document.getElementById('infoModalBody').innerHTML = `<div class="no-club" style="text-align:center;padding:20px;">⏳ Memuat data...</div>`;
+    document.getElementById('infoModal').classList.add('on');
+
+    const { data: allMatches } = await sb.from('matches').select('*, standings(*)').eq('mode', currentMode).order('timestamp', { ascending: true });
+
+    const clubStats = {};
+    let grandTotalW=0, grandTotalD=0, grandTotalL=0, grandTotalPl=0, grandLiga=0, grandJuara=0;
+
+    (allMatches || []).forEach(match => {
+        const st = (match.standings || []).find(p => fix(p.player_name) === nama);
+        if (!st) return;
+
+        const mi    = (matchInfoData[match.id] || {})[nama] || {};
+        const club  = (mi.club || '').trim() || '(Tidak Diisi)';
+        const isFT  = mi.is_full_transfer || false;
+        const w=parseInt(st.w)||0, d=parseInt(st.d)||0, l=parseInt(st.l)||0;
+        const pl=w+d+l, pts=parseInt(st.pts)||(w*3+d);
+
+        if (!clubStats[club]) clubStats[club] = { liga:0,w:0,d:0,l:0,pl:0,pts:0,juara:0,isFT };
+        const sorted = sortStandings(match.standings||[], match.manual_juara);
+        const isJuara = sorted.length > 0 && fix(sorted[0].player_name) === nama && (sorted[0].pts||0) > 0;
+
+        clubStats[club].liga  += 1;
+        clubStats[club].w     += w; clubStats[club].d += d; clubStats[club].l += l;
+        clubStats[club].pl    += pl; clubStats[club].pts += pts;
+        clubStats[club].juara += isJuara ? 1 : 0;
+        if (isFT) clubStats[club].isFT = true;
+
+        grandTotalW+=w; grandTotalD+=d; grandTotalL+=l; grandTotalPl+=pl; grandLiga+=1;
+        if (isJuara) grandJuara+=1;
+    });
+
+    const clubs = Object.keys(clubStats);
+    if (!clubs.length) {
+        document.getElementById('infoModalBody').innerHTML = `<div class="no-club" style="text-align:center;padding:20px;">Belum ada data klub untuk ${nama}.</div>`;
+        return;
+    }
+    clubs.sort((a,b) => {
+        if (clubStats[b].liga !== clubStats[a].liga) return clubStats[b].liga - clubStats[a].liga;
+        const wrA = clubStats[a].pl>0?clubStats[a].w/clubStats[a].pl:0;
+        const wrB = clubStats[b].pl>0?clubStats[b].w/clubStats[b].pl:0;
+        return wrB-wrA;
+    });
+
+    const grandPct = winPct(grandTotalW, grandTotalPl);
+    const grandPts = grandTotalW*3+grandTotalD;
+
+    let html = `
+        <div style="background:linear-gradient(135deg,#37003c,#6a0dad);border-radius:12px;padding:14px 16px;margin-bottom:16px;color:white;">
+            <div style="font-size:0.68rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;opacity:0.7;margin-bottom:10px;">📊 Grand Total — ${grandLiga} Liga</div>
+            <div style="display:flex;gap:10px;flex-wrap:wrap;">
+                <div style="text-align:center;background:rgba(255,215,0,0.25);border-radius:8px;padding:8px 14px;min-width:50px;border:1px solid rgba(255,215,0,0.4);">
+                    <div style="font-size:1.4rem;font-weight:900;color:#ffd700;">${grandJuara}</div>
+                    <div style="font-size:0.58rem;font-weight:700;opacity:0.8;text-transform:uppercase;margin-top:2px;">🏆 Juara</div>
+                </div>
+                <div style="text-align:center;background:rgba(255,255,255,0.12);border-radius:8px;padding:8px 14px;min-width:50px;">
+                    <div style="font-size:1.4rem;font-weight:900;color:#00ff85;">${grandTotalW}</div>
+                    <div style="font-size:0.58rem;font-weight:700;opacity:0.7;text-transform:uppercase;margin-top:2px;">Win</div>
+                </div>
+                <div style="text-align:center;background:rgba(255,255,255,0.12);border-radius:8px;padding:8px 14px;min-width:50px;">
+                    <div style="font-size:1.4rem;font-weight:900;color:#d0d0d0;">${grandTotalD}</div>
+                    <div style="font-size:0.58rem;font-weight:700;opacity:0.7;text-transform:uppercase;margin-top:2px;">Draw</div>
+                </div>
+                <div style="text-align:center;background:rgba(255,255,255,0.12);border-radius:8px;padding:8px 14px;min-width:50px;">
+                    <div style="font-size:1.4rem;font-weight:900;color:#ff6b6b;">${grandTotalL}</div>
+                    <div style="font-size:0.58rem;font-weight:700;opacity:0.7;text-transform:uppercase;margin-top:2px;">Loss</div>
+                </div>
+                <div style="text-align:center;background:rgba(255,255,255,0.12);border-radius:8px;padding:8px 14px;min-width:50px;">
+                    <div style="font-size:1.4rem;font-weight:900;color:white;">${grandTotalPl}</div>
+                    <div style="font-size:0.58rem;font-weight:700;opacity:0.7;text-transform:uppercase;margin-top:2px;">Main</div>
+                </div>
+                <div style="text-align:center;background:rgba(233,0,82,0.4);border-radius:8px;padding:8px 14px;min-width:50px;">
+                    <div style="font-size:1.4rem;font-weight:900;color:#fff;">${grandPct}%</div>
+                    <div style="font-size:0.58rem;font-weight:700;opacity:0.7;text-transform:uppercase;margin-top:2px;">Win%</div>
+                </div>
+                <div style="text-align:center;background:rgba(255,255,255,0.12);border-radius:8px;padding:8px 14px;min-width:50px;">
+                    <div style="font-size:1.4rem;font-weight:900;color:#fdbb2d;">${grandPts}</div>
+                    <div style="font-size:0.58rem;font-weight:700;opacity:0.7;text-transform:uppercase;margin-top:2px;">Pts</div>
+                </div>
+            </div>
+        </div>
+        <div style="font-size:0.68rem;font-weight:700;color:var(--sub);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;">⚽ Statistik per Klub (${clubs.length} klub)</div>`;
+
+    clubs.forEach((club,idx) => {
+        const cs  = clubStats[club];
+        const pct = winPct(cs.w, cs.pl);
+        const isUnknown = club === '(Tidak Diisi)';
+        const isBest = idx === 0 && !isUnknown;
+        html += `
+            <div class="league-card" style="margin-bottom:10px;">
+                <div class="league-card-head" style="${isBest?'background:linear-gradient(90deg,#fff9c4,#fff3e0);':''}">
+                    <div>
+                        <span class="lc-title" style="${isUnknown?'color:#aaa;font-style:italic;':''}">
+                            ${isBest?'🥇 ':''}⚽ ${escHtml(club)}
+                            ${cs.isFT?'<span style="background:#fff3e0;color:#e65100;font-size:0.6rem;font-weight:700;padding:1px 6px;border-radius:5px;border:1px solid #ffcc80;margin-left:4px;">FULL TRANSFER</span>':''}
+                        </span>
+                        <div style="font-size:0.68rem;color:var(--sub);margin-top:2px;">${cs.liga}x Liga dipakai</div>
+                    </div>
+                    <span class="lc-badge" style="background:${pct>=60?'var(--win)':pct>=40?'#888':'var(--loss)'};">${pct}% WR</span>
+                </div>
+                <div class="league-card-body">
+                    <div class="stat-pills">
+                        <div class="stat-pill" style="background:${cs.juara>0?'#fffde7':'#f5f5f5'};${cs.juara>0?'border:1px solid #ffd700;':''}">
+                            <span class="sp-val" style="color:${cs.juara>0?'#c6a000':'#bbb'};">${cs.juara}🏆</span>
+                            <span class="sp-lbl">Juara</span>
+                        </div>
+                        <div class="stat-pill"><span class="sp-val win">${cs.w}</span><span class="sp-lbl">Win</span></div>
+                        <div class="stat-pill"><span class="sp-val draw">${cs.d}</span><span class="sp-lbl">Draw</span></div>
+                        <div class="stat-pill"><span class="sp-val loss">${cs.l}</span><span class="sp-lbl">Loss</span></div>
+                        <div class="stat-pill"><span class="sp-val">${cs.pl}</span><span class="sp-lbl">Main</span></div>
+                        <div class="stat-pill"><span class="sp-val pct">${pct}%</span><span class="sp-lbl">Win%</span></div>
+                        <div class="stat-pill"><span class="sp-val" style="color:#fdbb2d;">${cs.pts}</span><span class="sp-lbl">Pts</span></div>
+                    </div>
+                    <div class="win-bar-wrap">
+                        <div class="win-bar-label">
+                            <span>Win Rate</span>
+                            <span>${cs.w}W · ${cs.d}D · ${cs.l}L dari ${cs.pl} pertandingan</span>
+                        </div>
+                        <div class="win-bar-bg">
+                            <div class="win-bar-fill" style="width:${pct}%;background:${pct>=60?'linear-gradient(90deg,var(--win),#00e676)':pct>=40?'linear-gradient(90deg,#888,#bbb)':'linear-gradient(90deg,var(--loss),#ff8a80)'};"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>`;
+    });
+
+    document.getElementById('infoModalBody').innerHTML = html;
+}
+
+async function simpanKlub(matchId, nama, safeId) {
+    const clubVal = (document.getElementById(`clubInput_${safeId}_${nama}`)?.value || '').trim();
+    const ftVal   = document.getElementById(`ftCheck_${safeId}_${nama}`)?.checked || false;
+
+    const { error } = await sb.from('match_info').upsert(
+        { match_id: matchId, player_name: nama, club: clubVal, is_full_transfer: ftVal },
+        { onConflict: 'match_id,player_name' }
+    );
+
+    if (!error) {
+        alert(`✅ Data klub ${nama} berhasil disimpan!`);
+        if (!matchInfoData[matchId]) matchInfoData[matchId] = {};
+        matchInfoData[matchId][nama] = { club: clubVal, is_full_transfer: ftVal };
+    } else {
+        alert('❌ Gagal: ' + error.message);
+    }
+}
+
+function tutupInfoPlayer() { document.getElementById('infoModal').classList.remove('on'); }
+function tutupInfoModalOutside(e) { if (e.target === document.getElementById('infoModal')) tutupInfoPlayer(); }
 
 // ── ADMIN ─────────────────────────────────────────────────────
 function cekAdmin() {
     window._kk = (window._kk||0)+1;
-    if (window._kk >= 5) { window._kk=0; modeAdmin=true; alert('🔓 Mode Admin Aktif! Klik nama player di klasemen untuk mengisi data klub.'); renderAdminArea(); renderStatsCards(); loadData(); }
+    if (window._kk >= 5) {
+        window._kk = 0; modeAdmin = true;
+        alert('🔓 Mode Admin Aktif! Klik nama player di klasemen untuk mengisi data klub.');
+        renderAdminArea(); renderStatsCards(); loadData();
+    }
 }
 
 function matikanAdmin() {
@@ -1835,7 +1218,10 @@ function matikanAdmin() {
 function renderAdminArea() {
     if (!modeAdmin) { document.getElementById('adminArea').innerHTML=''; return; }
     if (currentMonth === 'ALL TIME STANDING') {
-        document.getElementById('adminArea').innerHTML = `<div class="admin-panel"><h3>⚙️ Admin Mode</h3><p style="font-size:0.85rem;color:#999;margin-bottom:12px;">Pilih bulan terlebih dahulu untuk membuat liga baru.</p><button class="btn-adm btn-off" onclick="matikanAdmin()">🔒 Matikan Admin</button></div>`;
+        document.getElementById('adminArea').innerHTML = `
+            <div class="admin-panel"><h3>⚙️ Admin Mode</h3>
+            <p style="font-size:0.85rem;color:#999;margin-bottom:12px;">Pilih bulan terlebih dahulu untuk membuat liga baru.</p>
+            <button class="btn-adm btn-off" onclick="matikanAdmin()">🔒 Matikan Admin</button></div>`;
         return;
     }
     document.getElementById('adminArea').innerHTML = `
@@ -1846,54 +1232,33 @@ function renderAdminArea() {
             <select id="newDate" class="adm-select">${Array.from({length:31},(_,i)=>`<option value="${i+1}">Tanggal ${i+1}</option>`).join('')}</select>
             <button class="btn-adm btn-create" onclick="buatLiga()">➕ Buat Liga</button>
             <button class="btn-adm btn-off" onclick="matikanAdmin()">🔒 Matikan Admin</button>
-            <p style="font-size:0.75rem;color:#999;margin-top:10px;">💡 Untuk isi data klub per liga: klik nama player di tabel klasemen.</p>
+            <p style="font-size:0.75rem;color:#999;margin-top:10px;">💡 Klik nama player di tabel klasemen untuk isi data klub.</p>
         </div>`;
 }
 
-function buatLiga() {
+async function buatLiga() {
     const sel = Array.from(document.querySelectorAll('.p-check:checked')).map(c=>c.value);
-    const tgl = document.getElementById('newDate').value;
+    const tgl = parseInt(document.getElementById('newDate').value);
     if (sel.length !== parseInt(currentMode)) return alert(`Mode ${currentMode} Player: Centang TEPAT ${currentMode} pemain!`);
-    db.ref(`${dbPath}/${currentMonth}/matches`).push().set({
-        tanggal: parseInt(tgl), timestamp: Date.now(),
-        standings: sel.map((n,i) => ({name:n,w:0,d:0,l:0,f:0,a:0,gd:0,pts:0,manualRank:i+1}))
-    }).then(() => { renderAdminArea(); alert('✅ Liga berhasil dibuat!'); })
-      .catch(e => alert('❌ Gagal: ' + e.message));
+
+    // Insert match
+    const { data: matchData, error: matchErr } = await sb.from('matches').insert({
+        mode: currentMode, bulan: currentMonth, tanggal: tgl, timestamp: Date.now()
+    }).select().single();
+
+    if (matchErr || !matchData) { alert('❌ Gagal membuat liga: ' + (matchErr?.message||'unknown')); return; }
+
+    // Insert standings
+    const standingsArr = sel.map((n,i) => ({
+        match_id: matchData.id, player_name: n, w:0,d:0,l:0,f:0,a:0,gd:0,pts:0, manual_rank:i+1
+    }));
+    const { error: stErr } = await sb.from('standings').insert(standingsArr);
+    if (stErr) { alert('❌ Gagal insert standings: ' + stErr.message); return; }
+
+    alert('✅ Liga berhasil dibuat!');
+    renderAdminArea();
+    await loadMonthly();
 }
-
-/* =========================================================
-   REALTIME SUPABASE
-========================================================= */
-
-supabaseClient
-.channel('realtime-matches')
-
-.on(
-    'postgres_changes',
-    {
-        event: '*',
-        schema: 'public',
-        table: 'matches'
-    },
-
-    payload => {
-
-        console.log('Realtime update:', payload);
-
-        if (currentMonth === 'ALL TIME STANDING') {
-
-            renderAllTime();
-            updateSidebarAllTime();
-
-        } else {
-
-            loadData();
-        }
-    }
-)
-
-.subscribe();
-
 </script>
 </body>
 </html>
