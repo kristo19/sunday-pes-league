@@ -751,55 +751,48 @@ if (path.includes('/matches')) {
         // ROOT DATA
         // =========================
 
-        if (
-            path === 'liga' ||
-            path === 'liga3'
-        ) {
+      if (
+    path === 'liga' ||
+    path === 'liga3'
+) {
 
-            const { data, error } = await supabaseClient
-                .from('matches')
-                .select('*');
+    const { data, error } = await supabaseClient
+        .from('matches')
+        .select('*')
+        .order('timestamp', { ascending: true });
 
-            if (error) {
+    if (error) {
 
-                console.error(error);
-
-                return {};
-            }
-
-            const result = {};
-
-            data.forEach(row => {
-
-                if (!result[row.bulan]) {
-
-                    result[row.bulan] = {
-                        matches: {}
-                    };
-                }
-
-                result[row.bulan].matches[row.id] = {
-
-                    tanggal: row.tanggal,
-                    standings: row.standings,
-                    manualJuara: row.manual_juara,
-                    timestamp: row.timestamp
-
-                };
-
-            });
-
-            return result;
-        }
-
-        return {};
-
-    } catch (err) {
-
-        console.error(err);
+        console.error(error);
 
         return {};
     }
+
+    const result = {};
+
+    data.forEach(row => {
+
+        if (!result[row.bulan]) {
+
+            result[row.bulan] = {
+                matches: {}
+            };
+        }
+
+        result[row.bulan].matches[row.id] = {
+
+            tanggal: row.tanggal,
+            standings: row.standings,
+            manualJuara: row.manual_juara,
+            timestamp: row.timestamp
+
+        };
+
+    });
+
+    console.log('SUPABASE DATA:', result);
+
+    return result;
 }
 
 /* =========================================================
