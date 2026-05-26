@@ -646,8 +646,13 @@ async function getData(path) {
             const { data, error } = await supabaseClient
                 .from('matches')
                 .select('*')
-                .eq('bulan', bulan)
-                .order('timestamp', { ascending: true });
+                console.log('CURRENT BULAN:', bulan);
+
+const { data, error } = await supabaseClient
+    .from('matches')
+    .select('*')
+    .eq('bulan', bulan)
+    .order('timestamp', { ascending: true });
 
             if (error) {
 
@@ -954,7 +959,7 @@ async function removeData(path) {
 // ── CONSTANTS & STATE ─────────────────────────────────────────
 const MONTHS = ["Januari","Februari","Maret","April","Mei","Juni","Juli","Agustus","September","Oktober","November","Desember"];
 // CHANGED: Ipo → Stive
-const ALL_PLAYERS = ["Toxx","Stive","Alfa","Kobe"];
+const ALL_PLAYERS = ["Alfa","Toxx","Stive","Kobe"];
 
 // CHANGED: Default to ALL TIME STANDING on first open
 let currentMonth = 'ALL TIME STANDING';
