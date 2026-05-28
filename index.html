@@ -116,8 +116,6 @@
             padding: 8px 18px; font-size: 0.77rem; color: var(--sub);
             background: #f7f0ff; border-left: 3px solid var(--purple); font-style: italic;
         }
-        .alltime-sub-note.ft-note { background: #ffebee; border-left-color: #b71c1c; }
-        .alltime-sub-note.klub-note { background: #e8f5e9; border-left-color: #0a5e40; }
 
         .tbl-wrap { overflow-x: auto; }
         .epl-tbl { width: 100%; border-collapse: collapse; min-width: 560px; }
@@ -364,7 +362,6 @@
     </div>
 </div>
 
-<!-- MODAL -->
 <div id="infoModal" class="info-modal" onclick="tutupInfoModalOutside(event)">
     <div class="info-modal-box">
         <div class="info-modal-header" id="infoModalHeader">
@@ -395,7 +392,6 @@ let editingStats = false;
 let activeSet    = new Set();
 let matchInfoData = {};
 let realtimeSub  = null;
-// Liga type untuk admin buat liga: 'ft' atau 'klub'
 let newLigaType  = 'klub';
 
 const fix = n => n==="Ito"?"Toxx":n==="Ipo"?"Stive":(n||"Unknown");
@@ -414,6 +410,53 @@ function formCircles(arr){
 }
 function escHtml(str){ return (str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
 function winPct(w,pl){ if(!pl) return 0; return Math.round(w/pl*100); }
+
+// DATABASE KLUB UNTUK LOGO
+function getClubLogo(clubName) {
+    if(!clubName) return null;
+    const name = clubName.toLowerCase().replace(/[^a-z0-9]/g, '');
+    const logos = {
+        'manchesterunited': 'https://a.espncdn.com/i/teamlogos/soccer/500/360.png',
+        'mu': 'https://a.espncdn.com/i/teamlogos/soccer/500/360.png',
+        'manutd': 'https://a.espncdn.com/i/teamlogos/soccer/500/360.png',
+        'arsenal': 'https://a.espncdn.com/i/teamlogos/soccer/500/359.png',
+        'manchestercity': 'https://a.espncdn.com/i/teamlogos/soccer/500/382.png',
+        'mancity': 'https://a.espncdn.com/i/teamlogos/soccer/500/382.png',
+        'realmadrid': 'https://a.espncdn.com/i/teamlogos/soccer/500/86.png',
+        'madrid': 'https://a.espncdn.com/i/teamlogos/soccer/500/86.png',
+        'barcelona': 'https://a.espncdn.com/i/teamlogos/soccer/500/83.png',
+        'barca': 'https://a.espncdn.com/i/teamlogos/soccer/500/83.png',
+        'bayernmunchen': 'https://a.espncdn.com/i/teamlogos/soccer/500/132.png',
+        'bayernmunich': 'https://a.espncdn.com/i/teamlogos/soccer/500/132.png',
+        'bayern': 'https://a.espncdn.com/i/teamlogos/soccer/500/132.png',
+        'liverpool': 'https://a.espncdn.com/i/teamlogos/soccer/500/364.png',
+        'chelsea': 'https://a.espncdn.com/i/teamlogos/soccer/500/363.png',
+        'acmilan': 'https://a.espncdn.com/i/teamlogos/soccer/500/103.png',
+        'milan': 'https://a.espncdn.com/i/teamlogos/soccer/500/103.png',
+        'intermilan': 'https://a.espncdn.com/i/teamlogos/soccer/500/110.png',
+        'inter': 'https://a.espncdn.com/i/teamlogos/soccer/500/110.png',
+        'juventus': 'https://a.espncdn.com/i/teamlogos/soccer/500/111.png',
+        'juve': 'https://a.espncdn.com/i/teamlogos/soccer/500/111.png',
+        'psg': 'https://a.espncdn.com/i/teamlogos/soccer/500/160.png',
+        'parissaintgermain': 'https://a.espncdn.com/i/teamlogos/soccer/500/160.png',
+        'napoli': 'https://a.espncdn.com/i/teamlogos/soccer/500/114.png',
+        'tottenham': 'https://a.espncdn.com/i/teamlogos/soccer/500/367.png',
+        'spurs': 'https://a.espncdn.com/i/teamlogos/soccer/500/367.png',
+        'atleticomadrid': 'https://a.espncdn.com/i/teamlogos/soccer/500/1068.png',
+        'atletico': 'https://a.espncdn.com/i/teamlogos/soccer/500/1068.png',
+        'borussiadortmund': 'https://a.espncdn.com/i/teamlogos/soccer/500/124.png',
+        'dortmund': 'https://a.espncdn.com/i/teamlogos/soccer/500/124.png',
+        'astonvilla': 'https://a.espncdn.com/i/teamlogos/soccer/500/362.png',
+        'villa': 'https://a.espncdn.com/i/teamlogos/soccer/500/362.png',
+        'newcastle': 'https://a.espncdn.com/i/teamlogos/soccer/500/361.png',
+        'newcastleunited': 'https://a.espncdn.com/i/teamlogos/soccer/500/361.png',
+        'asroma': 'https://a.espncdn.com/i/teamlogos/soccer/500/104.png',
+        'roma': 'https://a.espncdn.com/i/teamlogos/soccer/500/104.png',
+        'bayerleverkusen': 'https://a.espncdn.com/i/teamlogos/soccer/500/131.png',
+        'leverkusen': 'https://a.espncdn.com/i/teamlogos/soccer/500/131.png'
+    };
+    return logos[name] || null;
+}
 
 function sortStandings(standings, manualJuara){
     const j=fix(manualJuara||'');
@@ -528,17 +571,13 @@ async function loadStats(){
     renderStatsCards();
 }
 
-// ── HELPER: cek apakah sebuah match adalah liga FT
-// Mengambil dari match_info player manapun dalam match itu
 function isMatchFT(matchId){
     const mi=matchInfoData[matchId]||{};
     const vals=Object.values(mi);
-    if(!vals.length) return null; // belum ada data
-    // Kalau mayoritas/salah satu player di-set FT, anggap liga FT
+    if(!vals.length) return null;
     return vals.some(v=>v.is_full_transfer===true);
 }
 
-// ── ALL TIME ──────────────────────────────────────────────────
 async function renderAllTime(){
     const {data:matches,error}=await sb.from('matches').select('*, standings(*)').eq('mode',currentMode).order('timestamp',{ascending:true});
     if(error||!matches||!matches.length){
@@ -549,7 +588,6 @@ async function renderAllTime(){
     const overall=mkStats(), ftOnly=mkStats(), klubOnly=mkStats();
 
     matches.forEach(match=>{
-        // Tentukan tipe liga dari match_info (ambil nilai is_full_transfer dari player pertama yang ada)
         const mi=matchInfoData[match.id]||{};
         const miVals=Object.values(mi);
         const isFTLiga = miVals.length>0 ? miVals[0].is_full_transfer===true : false;
@@ -586,23 +624,19 @@ async function renderAllTime(){
 
     let html='';
     html+='<div class="match-block"><div class="section-head"><span>&#127942; ALL TIME STANDING</span><span class="badge-liga">Overall</span></div>'
-        +'<div class="alltime-sub-note">Akumulasi semua liga &mdash; Full Transfer &amp; Non-FT digabung.</div>'
         +buildEplBlock(sortedOverall,true,false,[],true,null,'overall')+'</div>';
 
-    html+='<div class="match-block"><div class="section-head ft-head"><span>&#128286; KLASEMEN FULL TRANSFER</span><span class="badge-ft">Full Transfer</span></div>'
-        +'<div class="alltime-sub-note ft-note">Hanya liga yang dimainkan dengan mode <strong>Full Transfer</strong>.</div>';
+    html+='<div class="match-block"><div class="section-head ft-head"><span>&#128286; KLASEMEN FULL TRANSFER</span><span class="badge-ft">Full Transfer</span></div>';
     html+=sortedFT.length>0?buildEplBlock(sortedFT,false,false,[],true,null,'ft'):'<div class="empty-state" style="padding:24px 40px;">Belum ada data liga Full Transfer.</div>';
     html+='</div>';
 
-    html+='<div class="match-block"><div class="section-head klub-head"><span>&#9917; KLASEMEN KLUB</span><span class="badge-klub">Non Full Transfer</span></div>'
-        +'<div class="alltime-sub-note klub-note">Hanya liga yang dimainkan dengan mode <strong>Klub biasa</strong> (tanpa Full Transfer).</div>';
-    html+=sortedKlub.length>0?buildEplBlock(sortedKlub,false,false,[],true,null,'klub'):'<div class="empty-state" style="padding:24px 40px;">Belum ada data liga Klub (Non Full Transfer).</div>';
+    html+='<div class="match-block"><div class="section-head klub-head"><span>&#9917; KLASEMEN KLUB</span><span class="badge-klub">Klub</span></div>';
+    html+=sortedKlub.length>0?buildEplBlock(sortedKlub,false,false,[],true,null,'klub'):'<div class="empty-state" style="padding:24px 40px;">Belum ada data liga Klub.</div>';
     html+='</div>';
 
     document.getElementById('mainContent').innerHTML=html;
 }
 
-// ── MONTHLY ───────────────────────────────────────────────────
 function renderMonthly(matches){
     const el=document.getElementById('mainContent');
     el.innerHTML='';
@@ -619,7 +653,6 @@ function renderMonthly(matches){
         const winner=(s[0]&&(s[0].pts||0)>0)?fix(s[0].player_name):'-';
         const hari=getNamaHari(m.tanggal||1,currentMonth);
 
-        // Deteksi tipe liga
         const mi=matchInfoData[m.id]||{};
         const miVals=Object.values(mi);
         const isFTLiga=miVals.length>0?miVals[0].is_full_transfer===true:false;
@@ -650,7 +683,6 @@ function renderMonthly(matches){
     });
 }
 
-// ── TABLE BUILDER ─────────────────────────────────────────────
 function buildEplBlock(rowData,showForm,isEdit,rawStandings,showWinPct,matchId,tableType){
     tableType=tableType||'overall';
     const topN=Math.min(rowData.length,3);
@@ -866,11 +898,14 @@ async function bukaInfoPlayerMatch(nama, matchId){
     const mi=(matchInfoData[matchId]||{})[nama]||{};
     let ligaNum=0;
     for(const m of localData){ if(m.tanggal===match.tanggal) ligaNum++; if(m.id===matchId) break; }
+    
+    const sorted = sortStandings(match.standings||[], match.manual_juara);
+    const isJuara = sorted.length>0 && fix(sorted[0].player_name)===nama && (sorted[0].pts||0)>0;
+    
     const st=(match.standings||[]).find(p=>fix(p.player_name)===nama)||{};
-    const w=parseInt(st.w)||0,d=parseInt(st.d)||0,l=parseInt(st.l)||0,pl=w+d+l,pct=winPct(w,pl);
+    const w=parseInt(st.w)||0,d=parseInt(st.d)||0,l=parseInt(st.l)||0,pl=w+d+l,pct=winPct(w,pl),pts=parseInt(st.pts)||(w*3+d);
     const hari=getNamaHari(match.tanggal,currentMonth);
 
-    // Deteksi tipe liga dari match_info
     const miAll=matchInfoData[matchId]||{};
     const miVals=Object.values(miAll);
     const isFTLiga=miVals.length>0?miVals[0].is_full_transfer===true:(mi.is_full_transfer===true);
@@ -880,8 +915,10 @@ async function bukaInfoPlayerMatch(nama, matchId){
     document.getElementById('infoModalTitle').innerText=nama;
     document.getElementById('infoModalSubtitle').innerText='📅 '+hari+', '+match.tanggal+' '+currentMonth+' — Liga '+ligaNum+(isFTLiga?' 🔞':' ⚽');
 
-    // Club info display
     const club=mi.club||'';
+    const clubLogo=getClubLogo(club);
+    const iconHtml=clubLogo?'<img src="'+clubLogo+'" style="width:24px;height:24px;object-fit:contain;">':'<span style="font-size:1.2rem;">⚽</span>';
+    
     let clubHtml;
     if(isFTLiga){
         clubHtml='<div style="display:inline-flex;align-items:center;gap:8px;background:#ffebee;border:1.5px solid #ffcdd2;border-radius:10px;padding:8px 14px;margin-bottom:12px;">'
@@ -890,7 +927,7 @@ async function bukaInfoPlayerMatch(nama, matchId){
             +'</div>';
     } else if(club){
         clubHtml='<div style="display:inline-flex;align-items:center;gap:8px;background:#e8f5e9;border:1.5px solid #c8e6c9;border-radius:10px;padding:8px 14px;margin-bottom:12px;">'
-            +'<span style="font-size:1.2rem;">⚽</span>'
+            +iconHtml
             +'<span style="font-family:\'Barlow Condensed\',sans-serif;font-size:1.3rem;font-weight:900;color:#0a5e40;">'+escHtml(club)+'</span>'
             +'</div>';
     } else {
@@ -903,15 +940,18 @@ async function bukaInfoPlayerMatch(nama, matchId){
         adminSection=buildAdminClubSection(matchId,safeId,nama,club,isFTLiga);
     }
 
+    // UPDATE URUTAN: JUARA -> MAIN -> WIN -> DRAW -> LOSS -> PTS -> WIN%
     document.getElementById('infoModalBody').innerHTML='<div class="league-card"><div class="league-card-head">'
         +'<span class="lc-title">📋 Liga '+ligaNum+' — '+currentMonth+'</span>'
         +(modeAdmin?'<span class="lc-badge">Edit Mode</span>':'')
         +'</div><div class="league-card-body">'+clubHtml
         +'<div class="stat-pills">'
+        +'<div class="stat-pill" style="background:'+(isJuara?'#fffde7':'#f5f5f5')+';'+(isJuara?'border:1px solid #ffd700;':'')+'"><span class="sp-val" style="color:'+(isJuara?'#c6a000':'#bbb')+';">'+(isJuara?'1':'0')+'🏆</span><span class="sp-lbl">Juara</span></div>'
+        +'<div class="stat-pill"><span class="sp-val">'+pl+'</span><span class="sp-lbl">Main</span></div>'
         +'<div class="stat-pill"><span class="sp-val win">'+w+'</span><span class="sp-lbl">Win</span></div>'
         +'<div class="stat-pill"><span class="sp-val draw">'+d+'</span><span class="sp-lbl">Draw</span></div>'
         +'<div class="stat-pill"><span class="sp-val loss">'+l+'</span><span class="sp-lbl">Loss</span></div>'
-        +'<div class="stat-pill"><span class="sp-val">'+pl+'</span><span class="sp-lbl">Main</span></div>'
+        +'<div class="stat-pill"><span class="sp-val" style="color:#fdbb2d;">'+pts+'</span><span class="sp-lbl">Pts</span></div>'
         +'<div class="stat-pill"><span class="sp-val pct">'+pct+'%</span><span class="sp-lbl">Win%</span></div>'
         +'</div><div class="win-bar-wrap"><div class="win-bar-label"><span>Win Rate</span><span>'+pct+'%</span></div>'
         +'<div class="win-bar-bg"><div class="win-bar-fill" style="width:'+pct+'%"></div></div></div>'
@@ -919,19 +959,14 @@ async function bukaInfoPlayerMatch(nama, matchId){
     document.getElementById('infoModal').classList.add('on');
 }
 
-// Admin section untuk edit klub di modal monthly
-// Untuk liga FT: hanya bisa ubah nama klub (FT tetap)
-// Untuk liga Klub: isi nama klub
 function buildAdminClubSection(matchId, safeId, nama, currentClub, isFTLiga){
     const keyId=safeId+'_'+nama;
     if(isFTLiga){
-        // Liga FT: tidak perlu input apa-apa, cukup info
         return '<div class="admin-club-edit">'
             +'<label>ℹ️ Liga ini adalah mode Full Transfer</label>'
             +'<div style="background:#ffebee;border-radius:8px;padding:10px 14px;font-size:0.85rem;color:#c62828;font-weight:600;">🔞 Semua player di liga ini menggunakan Full Transfer. Tidak ada nama klub.</div>'
             +'</div>';
     }
-    // Liga Klub: input nama klub
     return '<div class="admin-club-edit">'
         +'<label>✏️ Edit Nama Klub (Admin)</label>'
         +'<input class="admin-club-input" id="clubInput_'+keyId+'" placeholder="Nama klub, cth: Real Madrid" value="'+escHtml(currentClub||'')+'">'
@@ -974,7 +1009,6 @@ async function bukaInfoPlayerAllTime(nama, filterType){
         const st=(match.standings||[]).find(p=>fix(p.player_name)===nama);
         if(!st) return;
 
-        // Deteksi tipe liga dari match_info
         const miAll=matchInfoData[match.id]||{};
         const miVals=Object.values(miAll);
         const isFTLiga=miVals.length>0?miVals[0].is_full_transfer===true:false;
@@ -983,7 +1017,6 @@ async function bukaInfoPlayerAllTime(nama, filterType){
         if(filterType==='klub'&&isFTLiga) return;
 
         const mi=(matchInfoData[match.id]||{})[nama]||{};
-        // Nama klub: kalau FT, tampilkan "FULL TRANSFER" (bukan "tidak diisi")
         const clubLabel=isFTLiga?'FULL TRANSFER':(mi.club||'').trim()||'(Tidak Diisi)';
 
         const w=parseInt(st.w)||0,d=parseInt(st.d)||0,l=parseInt(st.l)||0,pl=w+d+l,pts=parseInt(st.pts)||(w*3+d);
@@ -1008,16 +1041,17 @@ async function bukaInfoPlayerAllTime(nama, filterType){
     const headerGrad=filterType==='ft'?'background:linear-gradient(135deg,#7d0000,#c62828)':filterType==='klub'?'background:linear-gradient(135deg,#0a5e40,#1b7a52)':'background:linear-gradient(135deg,#37003c,#6a0dad)';
     const typeLabel=filterType==='ft'?'🔞 Full Transfer':filterType==='klub'?'⚽ Klub':'Overall';
 
+    // UPDATE URUTAN: JUARA -> MAIN -> WIN -> DRAW -> LOSS -> PTS -> WIN%
     let html='<div style="'+headerGrad+';border-radius:12px;padding:14px 16px;margin-bottom:16px;color:white;">'
         +'<div style="font-size:0.68rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;opacity:0.7;margin-bottom:10px;">📊 Grand Total — '+gtLiga+' Liga ('+typeLabel+')</div>'
         +'<div style="display:flex;gap:10px;flex-wrap:wrap;">'
         +'<div style="text-align:center;background:rgba(255,215,0,0.25);border-radius:8px;padding:8px 14px;min-width:50px;border:1px solid rgba(255,215,0,0.4);"><div style="font-size:1.4rem;font-weight:900;color:#ffd700;">'+gtJuara+'</div><div style="font-size:0.58rem;font-weight:700;opacity:0.8;text-transform:uppercase;margin-top:2px;">🏆 Juara</div></div>'
+        +'<div style="text-align:center;background:rgba(255,255,255,0.12);border-radius:8px;padding:8px 14px;min-width:50px;"><div style="font-size:1.4rem;font-weight:900;color:white;">'+gtPl+'</div><div style="font-size:0.58rem;font-weight:700;opacity:0.7;text-transform:uppercase;margin-top:2px;">Main</div></div>'
         +'<div style="text-align:center;background:rgba(255,255,255,0.12);border-radius:8px;padding:8px 14px;min-width:50px;"><div style="font-size:1.4rem;font-weight:900;color:#00ff85;">'+gtW+'</div><div style="font-size:0.58rem;font-weight:700;opacity:0.7;text-transform:uppercase;margin-top:2px;">Win</div></div>'
         +'<div style="text-align:center;background:rgba(255,255,255,0.12);border-radius:8px;padding:8px 14px;min-width:50px;"><div style="font-size:1.4rem;font-weight:900;color:#d0d0d0;">'+gtD+'</div><div style="font-size:0.58rem;font-weight:700;opacity:0.7;text-transform:uppercase;margin-top:2px;">Draw</div></div>'
         +'<div style="text-align:center;background:rgba(255,255,255,0.12);border-radius:8px;padding:8px 14px;min-width:50px;"><div style="font-size:1.4rem;font-weight:900;color:#ff6b6b;">'+gtL+'</div><div style="font-size:0.58rem;font-weight:700;opacity:0.7;text-transform:uppercase;margin-top:2px;">Loss</div></div>'
-        +'<div style="text-align:center;background:rgba(255,255,255,0.12);border-radius:8px;padding:8px 14px;min-width:50px;"><div style="font-size:1.4rem;font-weight:900;color:white;">'+gtPl+'</div><div style="font-size:0.58rem;font-weight:700;opacity:0.7;text-transform:uppercase;margin-top:2px;">Main</div></div>'
-        +'<div style="text-align:center;background:rgba(233,0,82,0.4);border-radius:8px;padding:8px 14px;min-width:50px;"><div style="font-size:1.4rem;font-weight:900;color:#fff;">'+gPct+'%</div><div style="font-size:0.58rem;font-weight:700;opacity:0.7;text-transform:uppercase;margin-top:2px;">Win%</div></div>'
         +'<div style="text-align:center;background:rgba(255,255,255,0.12);border-radius:8px;padding:8px 14px;min-width:50px;"><div style="font-size:1.4rem;font-weight:900;color:#fdbb2d;">'+gPts+'</div><div style="font-size:0.58rem;font-weight:700;opacity:0.7;text-transform:uppercase;margin-top:2px;">Pts</div></div>'
+        +'<div style="text-align:center;background:rgba(233,0,82,0.4);border-radius:8px;padding:8px 14px;min-width:50px;"><div style="font-size:1.4rem;font-weight:900;color:#fff;">'+gPct+'%</div><div style="font-size:0.58rem;font-weight:700;opacity:0.7;text-transform:uppercase;margin-top:2px;">Win%</div></div>'
         +'</div></div>'
         +'<div style="font-size:0.68rem;font-weight:700;color:var(--sub);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;">'+(filterType==='ft'?'🔞':'⚽')+' Statistik per Kategori ('+clubs.length+' entri)</div>';
 
@@ -1027,18 +1061,21 @@ async function bukaInfoPlayerAllTime(nama, filterType){
         const isBest=idx===0&&!isUk;
         const isFTCard=cs.isFT;
 
-        // Card styling
         const cardBg=isBest?(isFTCard?'background:linear-gradient(90deg,#ffebee,#fff0f0);':'background:linear-gradient(90deg,#fff9c4,#fff3e0);'):'';
-        const clubIcon=isFTCard?'🔞':'⚽';
         const clubColor=isFTCard?'color:#c62828;':'color:#0a5e40;';
         const clubBadgeBg=isFTCard?'#ffebee':'#e8f5e9';
         const clubBadgeBorder=isFTCard?'#ffcdd2':'#c8e6c9';
         const clubBadgeColor=isFTCard?'#c62828':'#0a5e40';
+        
+        const logo=getClubLogo(club);
+        const clubIcon=isFTCard?'🔞':(logo?'<img src="'+logo+'" style="width:20px;height:20px;object-fit:contain;vertical-align:middle;">':'⚽');
+        const finalIcon=isUk?'⚽':clubIcon;
 
+        // UPDATE URUTAN: JUARA -> MAIN -> WIN -> DRAW -> LOSS -> PTS -> WIN%
         html+='<div class="league-card" style="margin-bottom:10px;">'
             +'<div class="league-card-head" style="'+cardBg+'"><div>'
             +'<span class="lc-title" style="'+(isUk?'color:#aaa;font-style:italic;':clubColor)+'">'
-            +(isBest?'🥇 ':'')+clubIcon+' '
+            +(isBest?'🥇 ':'')+finalIcon+' '
             +'<span style="background:'+clubBadgeBg+';border:1px solid '+clubBadgeBorder+';color:'+clubBadgeColor+';padding:2px 10px;border-radius:6px;font-size:0.9rem;font-weight:900;">'+escHtml(club)+'</span>'
             +'</span>'
             +'<div style="font-size:0.68rem;color:var(--sub);margin-top:3px;">'+cs.liga+'x Liga dipakai</div>'
@@ -1047,12 +1084,12 @@ async function bukaInfoPlayerAllTime(nama, filterType){
             +'</div>'
             +'<div class="league-card-body"><div class="stat-pills">'
             +'<div class="stat-pill" style="background:'+(cs.juara>0?'#fffde7':'#f5f5f5')+';'+(cs.juara>0?'border:1px solid #ffd700;':'')+'"><span class="sp-val" style="color:'+(cs.juara>0?'#c6a000':'#bbb')+';">'+cs.juara+'🏆</span><span class="sp-lbl">Juara</span></div>'
+            +'<div class="stat-pill"><span class="sp-val">'+cs.pl+'</span><span class="sp-lbl">Main</span></div>'
             +'<div class="stat-pill"><span class="sp-val win">'+cs.w+'</span><span class="sp-lbl">Win</span></div>'
             +'<div class="stat-pill"><span class="sp-val draw">'+cs.d+'</span><span class="sp-lbl">Draw</span></div>'
             +'<div class="stat-pill"><span class="sp-val loss">'+cs.l+'</span><span class="sp-lbl">Loss</span></div>'
-            +'<div class="stat-pill"><span class="sp-val">'+cs.pl+'</span><span class="sp-lbl">Main</span></div>'
-            +'<div class="stat-pill"><span class="sp-val pct">'+pct+'%</span><span class="sp-lbl">Win%</span></div>'
             +'<div class="stat-pill"><span class="sp-val" style="color:#fdbb2d;">'+cs.pts+'</span><span class="sp-lbl">Pts</span></div>'
+            +'<div class="stat-pill"><span class="sp-val pct">'+pct+'%</span><span class="sp-lbl">Win%</span></div>'
             +'</div>'
             +'<div class="win-bar-wrap"><div class="win-bar-label"><span>Win Rate</span><span>'+cs.w+'W · '+cs.d+'D · '+cs.l+'L dari '+cs.pl+' pertandingan</span></div>'
             +'<div class="win-bar-bg"><div class="win-bar-fill" style="width:'+pct+'%;background:'+(pct>=60?'linear-gradient(90deg,var(--win),#00e676)':pct>=40?'linear-gradient(90deg,#888,#bbb)':'linear-gradient(90deg,var(--loss),#ff8a80)')+'"></div></div>'
@@ -1080,7 +1117,6 @@ function matikanAdmin(){
     loadData(); renderStatsCards();
 }
 
-// ── LIGA TYPE SELECTOR (Admin Buat Liga) ──────────────────────
 function pilihTipeLiga(type){
     newLigaType=type;
     const btnFT=document.getElementById('lbtnFT');
@@ -1088,7 +1124,6 @@ function pilihTipeLiga(type){
     if(!btnFT||!btnKlub) return;
     btnFT.className='liga-type-btn'+(type==='ft'?' active-ft':'');
     btnKlub.className='liga-type-btn'+(type==='klub'?' active-klub':'');
-    // Tampilkan/sembunyikan input nama klub berdasarkan type
     const klubInputWrap=document.getElementById('adminKlubNameSection');
     if(klubInputWrap) klubInputWrap.style.display=type==='klub'?'block':'none';
 }
@@ -1106,8 +1141,6 @@ function renderAdminArea(){
         +'<p style="font-size:0.82rem;color:#666;margin-bottom:10px;">Centang tepat <strong>'+currentMode+' pemain</strong>:</p>'
         +'<div class="p-checks">'+ALL_PLAYERS.map(p=>'<label><input type="checkbox" class="p-check" value="'+p+'" checked> '+p+'</label>').join('')+'</div>'
         +'<select id="newDate" class="adm-select" style="margin-top:10px;">'+Array.from({length:31},(_,i)=>'<option value="'+(i+1)+'">Tanggal '+(i+1)+'</option>').join('')+'</select>'
-
-        // ── PILIH TIPE LIGA ──
         +'<p style="font-size:0.8rem;font-weight:700;color:var(--sub);text-transform:uppercase;letter-spacing:0.5px;margin:12px 0 8px;">Tipe Liga:</p>'
         +'<div class="liga-type-select">'
         +'<div class="liga-type-btn" id="lbtnFT" onclick="pilihTipeLiga(\'ft\')">'
@@ -1117,8 +1150,6 @@ function renderAdminArea(){
         +'<span class="lbt-icon">⚽</span><span class="lbt-label">Klub</span>'
         +'</div>'
         +'</div>'
-
-        // Input nama klub (hanya tampil kalau mode Klub)
         +'<div id="adminKlubNameSection" style="display:block;">'
         +'<p style="font-size:0.75rem;color:var(--sub);margin-bottom:6px;">Nama klub masing-masing player (opsional, bisa diisi nanti):</p>'
         +ALL_PLAYERS.map(p=>'<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">'
@@ -1126,13 +1157,11 @@ function renderAdminArea(){
             +'<input type="text" id="newKlub_'+p+'" class="admin-club-input" style="margin-bottom:0;flex:1;" placeholder="Nama klub '+p+'">'
             +'</div>').join('')
         +'</div>'
-
         +'<button class="btn-adm btn-create" onclick="buatLiga()">➕ Buat Liga</button>'
         +'<button class="btn-adm btn-off" onclick="matikanAdmin()">🔒 Matikan Admin</button>'
         +'<p style="font-size:0.75rem;color:#999;margin-top:10px;">💡 Klik nama player di tabel klasemen untuk edit data.</p>'
         +'</div>';
 
-    // Set default
     newLigaType='klub';
 }
 
@@ -1150,9 +1179,6 @@ async function buatLiga(){
     const {error:stErr}=await sb.from('standings').insert(standingsArr);
     if(stErr){ alert('❌ Gagal insert standings: '+stErr.message); return; }
 
-    // Insert match_info untuk semua player
-    // Untuk FT: is_full_transfer=true, club=''
-    // Untuk Klub: is_full_transfer=false, club=nama yang diinput (atau kosong)
     const miArr=sel.map(n=>({
         match_id:matchData.id,
         player_name:n,
