@@ -1,0 +1,1496 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LIGA PES</title>
+    <!-- Supabase JS v2 -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700;800;900&family=Barlow+Condensed:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        /* ===== PASTE SEMUA CSS DARI FILE ASLI DI SINI (tidak berubah) ===== */
+        :root {
+            --purple: #37003c; --pink: #e90052; --cyan: #00ff85;
+            --border: #e8dff0; --sub: #6c6c80; --hover: #f3eaff;
+            --win: #00c853; --draw: #b0b0b0; --loss: #e52b2b;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Barlow', sans-serif;
+            background: linear-gradient(160deg, #270668 0%, #5d15a3 45%, #1a0535 100%);
+            min-height: 100vh; color: #37003c;
+        }
+        /* LANDING */
+        .landing { position: fixed; inset: 0; background: linear-gradient(160deg, #270668 0%, #5d15a3 45%, #1a0535 100%); z-index: 10000; display: flex; flex-direction: column; justify-content: center; align-items: center; color: white; transition: opacity 0.5s; }
+        .landing h1 { font-family: 'Barlow Condensed', sans-serif; font-size: 3.5rem; font-weight: 900; letter-spacing: 2px; text-align: center; margin-bottom: 6px; }
+        .landing h1 span { color: var(--cyan); }
+        .landing p { font-size: 1rem; color: rgba(255,255,255,0.55); margin-bottom: 50px; letter-spacing: 3px; text-transform: uppercase; }
+        .mode-cards { display: flex; gap: 24px; flex-wrap: wrap; justify-content: center; padding: 20px; }
+        .mode-card { background: rgba(255,255,255,0.07); border: 1.5px solid rgba(255,255,255,0.15); backdrop-filter: blur(10px); padding: 48px 36px; border-radius: 20px; cursor: pointer; transition: all 0.3s; text-align: center; width: 200px; }
+        .mode-card:hover { background: var(--pink); border-color: var(--pink); transform: translateY(-8px); box-shadow: 0 20px 40px rgba(233,0,82,0.35); }
+        .mode-card h2 { font-size: 2.8rem; font-weight: 900; margin-bottom: 8px; }
+        .mode-card span { font-size: 0.85rem; font-weight: 600; letter-spacing: 1px; opacity: 0.8; text-transform: uppercase; }
+        /* APP */
+        .app { display: none; max-width: 1200px; margin: 0 auto; padding: 20px 16px 40px; }
+        .app.on { display: block; }
+        .app-header { background: var(--purple); border-radius: 16px; padding: 16px 24px; display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; gap: 12px; flex-wrap: wrap; }
+        .app-title { font-family: 'Barlow Condensed', sans-serif; font-size: 1.6rem; font-weight: 900; color: white; letter-spacing: 1px; cursor: default; user-select: none; }
+        .app-title span { color: var(--cyan); }
+        .header-right { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+        .mode-badge { background: var(--pink); color: white; padding: 5px 14px; border-radius: 20px; font-size: 0.78rem; font-weight: 700; }
+        .btn-switch { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.3); color: white; border-radius: 20px; padding: 6px 14px; cursor: pointer; font-size: 0.8rem; font-weight: 600; transition: 0.2s; font-family: 'Barlow', sans-serif; }
+        .btn-switch:hover { background: var(--pink); border-color: var(--pink); }
+        .nav-bar { background: white; border-radius: 12px; padding: 12px 20px; margin-bottom: 16px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+        .nav-label { font-size: 0.7rem; font-weight: 700; color: var(--sub); text-transform: uppercase; letter-spacing: 1px; white-space: nowrap; }
+        .nav-select { padding: 7px 14px; border-radius: 20px; border: 1.5px solid var(--border); background: white; cursor: pointer; font-size: 0.85rem; font-weight: 600; color: var(--purple); font-family: 'Barlow', sans-serif; appearance: none; padding-right: 32px; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%2337003c' d='M1 1l5 5 5-5'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; outline: none; }
+        .btn-alltime { padding: 7px 18px; border-radius: 20px; border: none; background: var(--pink); color: white; cursor: pointer; font-size: 0.85rem; font-weight: 800; font-family: 'Barlow', sans-serif; transition: 0.2s; }
+        .btn-alltime:hover { background: var(--purple); }
+        .btn-alltime.active { background: var(--purple); }
+        .btn-stats-menu { padding: 7px 18px; border-radius: 20px; border: none; background: linear-gradient(135deg, #ff6b35, #f7c59f); color: #7f0000; cursor: pointer; font-size: 0.85rem; font-weight: 800; font-family: 'Barlow', sans-serif; transition: 0.2s; }
+        .btn-stats-menu.active { background: linear-gradient(135deg, #b8360b, #e84c00); color: white; }
+        .btn-db-menu { padding: 7px 18px; border-radius: 20px; border: none; background: linear-gradient(135deg, #1565c0, #90caf9); color: #003c8f; cursor: pointer; font-size: 0.85rem; font-weight: 800; font-family: 'Barlow', sans-serif; transition: 0.2s; }
+        .btn-db-menu.active { background: linear-gradient(135deg, #003c8f, #1565c0); color: white; }
+        /* MAIN LAYOUT */
+        .main-layout { display: grid; grid-template-columns: 1fr 300px; gap: 16px; align-items: start; }
+        .content-panel { background: white; border-radius: 14px; overflow: hidden; }
+        .champ-banner { background: linear-gradient(135deg, var(--purple) 0%, #6a0dad 100%); color: white; text-align: center; padding: 13px 20px; font-size: 0.95rem; font-weight: 700; }
+        .champ-banner.hidden { display: none; }
+        /* SECTION HEAD */
+        .section-head { color: white; padding: 11px 18px; font-family: 'Barlow Condensed', sans-serif; font-size: 1.15rem; font-weight: 800; letter-spacing: 1px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+        .section-head.type-klub { background: linear-gradient(135deg, #1b5e20 0%, #2e7d32 40%, #43a047 80%, #66bb6a 100%); }
+        .section-head.type-ft   { background: linear-gradient(135deg, #7f0000 0%, #c62828 40%, #e53935 80%, #ff5252 100%); }
+        .section-head.type-unknown { background: linear-gradient(135deg, #4a4a5a 0%, #6c6c80 100%); }
+        .badge-liga { font-size: 0.68rem; padding: 2px 9px; border-radius: 10px; font-weight: 700; font-family: 'Barlow', sans-serif; }
+        .badge-liga.badge-klub { background: rgba(255,255,255,0.25); color: white; border: 1px solid rgba(255,255,255,0.45); }
+        .badge-liga.badge-ft   { background: rgba(255,255,255,0.2);  color: white; border: 1px solid rgba(255,255,255,0.35); }
+        .ft-accent-bar   { background: linear-gradient(90deg, #7f0000, #e53935, #ff5252, #e53935, #7f0000); background-size: 200% 100%; animation: shimBar 2s linear infinite; height: 3px; }
+        .klub-accent-bar { background: linear-gradient(90deg, #1b5e20, #69f0ae, #43a047, #69f0ae, #1b5e20); background-size: 200% 100%; animation: shimBar 2s linear infinite; height: 3px; }
+        @keyframes shimBar { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+        /* TABLE */
+        .tbl-wrap { overflow-x: auto; }
+        .epl-tbl { width: 100%; border-collapse: collapse; min-width: 560px; }
+        .epl-tbl thead th { padding: 11px 10px; font-size: 0.7rem; font-weight: 700; color: var(--sub); text-align: center; border-bottom: 2px solid var(--border); text-transform: uppercase; letter-spacing: 0.5px; background: white; }
+        .epl-tbl thead th.tl { text-align: left; }
+        .epl-tbl tbody tr { border-bottom: 1px solid var(--border); transition: background 0.12s; }
+        .epl-tbl tbody tr:hover { background: var(--hover); }
+        .epl-tbl tbody td { padding: 10px; text-align: center; font-size: 0.9rem; color: #37003c; }
+        .epl-tbl tbody td.tl { text-align: left; }
+        .epl-tbl.tbl-ft tbody tr:hover   { background: #fff5f5; }
+        .epl-tbl.tbl-klub tbody tr:hover { background: #f1f8f1; }
+        .pos-wrap { display: flex; align-items: center; }
+        .pos-bar { width: 4px; height: 34px; border-radius: 2px; margin-right: 8px; flex-shrink: 0; }
+        .bar-top      { background: var(--purple); } .bar-top-ft  { background: #c62828; } .bar-top-klub { background: #2e7d32; }
+        .bar-mid      { background: #e0d0f0; }       .bar-mid-ft  { background: #ef9a9a; } .bar-mid-klub { background: #a5d6a7; }
+        .pos-num      { font-weight: 700; font-size: 0.85rem; color: var(--sub); width: 20px; text-align: center; }
+        .pos-num.top  { color: var(--purple); } .pos-num.top-ft { color: #c62828; } .pos-num.top-klub { color: #2e7d32; }
+        .pts-big      { font-weight: 900; font-size: 1.05rem; color: var(--purple); }
+        .pts-big-ft   { font-weight: 900; font-size: 1.05rem; color: #c62828; }
+        .pts-big-klub { font-weight: 900; font-size: 1.05rem; color: #2e7d32; }
+        .gd-pos { color: #00c853; font-weight: 700; } .gd-neg { color: #e52b2b; font-weight: 700; } .gd-zero { color: #333; }
+        .win-row      { background: #fff3b0 !important; border-left: 4px solid #f0c000 !important; }
+        .win-row-ft   { background: #ffc0cb !important; border-left: 4px solid #e52b2b !important; }
+        .win-row-klub { background: #b8e8c0 !important; border-left: 4px solid #2e7d32 !important; }
+        .clickable-name      { cursor: pointer; color: var(--purple); font-weight: 800; font-size: 0.95rem; border-bottom: 1.5px dashed var(--purple); }
+        .clickable-name-ft   { cursor: pointer; color: #c62828; font-weight: 800; font-size: 0.95rem; border-bottom: 1.5px dashed #c62828; }
+        .clickable-name-klub { cursor: pointer; color: #2e7d32; font-weight: 800; font-size: 0.95rem; border-bottom: 1.5px dashed #2e7d32; }
+        .tbl-in { width: 38px; text-align: center; padding: 3px 2px; border: 1px solid #ccc; border-radius: 4px; font-size: 0.85rem; font-family: 'Barlow', sans-serif; }
+        .tbl-in-pts { background: #f5f5f5; color: #888; }
+        .match-block { border-top: 1px solid var(--border); }
+        .match-block:first-child { border-top: none; }
+        /* SIDEBAR */
+        .sidebar { display: flex; flex-direction: column; gap: 14px; }
+        .sb-card { background: white; border-radius: 14px; overflow: hidden; }
+        .sb-head { background: var(--purple); color: white; padding: 11px 16px; font-size: 0.78rem; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; }
+        .sb-head.dark   { background: #0f1a45; }
+        .sb-head.trophy { background: linear-gradient(135deg, #b8860b 0%, #daa520 100%); }
+        .sb-tbl { width: 100%; border-collapse: collapse; }
+        .sb-tbl thead th { font-size: 0.63rem; font-weight: 700; color: var(--sub); text-transform: uppercase; padding: 7px 12px; text-align: center; border-bottom: 1px solid var(--border); }
+        .sb-tbl thead th.tl { text-align: left; }
+        .sb-tbl tbody td { padding: 9px 12px; font-size: 0.85rem; text-align: center; border-bottom: 1px solid var(--border); color: #37003c; }
+        .sb-tbl tbody td.tl { text-align: left; font-weight: 600; }
+        .sb-tbl tbody tr:last-child td { border-bottom: none; }
+        .sb-pts { font-weight: 900; color: var(--purple); }
+        .sb-r1 td:first-child { border-left: 3px solid var(--pink); }
+        .trophy-count { font-weight: 900; font-size: 1rem; color: #b8860b; }
+        .empty-state { padding: 40px; text-align: center; color: #999; font-size: 0.95rem; }
+        /* ADMIN */
+        .admin-panel { background: white; border-radius: 14px; padding: 20px; margin-top: 16px; border: 2px dashed var(--pink); }
+        .admin-panel h3 { font-size: 0.85rem; font-weight: 800; color: var(--pink); margin-bottom: 12px; text-transform: uppercase; letter-spacing: 1px; }
+        .p-checks { display: flex; gap: 14px; flex-wrap: wrap; margin: 10px 0; }
+        .p-checks label { font-size: 0.85rem; font-weight: 600; display: flex; align-items: center; gap: 5px; cursor: pointer; }
+        .adm-select { width: 100%; padding: 9px 12px; border: 1.5px solid var(--border); border-radius: 8px; font-family: 'Barlow', sans-serif; font-size: 0.9rem; margin-bottom: 10px; outline: none; color: var(--purple); }
+        .btn-adm { display: block; width: 100%; padding: 11px; border-radius: 10px; border: none; cursor: pointer; font-family: 'Barlow', sans-serif; font-weight: 700; font-size: 0.9rem; margin-top: 8px; transition: 0.2s; }
+        .btn-create { background: var(--purple); color: white; }
+        .btn-create:hover { background: var(--pink); }
+        .btn-off { background: #eee; color: #666; }
+        .btn-edit { background: rgba(233,0,82,0.09); color: var(--pink); border: none; padding: 4px 10px; border-radius: 6px; cursor: pointer; font-size: 0.75rem; font-weight: 700; font-family: 'Barlow', sans-serif; }
+        .btn-save { background: #00c853; color: white; border: none; padding: 4px 10px; border-radius: 6px; cursor: pointer; font-size: 0.75rem; font-weight: 700; font-family: 'Barlow', sans-serif; }
+        .btn-del { background: none; border: none; cursor: pointer; font-size: 1rem; padding: 2px 5px; }
+        .liga-type-group { display: flex; gap: 12px; margin-bottom: 12px; }
+        .liga-type-card { flex: 1; padding: 18px 14px; border-radius: 12px; border: 2px solid var(--border); background: white; font-family: 'Barlow', sans-serif; cursor: pointer; transition: all 0.22s; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 6px; }
+        .liga-type-card .ltc-icon  { font-size: 2rem; line-height: 1; }
+        .liga-type-card .ltc-label { font-size: 0.95rem; font-weight: 800; }
+        .liga-type-card .ltc-desc  { font-size: 0.72rem; font-weight: 600; opacity: 0.65; }
+        .liga-type-card.aktif-klub { background: linear-gradient(135deg, #1b5e20, #43a047); border-color: #1b5e20; color: white; }
+        .liga-type-card.aktif-ft   { background: linear-gradient(135deg, #7f0000, #e53935); border-color: #7f0000; color: white; }
+        .club-inputs-admin { display: none; background: #f1f8f1; border-radius: 8px; padding: 12px; margin-bottom: 10px; border: 1px solid #a5d6a7; }
+        .club-input-row    { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+        .club-input-row label { font-size: 0.78rem; font-weight: 700; color: #2e7d32; min-width: 52px; }
+        .club-input-field  { flex: 1; padding: 7px 10px; border-radius: 6px; border: 1.5px solid #a5d6a7; font-family: 'Barlow', sans-serif; font-size: 0.85rem; color: #2e7d32; outline: none; }
+        /* INFO MODAL */
+        .info-modal { display: none; position: fixed; inset: 0; background: rgba(15,5,30,0.85); z-index: 99999; justify-content: center; align-items: center; padding: 20px; backdrop-filter: blur(6px); }
+        .info-modal.on { display: flex; }
+        .info-modal-box { background: white; width: 100%; max-width: 700px; border-radius: 20px; overflow: hidden; position: relative; box-shadow: 0 24px 80px rgba(0,0,0,0.6); animation: modalIn 0.3s cubic-bezier(0.34,1.56,0.64,1); }
+        @keyframes modalIn { from{opacity:0;transform:translateY(30px) scale(0.95)} to{opacity:1;transform:translateY(0) scale(1)} }
+        .info-modal-header { background: linear-gradient(135deg, var(--purple) 0%, #6a0dad 100%); padding: 26px 30px 22px; color: white; position: relative; }
+        .info-modal-header h2 { font-family: 'Barlow Condensed', sans-serif; font-size: 2.2rem; font-weight: 900; letter-spacing: 1px; margin: 0; }
+        .info-modal-header p  { font-size: 0.82rem; opacity: 0.65; margin-top: 4px; letter-spacing: 1px; text-transform: uppercase; }
+        .info-close { position: absolute; top: 14px; right: 14px; background: rgba(255,255,255,0.15); border: none; width: 36px; height: 36px; border-radius: 50%; font-size: 1.2rem; cursor: pointer; color: white; display: flex; justify-content: center; align-items: center; }
+        .info-close:hover { background: var(--pink); }
+        .info-modal-body { padding: 24px 30px 28px; max-height: 75vh; overflow-y: auto; }
+        .stat-pills { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; }
+        .stat-pill { display: flex; flex-direction: column; align-items: center; background: #f3eaff; border-radius: 10px; padding: 8px 14px; min-width: 54px; }
+        .stat-pill .sp-val { font-size: 1.3rem; font-weight: 900; color: var(--purple); line-height: 1; }
+        .stat-pill .sp-val.win  { color: var(--win); }
+        .stat-pill .sp-val.draw { color: #888; }
+        .stat-pill .sp-val.loss { color: var(--loss); }
+        .stat-pill .sp-val.pct  { color: var(--pink); }
+        .stat-pill .sp-lbl { font-size: 0.6rem; font-weight: 700; color: var(--sub); text-transform: uppercase; margin-top: 2px; }
+        .win-bar-wrap  { margin-top: 8px; }
+        .win-bar-bg    { background: #f0e6ff; border-radius: 20px; height: 8px; overflow: hidden; }
+        .win-bar-fill  { height: 100%; border-radius: 20px; background: linear-gradient(90deg, var(--pink), #9b27af); }
+        /* LOGIN MODAL */
+        .login-modal { display: none; position: fixed; inset: 0; background: rgba(15,5,30,0.9); z-index: 100000; justify-content: center; align-items: center; padding: 20px; backdrop-filter: blur(8px); }
+        .login-modal.on { display: flex; }
+        .login-box { background: white; padding: 30px; border-radius: 16px; width: 100%; max-width: 350px; text-align: center; box-shadow: 0 20px 60px rgba(0,0,0,0.5); }
+        .login-box h2 { font-family: 'Barlow Condensed', sans-serif; font-size: 2rem; color: var(--purple); margin-bottom: 20px; }
+        .auth-btn { width: 100%; padding: 12px; border-radius: 8px; border: none; font-weight: 700; font-family: 'Barlow', sans-serif; cursor: pointer; margin-bottom: 10px; font-size: 1rem; }
+        .btn-login  { background: var(--pink); color: white; }
+        .btn-cancel { background: #eee; color: #666; }
+        /* DATABASE PEMAIN */
+        .db-page-header { background: linear-gradient(135deg, #003c8f 0%, #1565c0 100%); padding: 24px 28px 20px; color: white; }
+        .db-page-header h2 { font-family: 'Barlow Condensed', sans-serif; font-size: 2rem; font-weight: 900; letter-spacing: 2px; margin: 0; }
+        .db-player-tabs { display: flex; border-bottom: 2px solid var(--border); background: white; overflow-x: auto; }
+        .db-player-tab { flex-shrink: 0; padding: 12px 20px; font-size: 0.82rem; font-weight: 800; color: var(--sub); border: none; background: none; cursor: pointer; border-bottom: 3px solid transparent; margin-bottom: -2px; transition: 0.15s; font-family: 'Barlow', sans-serif; text-transform: uppercase; }
+        .db-player-tab.on { color: #1565c0; border-bottom-color: #1565c0; }
+        .db-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 12px 20px; background: #f8f5ff; border-bottom: 1px solid var(--border); flex-wrap: wrap; }
+        .db-toolbar-left { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+        .db-search { padding: 7px 14px; border: 1.5px solid var(--border); border-radius: 20px; font-family: 'Barlow', sans-serif; font-size: 0.85rem; color: var(--purple); outline: none; min-width: 160px; }
+        .db-filter-pos { padding: 7px 12px; border: 1.5px solid var(--border); border-radius: 20px; font-family: 'Barlow', sans-serif; font-size: 0.82rem; color: var(--purple); background: white; outline: none; cursor: pointer; }
+        .btn-db-add { padding: 7px 16px; border-radius: 20px; border: none; background: #1565c0; color: white; font-family: 'Barlow', sans-serif; font-size: 0.8rem; font-weight: 700; cursor: pointer; }
+        .db-table-wrap { overflow-x: auto; }
+        .db-tbl { width: 100%; border-collapse: collapse; min-width: 440px; }
+        .db-tbl thead th { padding: 10px 12px; font-size: 0.68rem; font-weight: 700; color: var(--sub); text-align: left; border-bottom: 2px solid var(--border); text-transform: uppercase; letter-spacing: 0.5px; background: white; white-space: nowrap; cursor: pointer; user-select: none; }
+        .db-tbl tbody tr { border-bottom: 1px solid var(--border); transition: background 0.12s; }
+        .db-tbl tbody tr:hover { background: #e8f4ff; }
+        .db-tbl tbody td { padding: 9px 12px; font-size: 0.88rem; color: #37003c; vertical-align: middle; }
+        .db-num { font-weight: 900; font-size: 0.78rem; color: #1565c0; width: 28px; text-align: center; }
+        .db-pos-badge { display: inline-block; padding: 2px 8px; border-radius: 6px; font-size: 0.68rem; font-weight: 800; letter-spacing: 0.5px; }
+        .db-pos-GK { background: #fff3e0; color: #e65100; border: 1px solid #ffcc80; }
+        .db-pos-CB { background: #e8f5e9; color: #1b5e20; border: 1px solid #a5d6a7; }
+        .db-pos-LB { background: #e8f5e9; color: #1b5e20; border: 1px solid #a5d6a7; }
+        .db-pos-RB { background: #e8f5e9; color: #1b5e20; border: 1px solid #a5d6a7; }
+        .db-pos-DMF { background: #e3f2fd; color: #0d47a1; border: 1px solid #90caf9; }
+        .db-pos-CMF { background: #e3f2fd; color: #0d47a1; border: 1px solid #90caf9; }
+        .db-pos-AMF { background: #fce4ec; color: #880e4f; border: 1px solid #f48fb1; }
+        .db-pos-LWF { background: #f3e5f5; color: #4a148c; border: 1px solid #ce93d8; }
+        .db-pos-RWF { background: #f3e5f5; color: #4a148c; border: 1px solid #ce93d8; }
+        .db-pos-CF  { background: #ffebee; color: #b71c1c; border: 1px solid #ef9a9a; }
+        .db-pos-SS  { background: #fce4ec; color: #880e4f; border: 1px solid #f48fb1; }
+        .db-action-btn { padding: 3px 8px; border-radius: 5px; border: none; cursor: pointer; font-size: 0.72rem; font-weight: 700; font-family: 'Barlow', sans-serif; }
+        .db-edit-btn { background: #e3f2fd; color: #1565c0; }
+        .db-del-btn  { background: #ffebee; color: #c62828; margin-left: 4px; }
+        /* DB MODAL */
+        .db-modal { display: none; position: fixed; inset: 0; background: rgba(15,5,30,0.85); z-index: 99999; justify-content: center; align-items: center; padding: 16px; backdrop-filter: blur(6px); }
+        .db-modal.on { display: flex; }
+        .db-modal-box { background: white; width: 100%; max-width: 480px; border-radius: 18px; overflow: hidden; box-shadow: 0 24px 80px rgba(0,0,0,0.5); animation: modalIn 0.3s cubic-bezier(0.34,1.56,0.64,1); }
+        .db-modal-header { background: linear-gradient(135deg, #003c8f, #1565c0); padding: 18px 22px; color: white; display: flex; align-items: center; justify-content: space-between; }
+        .db-modal-header h3 { font-family: 'Barlow Condensed', sans-serif; font-size: 1.4rem; font-weight: 900; letter-spacing: 1px; margin: 0; }
+        .db-modal-close { background: rgba(255,255,255,0.15); border: none; width: 32px; height: 32px; border-radius: 50%; color: white; font-size: 1.1rem; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        .db-modal-close:hover { background: var(--pink); }
+        .db-modal-body { padding: 18px 22px 22px; }
+        .db-form-row    { margin-bottom: 13px; }
+        .db-form-label  { font-size: 0.72rem; font-weight: 700; color: var(--sub); text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 5px; }
+        .db-form-input, .db-form-select { width: 100%; padding: 9px 12px; border: 1.5px solid var(--border); border-radius: 8px; font-family: 'Barlow', sans-serif; font-size: 0.95rem; color: var(--purple); outline: none; background: white; }
+        .db-form-actions { display: flex; gap: 8px; margin-top: 16px; }
+        .db-btn-save   { flex: 1; padding: 11px; border-radius: 8px; border: none; background: #1565c0; color: white; font-family: 'Barlow', sans-serif; font-weight: 700; font-size: 0.9rem; cursor: pointer; }
+        .db-btn-cancel { padding: 11px 18px; border-radius: 8px; border: none; background: #eee; color: #666; font-family: 'Barlow', sans-serif; font-weight: 700; font-size: 0.9rem; cursor: pointer; }
+        /* STATS PAGE */
+        .stats-page-header { background: linear-gradient(135deg, #ff6b35 0%, #e84c00 50%, #b8360b 100%); padding: 24px 28px 20px; color: white; }
+        .stats-page-header h2 { font-family: 'Barlow Condensed', sans-serif; font-size: 2rem; font-weight: 900; letter-spacing: 2px; margin: 0; }
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0; }
+        .stats-section { padding: 20px 24px; border-right: 1px solid var(--border); }
+        .stats-section:last-child { border-right: none; }
+        .stats-section-title { font-family: 'Barlow Condensed', sans-serif; font-size: 1.1rem; font-weight: 900; letter-spacing: 1px; color: var(--purple); margin-bottom: 16px; padding-bottom: 8px; border-bottom: 2px solid var(--border); }
+        .stats-player-card { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--border); }
+        .stats-player-card:last-child { border-bottom: none; }
+        .stats-player-rank { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 900; flex-shrink: 0; background: #f0e6ff; color: var(--purple); }
+        .stats-player-rank.r1 { background: #ffd700; color: #7a5000; }
+        .stats-player-rank.r2 { background: #c0c0c0; color: #3a3a3a; }
+        .stats-player-rank.r3 { background: #cd7f32; color: white; }
+        .stats-player-info { flex: 1; }
+        .stats-player-name { font-weight: 800; font-size: 0.9rem; color: var(--purple); }
+        .stats-player-sub  { font-size: 0.7rem; color: var(--sub); font-weight: 600; }
+        .stats-player-val  { font-family: 'Barlow Condensed', sans-serif; font-size: 1.8rem; font-weight: 900; color: var(--purple); line-height: 1; }
+        .stats-player-val.goals   { color: var(--win); }
+        .stats-player-val.assists { color: var(--pink); }
+        /* MOBILE */
+        .mob-tabs { display: none; }
+        .mob-tab-btns { display: flex; border-bottom: 2px solid var(--border); }
+        .mob-tab-btn { flex: 1; padding: 11px; text-align: center; font-size: 0.8rem; font-weight: 700; color: var(--sub); border: none; background: white; cursor: pointer; border-bottom: 3px solid transparent; margin-bottom: -2px; font-family: 'Barlow', sans-serif; }
+        .mob-tab-btn.on { color: var(--purple); border-bottom-color: var(--purple); }
+        .mob-tbl { display: none; width: 100%; border-collapse: collapse; }
+        .mob-tbl.on { display: table; }
+        .mob-tbl thead th { padding: 8px 10px; font-size: 0.67rem; font-weight: 700; color: var(--sub); text-align: center; border-bottom: 1px solid var(--border); text-transform: uppercase; }
+        .mob-tbl thead th.tl { text-align: left; }
+        .mob-tbl tbody td { padding: 9px 8px; font-size: 0.85rem; text-align: center; border-bottom: 1px solid var(--border); color: #37003c; }
+        .mob-tbl tbody td.tl { text-align: left; }
+        .mob-tbl tbody tr:last-child td { border-bottom: none; }
+        .mob-tbl tbody tr:hover { background: var(--hover); }
+        .desktop-only { display: block; }
+        @media (max-width: 900px) {
+            .main-layout { grid-template-columns: 1fr; }
+            .mob-tabs { display: block; }
+            .desktop-only { display: none !important; }
+            .stats-grid { grid-template-columns: 1fr; }
+            .stats-section { border-right: none; border-bottom: 1px solid var(--border); }
+        }
+        @media (max-width: 600px) {
+            .landing h1 { font-size: 2.4rem; }
+            .mode-card { width: 150px; padding: 36px 20px; }
+        }
+        /* Admin club edit */
+        .admin-club-edit { margin-top: 14px; padding-top: 14px; border-top: 1px dashed #ddd; }
+        .admin-club-edit label { font-size: 0.75rem; font-weight: 700; color: var(--sub); text-transform: uppercase; display: block; margin-bottom: 4px; }
+        .admin-club-input { width: 100%; padding: 9px 12px; border-radius: 8px; border: 1.5px solid var(--border); font-family: 'Barlow', sans-serif; font-size: 0.95rem; outline: none; margin-bottom: 8px; color: var(--purple); }
+        .admin-club-check { display: flex; align-items: center; gap: 6px; font-size: 0.85rem; font-weight: 600; margin-bottom: 8px; cursor: pointer; }
+        .btn-save-club { background: #00c853; color: white; border: none; padding: 9px 20px; border-radius: 8px; font-family: 'Barlow', sans-serif; font-size: 0.85rem; font-weight: 700; cursor: pointer; }
+        .no-club { color: #bbb; font-size: 0.9rem; font-style: italic; padding: 8px 0; }
+        .badge-mode { font-size: 0.7rem; padding: 3px 10px; border-radius: 10px; font-weight: 800; font-family: 'Barlow', sans-serif; letter-spacing: 0.5px; text-transform: uppercase; }
+        .badge-mode.mode-klub { background: #e8f5e9; color: #1b5e20; border: 1.5px solid #a5d6a7; }
+        .badge-mode.mode-ft   { background: #ffebee; color: #b71c1c; border: 1.5px solid #ef9a9a; }
+        .db-stat-row { display: flex; gap: 8px; flex-wrap: wrap; padding: 10px 20px 12px; background: #f8f5ff; border-bottom: 1px solid var(--border); }
+        .db-stat-chip { background: white; border: 1px solid var(--border); border-radius: 20px; padding: 4px 12px; font-size: 0.72rem; font-weight: 700; color: var(--sub); }
+        .db-stat-chip span { color: var(--purple); font-size: 0.9rem; }
+        .db-trade-badge { display: inline-block; padding: 1px 6px; border-radius: 5px; font-size: 0.62rem; font-weight: 700; background: #fff9c4; color: #f57f17; border: 1px solid #ffe082; margin-left: 4px; }
+        .db-club-cell { display: flex; align-items: center; gap: 6px; }
+        .db-club-logo { width: 20px; height: 20px; object-fit: contain; flex-shrink: 0; }
+        .db-club-name { font-weight: 600; font-size: 0.85rem; }
+    </style>
+</head>
+<body>
+
+<!-- LANDING -->
+<div id="landingPage" class="landing">
+    <h1>LIGA <span>PES</span></h1>
+    <p>⚽ League Manager</p>
+    <div class="mode-cards">
+        <div class="mode-card" onclick="setMode('3')"><h2>3</h2><span>Player Mode</span></div>
+        <div class="mode-card" onclick="setMode('4')"><h2>4</h2><span>Player Mode</span></div>
+    </div>
+</div>
+
+<!-- APP -->
+<div id="appRoot" class="app">
+    <div class="app-header">
+        <div class="app-title" onclick="cekAdmin()">LIGA <span>PES</span></div>
+        <div class="header-right">
+            <span id="modeBadge" class="mode-badge">Mode Aktif</span>
+            <button class="btn-switch" onclick="kembaliKeMenuAwal()">🔄 Ganti Mode</button>
+        </div>
+    </div>
+    <div class="nav-bar">
+        <span class="nav-label">📅 Bulan:</span>
+        <select id="monthSelect" class="nav-select" onchange="gantiBulan(this.value)"></select>
+        <button id="btnAllTime" class="btn-alltime" onclick="gantiBulan('ALL TIME STANDING')">🏆 All Time</button>
+        <button id="btnStats"   class="btn-stats-menu" onclick="gantiBulan('STATS')">📊 Stats</button>
+        <button id="btnDB"      class="btn-db-menu"    onclick="gantiBulan('DATABASE')">👥 Database</button>
+    </div>
+    <div class="main-layout">
+        <div>
+            <div class="content-panel" id="contentPanel">
+                <div id="champBanner" class="champ-banner hidden"></div>
+                <div id="mainContent"></div>
+            </div>
+            <div id="adminArea"></div>
+        </div>
+        <div class="sidebar">
+            <div class="sb-card" id="sbTrophyMonthCard">
+                <div class="sb-head trophy">🏆 Trophy — <span id="sbTrophyMonthTitle">Bulan Ini</span></div>
+                <table class="sb-tbl"><thead><tr><th class="tl">Player</th><th>🏆 Juara</th></tr></thead><tbody id="sbTrophyMonthBody"></tbody></table>
+            </div>
+            <div class="sb-card" id="sbMonthCard">
+                <div class="sb-head">📊 <span id="sbMonthTitle">Total Poin</span></div>
+                <table class="sb-tbl"><thead><tr><th class="tl">Player</th><th>Pts</th></tr></thead><tbody id="sbMonthBody"></tbody></table>
+            </div>
+            <div class="sb-card" id="sbTrophyAllCard" style="display:none;">
+                <div class="sb-head trophy">🏆 Trophy — All Time</div>
+                <table class="sb-tbl"><thead><tr><th class="tl">Player</th><th>🏆 Juara</th></tr></thead><tbody id="sbTrophyAllBody"></tbody></table>
+            </div>
+            <div class="sb-card" id="sbAllTimeCard" style="display:none;">
+                <div class="sb-head dark">📊 All Time Points</div>
+                <table class="sb-tbl"><thead><tr><th class="tl">Player</th><th>Pts</th></tr></thead><tbody id="sbAllTimeBody"></tbody></table>
+            </div>
+            <div id="adminStatsTool"></div>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL INFO PLAYER -->
+<div id="infoModal" class="info-modal" onclick="if(event.target===this)tutupInfoPlayer()">
+    <div class="info-modal-box">
+        <div class="info-modal-header">
+            <h2 id="infoModalTitle">Player Info</h2>
+            <p id="infoModalSubtitle"></p>
+            <button class="info-close" onclick="tutupInfoPlayer()">×</button>
+        </div>
+        <div class="info-modal-body" id="infoModalBody"></div>
+    </div>
+</div>
+
+<!-- MODAL DATABASE PEMAIN -->
+<div id="dbModal" class="db-modal" onclick="if(event.target===this)tutupDbModal()">
+    <div class="db-modal-box">
+        <div class="db-modal-header">
+            <h3 id="dbModalTitle">Tambah Pemain</h3>
+            <button class="db-modal-close" onclick="tutupDbModal()">×</button>
+        </div>
+        <div class="db-modal-body">
+            <div class="db-form-row"><label class="db-form-label">Nomor</label><input type="number" id="dbFormNum" class="db-form-input" placeholder="1" min="1" max="99"></div>
+            <div class="db-form-row"><label class="db-form-label">Nama Pemain</label><input type="text" id="dbFormName" class="db-form-input" placeholder="contoh: Erling Haaland"></div>
+            <div class="db-form-row"><label class="db-form-label">Nama Klub</label><input type="text" id="dbFormClub" class="db-form-input" placeholder="contoh: Manchester City"></div>
+            <div class="db-form-row">
+                <label class="db-form-label">Posisi</label>
+                <select id="dbFormPos" class="db-form-select">
+                    <option value="">-- Pilih Posisi --</option>
+                    <option value="GK">GK</option><option value="CB">CB</option><option value="LB">LB</option><option value="RB">RB</option>
+                    <option value="DMF">DMF</option><option value="CMF">CMF</option><option value="AMF">AMF</option>
+                    <option value="RMF">RMF</option><option value="LMF">LMF</option>
+                    <option value="LWF">LWF</option><option value="RWF">RWF</option><option value="SS">SS</option><option value="CF">CF</option>
+                </select>
+            </div>
+            <div class="db-form-row"><label class="db-form-label">Rating (opsional)</label><input type="number" id="dbFormRating" class="db-form-input" placeholder="85" min="1" max="99"></div>
+            <div class="db-form-row"><label class="db-form-label">Catatan (opsional)</label><input type="text" id="dbFormNote" class="db-form-input" placeholder="Trade, Injured, dll."></div>
+            <div class="db-form-actions">
+                <button class="db-btn-cancel" onclick="tutupDbModal()">Batal</button>
+                <button class="db-btn-save" onclick="simpanDbPemain()">💾 Simpan</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL ADMIN (klik 5x) -->
+<div id="loginModal" class="login-modal">
+    <div class="login-box">
+        <h2>⚡ Mode Admin</h2>
+        <p style="color:#666;margin-bottom:20px;font-size:0.9rem;">Aktifkan atau nonaktifkan akses admin</p>
+        <button class="auth-btn btn-login" onclick="aktifkanAdmin()">✅ Aktifkan Admin</button>
+        <button class="auth-btn btn-cancel" onclick="tutupLogin()">Batal</button>
+    </div>
+</div>
+
+<script>
+// ============================================================
+// SUPABASE CONFIG — GANTI DENGAN MILIK ANDA
+// ============================================================
+const SUPABASE_URL      = 'https://XXXXXXXXXXXXXXXX.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.XXXXX';
+
+const { createClient } = supabase;
+const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// ============================================================
+// KONSTANTA
+// ============================================================
+const MONTHS      = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+const ALL_PLAYERS = ['Toxx','Stive','Alfa','Kobe'];
+const DB_PLAYERS  = ['Toxx','Stive','Alfa','Kobe','NON USER'];
+const LIGA_ORDINAL = ['Pertama','Kedua','Ketiga','Keempat','Kelima','Keenam','Ketujuh','Kedelapan','Kesembilan','Kesepuluh','Kesebelas','Kedua Belas'];
+function ligaOrdinal(n) { return LIGA_ORDINAL[(n-1)] || 'ke-'+n; }
+
+const CLUB_LOGO_MAP = {
+    'real madrid':'https://upload.wikimedia.org/wikipedia/en/5/56/Real_Madrid_CF.svg',
+    'barcelona':'https://upload.wikimedia.org/wikipedia/en/4/47/FC_Barcelona_%28crest%29.svg',
+    'manchester city':'https://upload.wikimedia.org/wikipedia/en/e/eb/Manchester_City_FC_badge.svg',
+    'man city':'https://upload.wikimedia.org/wikipedia/en/e/eb/Manchester_City_FC_badge.svg',
+    'liverpool':'https://upload.wikimedia.org/wikipedia/en/0/0c/Liverpool_FC.svg',
+    'arsenal':'https://upload.wikimedia.org/wikipedia/en/5/53/Arsenal_FC.svg',
+    'chelsea':'https://upload.wikimedia.org/wikipedia/en/c/cc/Chelsea_FC.svg',
+    'manchester united':'https://upload.wikimedia.org/wikipedia/en/7/7a/Manchester_United_FC_crest.svg',
+    'man utd':'https://upload.wikimedia.org/wikipedia/en/7/7a/Manchester_United_FC_crest.svg',
+    'tottenham':'https://upload.wikimedia.org/wikipedia/en/b/b4/Tottenham_Hotspur.svg',
+    'newcastle united':'https://upload.wikimedia.org/wikipedia/en/5/56/Newcastle_United_Logo.svg',
+    'aston villa':'https://upload.wikimedia.org/wikipedia/en/9/9f/Aston_Villa_FC_crest_%282016%29.svg',
+    'atletico madrid':'https://upload.wikimedia.org/wikipedia/en/f/f4/Atletico_Madrid_2017_logo.svg',
+    'sevilla':'https://upload.wikimedia.org/wikipedia/en/3/3b/Sevilla_FC_logo.svg',
+    'juventus':'https://upload.wikimedia.org/wikipedia/commons/1/15/Juventus_FC_2017_icon_%28black%29.svg',
+    'ac milan':'https://upload.wikimedia.org/wikipedia/commons/d/d0/Logo_of_AC_Milan.svg',
+    'inter milan':'https://upload.wikimedia.org/wikipedia/commons/0/05/FC_Internazionale_Milano_2021.svg',
+    'napoli':'https://upload.wikimedia.org/wikipedia/commons/2/2d/SSC_Napoli.svg',
+    'psg':'https://upload.wikimedia.org/wikipedia/en/a/a7/Paris_Saint-Germain_F.C..svg',
+    'paris saint-germain':'https://upload.wikimedia.org/wikipedia/en/a/a7/Paris_Saint-Germain_F.C..svg',
+    'bayern munich':'https://upload.wikimedia.org/wikipedia/commons/1/1b/FC_Bayern_M%C3%BCnchen_logo_%282002%E2%80%932017%29.svg',
+    'dortmund':'https://upload.wikimedia.org/wikipedia/commons/6/67/Borussia_Dortmund_logo.svg',
+    'borussia dortmund':'https://upload.wikimedia.org/wikipedia/commons/6/67/Borussia_Dortmund_logo.svg',
+    'bayer leverkusen':'https://upload.wikimedia.org/wikipedia/en/5/59/Bayer_04_Leverkusen_logo.svg',
+    'benfica':'https://upload.wikimedia.org/wikipedia/en/a/a2/SL_Benfica_logo.svg',
+    'porto':'https://upload.wikimedia.org/wikipedia/en/f/f1/FC_Porto.svg',
+    'ajax':'https://upload.wikimedia.org/wikipedia/en/7/79/Ajax_Amsterdam.svg',
+};
+function getClubLogo(c) { return c ? (CLUB_LOGO_MAP[c.trim().toLowerCase()] || null) : null; }
+
+// ============================================================
+// STATE
+// ============================================================
+let currentMode  = null;
+let currentMonth = 'ALL TIME STANDING';
+let modeAdmin    = false;
+let editingId    = null;
+let tipeLiga     = null;
+let localData    = {};   // {id: matchObj}
+let matchInfoData = {};  // {matchId: {playerName: {club, is_full_transfer}}}
+let statsData    = {};
+let trophyManualOrder = {};
+let allMatchesCache   = {};
+let dbData       = {};   // {playerKey: [{id, num, name, club, pos, note, rating}]}
+let dbCurrentPlayer = 'Toxx';
+let dbSearchQ    = '';
+let dbFilterPos  = '';
+let dbSortCol    = 'num';
+let dbSortDir    = 'asc';
+let dbEditId     = null;
+let activeSet    = new Set();
+let editFormArr  = {};
+let editingStats = false;
+let realtimeSubs = [];
+
+// ============================================================
+// UTILS
+// ============================================================
+function escHtml(s) { return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function gdClass(v) { return v>0?'gd-pos':v<0?'gd-neg':'gd-zero'; }
+function gdStr(v)   { return v>0?'+'+v:''+v; }
+function winPct(w,pl){ return !pl?0:Math.round((w/pl)*100); }
+function formCircles(arr){
+    if(!arr||!arr.length) return '<span style="color:#ccc;font-size:0.75rem;">—</span>';
+    return arr.map(f=>'<div class="fc fc-'+f.toLowerCase()+'">'+f+'</div>').join('');
+}
+function getNamaHari(tgl, bln){
+    const bi = MONTHS.indexOf(bln||currentMonth);
+    if(bi===-1) return 'Minggu';
+    const d = new Date(new Date().getFullYear(), bi, parseInt(tgl)||1);
+    return ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'][d.getDay()];
+}
+
+// ============================================================
+// SUPABASE HELPERS
+// ============================================================
+async function sbGet(table, filter = {}) {
+    let q = sb.from(table).select('*');
+    Object.entries(filter).forEach(([k,v]) => { q = q.eq(k, v); });
+    const { data, error } = await q;
+    if (error) console.error('sbGet error:', error);
+    return data || [];
+}
+async function sbInsert(table, payload) {
+    const { data, error } = await sb.from(table).insert(payload).select();
+    if (error) { console.error('sbInsert error:', error); throw error; }
+    return data[0];
+}
+async function sbUpdate(table, id, payload) {
+    const { error } = await sb.from(table).update(payload).eq('id', id);
+    if (error) { console.error('sbUpdate error:', error); throw error; }
+}
+async function sbUpsert(table, payload, onConflict) {
+    const { error } = await sb.from(table).upsert(payload, { onConflict });
+    if (error) { console.error('sbUpsert error:', error); throw error; }
+}
+async function sbDelete(table, id) {
+    const { error } = await sb.from(table).delete().eq('id', id);
+    if (error) { console.error('sbDelete error:', error); throw error; }
+}
+
+function unsubAll() {
+    realtimeSubs.forEach(s => sb.removeChannel(s));
+    realtimeSubs = [];
+}
+
+// ============================================================
+// MODE & NAVIGATION
+// ============================================================
+function setMode(m) {
+    currentMode = m;
+    const lp = document.getElementById('landingPage');
+    lp.style.opacity = '0';
+    setTimeout(() => {
+        lp.style.display = 'none';
+        document.getElementById('appRoot').classList.add('on');
+        applyMode();
+    }, 500);
+}
+
+function kembaliKeMenuAwal() {
+    unsubAll();
+    currentMode = null; localData = {}; matchInfoData = {}; trophyManualOrder = {}; allMatchesCache = {};
+    document.getElementById('appRoot').classList.remove('on');
+    const lp = document.getElementById('landingPage');
+    lp.style.display = 'flex';
+    setTimeout(() => { lp.style.opacity = '1'; }, 10);
+}
+
+function applyMode() {
+    document.getElementById('modeBadge').innerText = '🔥 ' + currentMode + ' Player Mode';
+    editingId = null; tipeLiga = null;
+    currentMonth = 'ALL TIME STANDING';
+    document.getElementById('btnAllTime').classList.add('active');
+    document.getElementById('btnStats').classList.remove('active');
+    document.getElementById('btnDB').classList.remove('active');
+    buildMonthSelect();
+    loadData();
+    listenRealtime();
+    loadTrophyOrder();
+    loadStats();
+    loadDbData();
+}
+
+function buildMonthSelect() {
+    const sel = document.getElementById('monthSelect');
+    sel.innerHTML = MONTHS.map(m => '<option value="'+m+'">'+m+'</option>').join('');
+}
+
+function gantiBulan(m) {
+    currentMonth = m;
+    if (!['ALL TIME STANDING','STATS','DATABASE'].includes(m)) document.getElementById('monthSelect').value = m;
+    document.getElementById('btnAllTime').classList.toggle('active', m==='ALL TIME STANDING');
+    document.getElementById('btnStats').classList.toggle('active', m==='STATS');
+    document.getElementById('btnDB').classList.toggle('active', m==='DATABASE');
+    editingId = null; tipeLiga = null;
+    loadData();
+    renderAdminArea();
+}
+
+// ============================================================
+// REALTIME SUBSCRIPTIONS (Supabase Realtime)
+// ============================================================
+function listenRealtime() {
+    unsubAll();
+
+    // Matches
+    const matchesCh = sb.channel('matches_'+currentMode)
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'matches', filter: 'mode=eq.'+currentMode }, () => {
+            if (!['ALL TIME STANDING','STATS','DATABASE'].includes(currentMonth)) loadMonthlyMatches();
+            if (currentMonth === 'ALL TIME STANDING') renderAllTime();
+        }).subscribe();
+    realtimeSubs.push(matchesCh);
+
+    // Match info
+    const miCh = sb.channel('match_info_'+currentMode)
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'match_info' }, () => {
+            loadMatchInfo();
+        }).subscribe();
+    realtimeSubs.push(miCh);
+
+    // Stats
+    const statsCh = sb.channel('stats_'+currentMode)
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'all_time_stats', filter: 'mode=eq.'+currentMode }, () => {
+            loadStats();
+        }).subscribe();
+    realtimeSubs.push(statsCh);
+
+    // Database pemain
+    const dbCh = sb.channel('db_'+currentMode)
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'database_pemain', filter: 'mode=eq.'+currentMode }, () => {
+            loadDbData();
+        }).subscribe();
+    realtimeSubs.push(dbCh);
+
+    // Trophy order
+    const tropCh = sb.channel('trophy_'+currentMode)
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'trophy_order', filter: 'mode=eq.'+currentMode }, () => {
+            loadTrophyOrder();
+        }).subscribe();
+    realtimeSubs.push(tropCh);
+}
+
+// ============================================================
+// LOAD DATA
+// ============================================================
+async function loadData() {
+    if (!currentMode) return;
+    const banner = document.getElementById('champBanner');
+
+    if (currentMonth === 'DATABASE') {
+        banner.classList.add('hidden');
+        toggleSidebarMode(false, true);
+        renderDatabasePage();
+        renderAdminArea();
+        return;
+    }
+    if (currentMonth === 'STATS') {
+        banner.classList.add('hidden');
+        toggleSidebarMode(false, true);
+        renderStatsPage();
+        renderAdminArea();
+        return;
+    }
+    if (currentMonth === 'ALL TIME STANDING') {
+        banner.classList.add('hidden');
+        toggleSidebarMode(true, false);
+        await renderAllTime();
+        await updateSidebarAllTime();
+        return;
+    }
+
+    banner.classList.remove('hidden');
+    banner.innerHTML = '⏳ Memuat...';
+    toggleSidebarMode(false, false);
+    document.getElementById('sbMonthTitle').innerText = 'Total Poin '+currentMonth;
+    document.getElementById('sbTrophyMonthTitle').innerText = currentMonth;
+
+    await loadMatchInfo();
+    await loadMonthlyMatches();
+}
+
+async function loadMonthlyMatches() {
+    const rows = await sbGet('matches', { mode: currentMode, bulan: currentMonth });
+    localData = {};
+    const counters = {};
+    rows.sort((a,b) => a.tanggal - b.tanggal || a.timestamp - b.timestamp);
+    rows.forEach(m => {
+        localData[m.id] = m;
+        counters[m.tanggal] = (counters[m.tanggal]||0)+1;
+        allMatchesCache[m.id] = { bulan: m.bulan, tanggal: m.tanggal, ligaNum: counters[m.tanggal], standings: m.standings, manualJuara: m.manual_juara };
+    });
+    renderMonthly(localData);
+    await updateSidebar(localData);
+}
+
+async function loadMatchInfo() {
+    // Load semua match_info untuk mode ini secara efisien
+    const matchIds = Object.keys(localData);
+    if (!matchIds.length) { matchInfoData = {}; return; }
+    const { data } = await sb.from('match_info').select('*').in('match_id', matchIds);
+    matchInfoData = {};
+    (data||[]).forEach(r => {
+        if (!matchInfoData[r.match_id]) matchInfoData[r.match_id] = {};
+        matchInfoData[r.match_id][r.player_name] = { club: r.club, isFullTransfer: r.is_full_transfer };
+    });
+}
+
+async function loadStats() {
+    const rows = await sbGet('all_time_stats', { mode: currentMode });
+    statsData = {};
+    ALL_PLAYERS.forEach(p => { statsData[p] = { score:0, assist:0, formText:'' }; });
+    rows.forEach(r => { statsData[r.player_name] = { score: r.score||0, assist: r.assist||0, formText: r.form_text||'' }; });
+    if (currentMonth === 'STATS') renderStatsPage();
+    renderStatsCards();
+}
+
+async function loadTrophyOrder() {
+    const rows = await sbGet('trophy_order', { mode: currentMode });
+    trophyManualOrder = {};
+    rows.forEach(r => { trophyManualOrder[r.bulan] = r.order_list; });
+}
+
+async function loadDbData() {
+    const rows = await sbGet('database_pemain', { mode: currentMode });
+    dbData = {};
+    DB_PLAYERS.forEach(pk => { dbData[pk] = {}; });
+    rows.forEach(r => {
+        if (!dbData[r.player_key]) dbData[r.player_key] = {};
+        dbData[r.player_key][r.id] = r;
+    });
+    if (currentMonth === 'DATABASE') renderDatabasePage();
+}
+
+// ============================================================
+// STANDINGS SORT
+// ============================================================
+function sortStandings(match) {
+    if (!match||!match.standings) return [];
+    let s = (match.standings).map(p=>({...p}));
+    const j = match.manual_juara || match.manualJuara;
+    s.sort((a,b) => {
+        if (j) { if(a.name===j)return -1; if(b.name===j)return 1; }
+        if ((b.pts||0)!==(a.pts||0)) return (b.pts||0)-(a.pts||0);
+        const gdA = (parseInt(a.f)||0)-(parseInt(a.a)||0), gdB = (parseInt(b.f)||0)-(parseInt(b.a)||0);
+        if (gdB!==gdA) return gdB-gdA;
+        if ((parseInt(b.f)||0)!==(parseInt(a.f)||0)) return (parseInt(b.f)||0)-(parseInt(a.f)||0);
+        return (a.manualRank||99)-(b.manualRank||99);
+    });
+    return s;
+}
+
+function detectLigaType(matchId, playerNames) {
+    const info = matchInfoData[matchId];
+    if (!info) return 'unknown';
+    const flags = (playerNames||[]).map(n => (info[n]||{}).isFullTransfer);
+    if (flags.every(f=>f===true)) return 'ft';
+    if (flags.every(f=>f===false||f===undefined||f===null)) return 'klub';
+    return 'mixed';
+}
+
+function toggleSidebarMode(isAllTime, isStats) {
+    document.getElementById('sbTrophyMonthCard').style.display = (isAllTime||isStats)?'none':'block';
+    document.getElementById('sbMonthCard').style.display       = (isAllTime||isStats)?'none':'block';
+    document.getElementById('sbTrophyAllCard').style.display   = isAllTime?'block':'none';
+    document.getElementById('sbAllTimeCard').style.display     = isAllTime?'block':'none';
+}
+
+// ============================================================
+// RENDER MONTHLY
+// ============================================================
+function renderMonthly(matches) {
+    const el = document.getElementById('mainContent');
+    if (!el) return;
+    if (!matches || !Object.keys(matches).length) {
+        el.innerHTML = '<div class="empty-state">Belum ada klasemen di bulan <strong>'+currentMonth+'</strong>.</div>';
+        return;
+    }
+    const ids = Object.keys(matches).sort((a,b) => {
+        const ma = matches[a], mb = matches[b];
+        return (ma.tanggal-mb.tanggal) || (ma.timestamp-mb.timestamp);
+    });
+    const counters = {};
+    let htmlAll = '';
+    ids.forEach(id => {
+        const m = matches[id];
+        if (!m) return;
+        counters[m.tanggal] = (counters[m.tanggal]||0)+1;
+        const ligaNum  = counters[m.tanggal];
+        const s        = sortStandings(m);
+        const isEdit   = editingId === id;
+        const names    = (m.standings||[]).map(p=>p.name);
+        const ligaType = detectLigaType(id, names);
+        const isFT     = ligaType==='ft';
+        const isKlub   = ligaType==='klub'||ligaType==='mixed';
+        const headCls  = isFT?'section-head type-ft':(isKlub?'section-head type-klub':'section-head type-unknown');
+        const badgeCls = isFT?'badge-liga badge-ft':(isKlub?'badge-liga badge-klub':'badge-liga');
+        const accentBar = isFT?'<div class="ft-accent-bar"></div>':(isKlub?'<div class="klub-accent-bar"></div>':'');
+        const juaraName = s[0]&&(s[0].pts||0)>0?s[0].name:'-';
+        const hari = getNamaHari(m.tanggal||1, m.bulan);
+        const heading = isEdit
+            ? '<select id="editTgl_'+id+'" style="padding:4px 8px;border-radius:6px;border:none;font-family:\'Barlow\',sans-serif;font-weight:700;">'+Array.from({length:31},(_,i)=>'<option value="'+(i+1)+'" '+(m.tanggal==i+1?'selected':'')+'>Tgl '+(i+1)+'</option>').join('')+'</select>'
+            : '📅 '+hari+', '+m.tanggal+' '+currentMonth;
+
+        let html = '<div class="match-block" id="mb-'+id+'">'
+            +'<div class="'+headCls+'">'
+            +'<span>'+heading+'</span>'
+            +'<span class="'+badgeCls+'">Liga '+ligaOrdinal(ligaNum)+'</span>'
+            +'<span style="margin-left:auto;display:flex;align-items:center;gap:4px;">'
+            +'<span style="background:rgba(255,255,255,0.15);padding:3px 10px;border-radius:10px;font-size:0.72rem;">🏆 '+escHtml(juaraName)+'</span>'
+            +(modeAdmin&&!isEdit?'<button class="btn-del" onclick="hapus(\''+id+'\')">🗑️</button>':'')
+            +(modeAdmin?'<button class="'+(isEdit?'btn-save':'btn-edit')+'" onclick="'+(isEdit?'simpan(\''+id+'\')':'edit(\''+id+'\')')+'">'+( isEdit?'💾 Simpan':'✏️ Edit')+'</button>':'')
+            +'</span></div>'+accentBar;
+
+        const uid   = id.replace(/[^a-zA-Z0-9]/g,'_');
+        const rowData = s.map((p,i)=>({
+            name:p.name, pos:i+1, pl:(p.w||0)+(p.d||0)+(p.l||0),
+            w:p.w||0, d:p.d||0, l:p.l||0, gf:p.f||0, ga:p.a||0,
+            gd:(p.f||0)-(p.a||0), pts:p.pts||0, isWin:i===0&&(p.pts||0)>0, manualRank:p.manualRank
+        }));
+        htmlAll += html + buildEplBlock(rowData, false, isEdit, s, false, id, ligaType, uid) + '</div>';
+    });
+    el.innerHTML = htmlAll;
+}
+
+// ============================================================
+// BUILD EPL TABLE BLOCK
+// ============================================================
+function buildEplBlock(rowData, showForm, isEdit, rawStandings, showWinPct, matchId, ligaType, uid) {
+    const isFT   = ligaType==='ft';
+    const isKlub = ligaType==='klub'||ligaType==='mixed';
+    const isAll  = !matchId;
+    const barTopCls = isFT?'bar-top-ft':(isKlub?'bar-top-klub':'bar-top');
+    const barMidCls = isFT?'bar-mid-ft':(isKlub?'bar-mid-klub':'bar-mid');
+    const topNumCls = isFT?'top-ft':(isKlub?'top-klub':'top');
+    const ptsCls    = isFT?'pts-big-ft':(isKlub?'pts-big-klub':'pts-big');
+    const tblCls    = isFT?' tbl-ft':(isKlub?' tbl-klub':'');
+    const winRowCls = isFT?'win-row-ft':(isKlub?'win-row-klub':'win-row');
+    const topN = Math.min(rowData.length,3);
+    const key  = uid||'at';
+
+    function nameCls() { return isFT?'clickable-name-ft':(isKlub?'clickable-name-klub':'clickable-name'); }
+    function makeNameHtml(name, crown) {
+        const cls = nameCls();
+        const sn  = escHtml(name);
+        if (isAll) return '<span class="'+cls+'" onclick="bukaInfoPlayerAllTime(\''+sn+'\')" style="cursor:pointer;">'+sn+crown+'</span>';
+        return '<span class="'+cls+'" onclick="bukaInfoPlayerMatch(\''+sn+'\',\''+matchId+'\')" style="cursor:pointer;">'+sn+crown+'</span>';
+    }
+
+    const dRows = rowData.map((p,i)=>{
+        const bCls = i<topN?barTopCls:barMidCls;
+        const nCls = i<topN?topNumCls:'';
+        const crown = p.isWin?' 👑':'';
+        let wC,dC,lC,fC,aC;
+        if(isEdit){
+            const n = escHtml(p.name);
+            wC='<td><input type="number" class="tbl-in w-in" data-n="'+n+'" data-key="'+key+'" min="0" value="'+(p.w||0)+'" oninput="recalc(this,\''+key+'\')"></td>';
+            dC='<td><input type="number" class="tbl-in d-in" data-n="'+n+'" data-key="'+key+'" min="0" value="'+(p.d||0)+'" oninput="recalc(this,\''+key+'\')"></td>';
+            lC='<td><input type="number" class="tbl-in l-in" data-n="'+n+'" data-key="'+key+'" min="0" value="'+(p.l||0)+'"></td>';
+            fC='<td><input type="number" class="tbl-in f-in" data-n="'+n+'" data-key="'+key+'" min="0" value="'+(p.gf||0)+'"></td>';
+            aC='<td><input type="number" class="tbl-in a-in" data-n="'+n+'" data-key="'+key+'" min="0" value="'+(p.ga||0)+'"></td>';
+        }else{
+            wC='<td>'+p.w+'</td>';dC='<td>'+p.d+'</td>';lC='<td>'+p.l+'</td>';fC='<td>'+p.gf+'</td>';aC='<td>'+p.ga+'</td>';
+        }
+        return '<tr class="'+(p.isWin?winRowCls:'')+'">'
+            +'<td><div class="pos-wrap"><div class="pos-bar '+bCls+'"></div><span class="pos-num '+nCls+'">'+(i+1)+'</span></div></td>'
+            +'<td class="tl">'+makeNameHtml(p.name,crown)+'</td>'
+            +'<td>'+p.pl+'</td>'+wC+dC+lC+fC+aC
+            +'<td class="'+gdClass(p.gd)+'">'+gdStr(p.gd)+'</td>'
+            +(isEdit
+                ?'<td><input class="tbl-in tbl-in-pts pts-in" data-n="'+escHtml(p.name)+'" data-key="'+key+'" value="'+p.pts+'" readonly></td>'
+                :'<td class="'+ptsCls+'">'+p.pts+'</td>')
+            +(showWinPct?'<td style="font-weight:700;">'+winPct(p.w,p.pl)+'%</td>':'')
+            +(isEdit?'<td><select class="tbl-in rank-in" data-n="'+escHtml(p.name)+'" data-key="'+key+'">'
+                +[1,2,3,4].map(n=>'<option value="'+n+'" '+((rawStandings[i]||{}).manualRank==n?'selected':'')+'>'+n+'</option>').join('')
+                +'</select></td>':'')
+            +'</tr>';
+    }).join('');
+
+    const tid='tbl'+key;
+    const shortRows = rowData.map((p,i)=>'<tr class="'+(p.isWin?winRowCls:'')+'">'
+        +'<td><div class="pos-wrap"><div class="pos-bar '+(i<topN?barTopCls:barMidCls)+'"></div><span class="pos-num '+(i<topN?topNumCls:'')+'">'+(i+1)+'</span></div></td>'
+        +'<td class="tl">'+makeNameHtml(p.name,p.isWin?' 👑':'')+'</td>'
+        +'<td>'+p.pl+'</td><td>'+p.w+'</td><td>'+p.d+'</td><td>'+p.l+'</td><td class="'+ptsCls+'">'+p.pts+'</td>'
+        +(showWinPct?'<td>'+winPct(p.w,p.pl)+'%</td>':'')
+        +'</tr>').join('');
+    const fullRows = rowData.map((p,i)=>'<tr class="'+(p.isWin?winRowCls:'')+'">'
+        +'<td><div class="pos-wrap"><div class="pos-bar '+(i<topN?barTopCls:barMidCls)+'"></div><span class="pos-num '+(i<topN?topNumCls:'')+'">'+(i+1)+'</span></div></td>'
+        +'<td class="tl">'+makeNameHtml(p.name,p.isWin?' 👑':'')+'</td>'
+        +'<td>'+p.pl+'</td><td>'+p.w+'</td><td>'+p.d+'</td><td>'+p.l+'</td>'
+        +'<td>'+p.gf+'</td><td>'+p.ga+'</td><td class="'+gdClass(p.gd)+'">'+gdStr(p.gd)+'</td>'
+        +'<td class="'+ptsCls+'">'+p.pts+'</td>'
+        +(showWinPct?'<td>'+winPct(p.w,p.pl)+'%</td>':'')
+        +'</tr>').join('');
+
+    return '<div class="tbl-wrap desktop-only"><table class="epl-tbl'+tblCls+'"><thead><tr>'
+        +'<th style="width:46px;">Pos</th><th class="tl">Player</th><th>Pl</th><th>W</th><th>D</th><th>L</th><th>GF</th><th>GA</th><th>GD</th><th>Pts</th>'
+        +(showWinPct?'<th>WIN%</th>':'')+(isEdit?'<th>Rank</th>':'')
+        +'</tr></thead><tbody>'+dRows+'</tbody></table></div>'
+        +'<div class="mob-tabs"><div class="mob-tab-btns">'
+        +(isEdit?'<button class="mob-tab-btn on" onclick="swTab(this,\''+tid+'\',\'edit\')">✏️ Edit</button>':'')
+        +'<button class="mob-tab-btn'+(isEdit?'':' on')+'" onclick="swTab(this,\''+tid+'\',\'short\')">Short</button>'
+        +'<button class="mob-tab-btn" onclick="swTab(this,\''+tid+'\',\'full\')">Full</button>'
+        +'</div>'
+        +(isEdit?'<table class="mob-tbl'+tblCls+' on" id="'+tid+'-edit"><thead><tr>'
+            +'<th style="width:32px;">Pos</th><th class="tl">Player</th><th>W</th><th>D</th><th>L</th><th>GF</th><th>GA</th><th>Pts</th><th>Rank</th>'
+            +'</tr></thead><tbody>'
+            +rowData.map((p,i)=>{const n=escHtml(p.name);return '<tr class="'+(p.isWin?winRowCls:'')+'">'
+                +'<td><div class="pos-wrap"><div class="pos-bar '+(i<topN?barTopCls:barMidCls)+'"></div><span class="pos-num '+(i<topN?topNumCls:'')+'">'+(i+1)+'</span></div></td>'
+                +'<td class="tl" style="font-size:0.8rem;font-weight:800;">'+n+'</td>'
+                +'<td><input type="number" class="tbl-in w-in" data-n="'+n+'" data-key="'+key+'" min="0" value="'+(p.w||0)+'" oninput="recalc(this,\''+key+'\')"></td>'
+                +'<td><input type="number" class="tbl-in d-in" data-n="'+n+'" data-key="'+key+'" min="0" value="'+(p.d||0)+'" oninput="recalc(this,\''+key+'\')"></td>'
+                +'<td><input type="number" class="tbl-in l-in" data-n="'+n+'" data-key="'+key+'" min="0" value="'+(p.l||0)+'"></td>'
+                +'<td><input type="number" class="tbl-in f-in" data-n="'+n+'" data-key="'+key+'" min="0" value="'+(p.gf||0)+'"></td>'
+                +'<td><input type="number" class="tbl-in a-in" data-n="'+n+'" data-key="'+key+'" min="0" value="'+(p.ga||0)+'"></td>'
+                +'<td><input class="tbl-in tbl-in-pts pts-in" data-n="'+n+'" data-key="'+key+'" value="'+p.pts+'" readonly style="width:36px;"></td>'
+                +'<td><select class="tbl-in rank-in" data-n="'+n+'" data-key="'+key+'">'
+                +[1,2,3,4].map(nv=>'<option value="'+nv+'" '+((rawStandings[i]||{}).manualRank==nv?'selected':'')+'>'+nv+'</option>').join('')
+                +'</select></td></tr>';}).join('')
+            +'</tbody></table>':'')
+        +'<table class="mob-tbl'+tblCls+(isEdit?'':' on')+'" id="'+tid+'-short"><thead><tr>'
+        +'<th style="width:38px;">Pos</th><th class="tl">Player</th><th>Pl</th><th>W</th><th>D</th><th>L</th><th>Pts</th>'+(showWinPct?'<th>WIN%</th>':'')
+        +'</tr></thead><tbody>'+shortRows+'</tbody></table>'
+        +'<table class="mob-tbl'+tblCls+'" id="'+tid+'-full"><thead><tr>'
+        +'<th style="width:38px;">Pos</th><th class="tl">Player</th><th>Pl</th><th>W</th><th>D</th><th>L</th><th>GF</th><th>GA</th><th>GD</th><th>Pts</th>'+(showWinPct?'<th>WIN%</th>':'')
+        +'</tr></thead><tbody>'+fullRows+'</tbody></table>'
+        +'</div>';
+}
+
+function swTab(btn,tid,tab){
+    const parent=btn.closest('.mob-tabs');
+    if(!parent)return;
+    parent.querySelectorAll('.mob-tab-btn').forEach(b=>b.classList.remove('on'));
+    parent.querySelectorAll('.mob-tbl').forEach(t=>t.classList.remove('on'));
+    btn.classList.add('on');
+    const tgt=document.getElementById(tid+'-'+tab);
+    if(tgt)tgt.classList.add('on');
+}
+
+// ============================================================
+// EDIT / SIMPAN / HAPUS (Admin)
+// ============================================================
+function edit(id) { editingId=id; renderMonthly(localData); }
+function recalc(el,key) {
+    const n=el.getAttribute('data-n');
+    if(!n||!key)return;
+    const w=parseInt(document.querySelector('.w-in[data-n="'+n+'"][data-key="'+key+'"]')?.value)||0;
+    const d=parseInt(document.querySelector('.d-in[data-n="'+n+'"][data-key="'+key+'"]')?.value)||0;
+    const pts=document.querySelector('.pts-in[data-n="'+n+'"][data-key="'+key+'"]');
+    if(pts)pts.value=w*3+d;
+}
+
+async function simpan(id) {
+    const tglEl = document.getElementById('editTgl_'+id);
+    if (!tglEl) return alert('Tanggal tidak ditemukan!');
+    const tgl = tglEl.value;
+    const key  = id.replace(/[^a-zA-Z0-9]/g,'_');
+    const mb   = document.getElementById('mb-'+id);
+    if (!mb) return alert('Block tidak ditemukan!');
+
+    const allWEls = mb.querySelectorAll('.w-in[data-key="'+key+'"]');
+    if (!allWEls.length) return alert('Data tidak ditemukan!');
+
+    const seen = new Set(), names = [];
+    allWEls.forEach(el => { const n=el.getAttribute('data-n'); if(n&&!seen.has(n)){seen.add(n);names.push(n);} });
+
+    const standings = names.map(name => {
+        const w=parseInt(mb.querySelector('.w-in[data-key="'+key+'"][data-n="'+name+'"]')?.value)||0;
+        const d=parseInt(mb.querySelector('.d-in[data-key="'+key+'"][data-n="'+name+'"]')?.value)||0;
+        const l=parseInt(mb.querySelector('.l-in[data-key="'+key+'"][data-n="'+name+'"]')?.value)||0;
+        const f=parseInt(mb.querySelector('.f-in[data-key="'+key+'"][data-n="'+name+'"]')?.value)||0;
+        const a=parseInt(mb.querySelector('.a-in[data-key="'+key+'"][data-n="'+name+'"]')?.value)||0;
+        const r=parseInt(mb.querySelector('.rank-in[data-key="'+key+'"][data-n="'+name+'"]')?.value)||1;
+        return {name,w,d,l,f,a,gd:f-a,pts:w*3+d,manualRank:r};
+    });
+
+    try {
+        await sbUpdate('matches', id, { tanggal: parseInt(tgl), standings, manual_juara: null });
+        editingId = null;
+        if (localData[id]) { localData[id].tanggal=parseInt(tgl); localData[id].standings=standings; localData[id].manual_juara=null; }
+        renderMonthly(localData);
+        await updateSidebar(localData);
+    } catch(e) { alert('❌ Gagal simpan: '+e.message); }
+}
+
+async function hapus(id) {
+    if (!confirm('Hapus liga ini?')) return;
+    try {
+        await sbDelete('matches', id);
+        delete localData[id];
+        renderMonthly(localData);
+        await updateSidebar(localData);
+    } catch(e) { alert('❌ Gagal hapus: '+e.message); }
+}
+
+// ============================================================
+// INFO PLAYER (klik nama)
+// ============================================================
+function bukaInfoPlayerMatch(nama, matchId) {
+    const mc  = allMatchesCache[matchId];
+    if (!mc) return;
+    const mi  = (matchInfoData[matchId]||{})[nama]||{};
+    const st  = (mc.standings||[]).find(p=>p.name===nama)||{};
+    const w=parseInt(st.w)||0, d=parseInt(st.d)||0, l=parseInt(st.l)||0;
+    const pl=w+d+l, pct=winPct(w,pl);
+    const hari=getNamaHari(mc.tanggal,mc.bulan);
+    document.getElementById('infoModalTitle').innerText   = nama;
+    document.getElementById('infoModalSubtitle').innerText = '📅 '+hari+', '+mc.tanggal+' '+mc.bulan+' — Liga '+ligaOrdinal(mc.ligaNum);
+    const clubSection  = buildClubDisplay(mi,w,d,l,pl,pct);
+    const adminSection = modeAdmin?buildAdminClubEdit(matchId,nama):'';
+    document.getElementById('infoModalBody').innerHTML = '<div style="border:1.5px solid var(--border);border-radius:12px;overflow:hidden;">'
+        +'<div style="background:#f7f0ff;padding:10px 14px;"><span style="font-family:\'Barlow Condensed\',sans-serif;font-size:1rem;font-weight:800;color:var(--purple);">Liga '+ligaOrdinal(mc.ligaNum)+' — '+mc.bulan+'</span></div>'
+        +'<div style="padding:12px 14px;">'+clubSection+adminSection+'</div></div>';
+    document.getElementById('infoModal').classList.add('on');
+}
+
+async function bukaInfoPlayerAllTime(nama) {
+    document.getElementById('infoModalTitle').innerText    = nama;
+    document.getElementById('infoModalSubtitle').innerText = '🏆 Statistik per Klub — All Time';
+    document.getElementById('infoModalBody').innerHTML     = '<div style="text-align:center;padding:20px;">⏳ Memuat...</div>';
+    document.getElementById('infoModal').classList.add('on');
+
+    // Ambil semua matches + match_info untuk player ini
+    const matches = await sbGet('matches', { mode: currentMode });
+    const { data: miAll } = await sb.from('match_info').select('*').eq('player_name', nama);
+    const miByMatchId = {};
+    (miAll||[]).forEach(r => { miByMatchId[r.match_id] = r; });
+
+    const clubStats = {};
+    let gW=0,gD=0,gL=0,gPl=0,gLiga=0,gJuara=0;
+
+    matches.forEach(m => {
+        const mi = miByMatchId[m.id];
+        if (!mi) return;
+        const st = (m.standings||[]).find(p=>p.name===nama);
+        if (!st) return;
+        const isFT = mi.is_full_transfer||false;
+        const club = isFT?'__FULL_TRANSFER__':((mi.club||'').trim()||'(Tidak Diisi)');
+        const w=parseInt(st.w)||0, d=parseInt(st.d)||0, l=parseInt(st.l)||0, pl=w+d+l;
+        const pts=parseInt(st.pts)||(w*3+d);
+        if (!clubStats[club]) clubStats[club]={liga:0,w:0,d:0,l:0,pl:0,pts:0,juara:0,isFT};
+        const sorted = sortStandings({standings:m.standings,manual_juara:m.manual_juara});
+        const isJuara = sorted.length>0&&sorted[0].name===nama&&(sorted[0].pts||0)>0;
+        clubStats[club].liga+=1; clubStats[club].w+=w; clubStats[club].d+=d; clubStats[club].l+=l;
+        clubStats[club].pl+=pl; clubStats[club].pts+=pts; clubStats[club].juara+=(isJuara?1:0);
+        gW+=w;gD+=d;gL+=l;gPl+=pl;gLiga+=1;if(isJuara)gJuara+=1;
+    });
+
+    const clubs = Object.keys(clubStats);
+    if (!clubs.length) {
+        document.getElementById('infoModalBody').innerHTML = '<div style="text-align:center;padding:20px;">Belum ada data.</div>';
+        return;
+    }
+    clubs.sort((a,b)=>{
+        if(a==='__FULL_TRANSFER__')return -1; if(b==='__FULL_TRANSFER__')return 1;
+        if(clubStats[b].liga!==clubStats[a].liga)return clubStats[b].liga-clubStats[a].liga;
+        return winPct(clubStats[b].w,clubStats[b].pl)-winPct(clubStats[a].w,clubStats[a].pl);
+    });
+    const gPct=winPct(gW,gPl);
+    let html = '<div style="background:linear-gradient(135deg,#37003c,#6a0dad);border-radius:12px;padding:14px 16px;margin-bottom:16px;color:white;">'
+        +'<div style="font-size:0.68rem;font-weight:700;text-transform:uppercase;opacity:0.7;margin-bottom:10px;">📊 Grand Total — '+gLiga+' Liga</div>'
+        +'<div class="stat-pills">'
+        +'<div class="stat-pill" style="background:rgba(255,215,0,0.25);border:1px solid rgba(255,215,0,0.4);"><span class="sp-val" style="color:#ffd700;">'+gJuara+'</span><span class="sp-lbl" style="color:rgba(255,255,255,0.7);">🏆 Juara</span></div>'
+        +'<div class="stat-pill" style="background:rgba(255,255,255,0.12);"><span class="sp-val" style="color:white;">'+gPl+'</span><span class="sp-lbl" style="color:rgba(255,255,255,0.7);">Main</span></div>'
+        +'<div class="stat-pill" style="background:rgba(255,255,255,0.12);"><span class="sp-val win">'+gW+'</span><span class="sp-lbl" style="color:rgba(255,255,255,0.7);">Win</span></div>'
+        +'<div class="stat-pill" style="background:rgba(255,255,255,0.12);"><span class="sp-val draw">'+gD+'</span><span class="sp-lbl" style="color:rgba(255,255,255,0.7);">Draw</span></div>'
+        +'<div class="stat-pill" style="background:rgba(255,255,255,0.12);"><span class="sp-val loss">'+gL+'</span><span class="sp-lbl" style="color:rgba(255,255,255,0.7);">Loss</span></div>'
+        +'<div class="stat-pill" style="background:rgba(233,0,82,0.4);"><span class="sp-val" style="color:white;">'+gPct+'%</span><span class="sp-lbl" style="color:rgba(255,255,255,0.7);">Win%</span></div>'
+        +'</div></div>';
+
+    clubs.forEach(club => {
+        const cs=clubStats[club];
+        const pct=winPct(cs.w,cs.pl);
+        const isFTB=club==='__FULL_TRANSFER__';
+        const isUnk=club==='(Tidak Diisi)';
+        const logoUrl=(!isFTB&&!isUnk)?getClubLogo(club):null;
+        const logoHtml=logoUrl?'<img src="'+logoUrl+'" style="width:28px;height:28px;object-fit:contain;margin-right:8px;" onerror="this.style.display=\'none\'">':'';
+        const displayName=isFTB?'🔀 Full Transfer':(isUnk?'(Tidak Diisi)':'⚽ '+escHtml(club));
+        html+='<div style="border:1.5px solid var(--border);border-radius:12px;margin-bottom:10px;overflow:hidden;">'
+            +'<div style="background:#f7f0ff;padding:10px 14px;display:flex;justify-content:space-between;align-items:center;">'
+            +'<div style="display:flex;align-items:center;">'+logoHtml+'<span style="font-family:\'Barlow Condensed\',sans-serif;font-size:1rem;font-weight:800;">'+displayName+'</span><span style="font-size:0.68rem;color:var(--sub);margin-left:8px;">'+cs.liga+'x liga</span></div>'
+            +'<span style="background:var(--pink);color:white;font-size:0.65rem;font-weight:700;padding:2px 8px;border-radius:8px;">'+pct+'% WR</span>'
+            +'</div>'
+            +'<div style="padding:12px 14px;"><div class="stat-pills">'
+            +'<div class="stat-pill" style="background:'+(cs.juara>0?'#fffde7':'#f5f5f5')+'"><span class="sp-val" style="color:'+(cs.juara>0?'#c6a000':'#bbb')+';">'+cs.juara+'🏆</span><span class="sp-lbl">Juara</span></div>'
+            +'<div class="stat-pill"><span class="sp-val win">'+cs.w+'</span><span class="sp-lbl">Win</span></div>'
+            +'<div class="stat-pill"><span class="sp-val draw">'+cs.d+'</span><span class="sp-lbl">Draw</span></div>'
+            +'<div class="stat-pill"><span class="sp-val loss">'+cs.l+'</span><span class="sp-lbl">Loss</span></div>'
+            +'<div class="stat-pill"><span class="sp-val pct">'+pct+'%</span><span class="sp-lbl">Win%</span></div>'
+            +'</div>'
+            +'<div class="win-bar-wrap"><div class="win-bar-bg"><div class="win-bar-fill" style="width:'+pct+'%"></div></div></div>'
+            +'</div></div>';
+    });
+    document.getElementById('infoModalBody').innerHTML=html;
+}
+
+function buildClubDisplay(mi,w,d,l,pl,pct){
+    const club=mi.club||''; const isFT=mi.isFullTransfer||false;
+    const logoUrl=(!isFT&&club)?getClubLogo(club):null;
+    const logoHtml=logoUrl?'<img src="'+logoUrl+'" style="width:32px;height:32px;object-fit:contain;margin-right:8px;border-radius:4px;" onerror="this.style.display=\'none\'">':'';
+    let clubHtml=club
+        ?'<div style="font-family:\'Barlow Condensed\',sans-serif;font-size:1.4rem;font-weight:900;color:var(--purple);margin-bottom:10px;display:flex;align-items:center;">'+logoHtml+'⚽ '+escHtml(club)+' '+(isFT?'<span style="background:#ffebee;color:#c62828;font-size:0.65rem;font-weight:700;padding:2px 7px;border-radius:6px;border:1px solid #ef9a9a;font-family:\'Barlow\',sans-serif;margin-left:6px;">FULL TRANSFER</span>':'')+'</div>'
+        :isFT
+            ?'<div style="font-family:\'Barlow Condensed\',sans-serif;font-size:1.4rem;font-weight:900;color:#c62828;margin-bottom:10px;">🔀 FULL TRANSFER</div>'
+            :'<div style="color:#bbb;font-size:0.9rem;font-style:italic;padding:8px 0;">Klub belum diisi.</div>';
+    return clubHtml
+        +'<div class="stat-pills">'
+        +'<div class="stat-pill"><span class="sp-val win">'+w+'</span><span class="sp-lbl">Win</span></div>'
+        +'<div class="stat-pill"><span class="sp-val draw">'+d+'</span><span class="sp-lbl">Draw</span></div>'
+        +'<div class="stat-pill"><span class="sp-val loss">'+l+'</span><span class="sp-lbl">Loss</span></div>'
+        +'<div class="stat-pill"><span class="sp-val">'+pl+'</span><span class="sp-lbl">Main</span></div>'
+        +'<div class="stat-pill"><span class="sp-val pct">'+pct+'%</span><span class="sp-lbl">Win%</span></div>'
+        +'</div>'
+        +'<div class="win-bar-wrap"><div class="win-bar-bg"><div class="win-bar-fill" style="width:'+pct+'%"></div></div></div>';
+}
+
+function buildAdminClubEdit(matchId,nama){
+    const safeId=matchId.replace(/[^a-zA-Z0-9_-]/g,'_');
+    const mi=(matchInfoData[matchId]||{})[nama]||{};
+    return '<div class="admin-club-edit"><label>✏️ Edit Klub (Admin)</label>'
+        +'<input class="admin-club-input" id="clubInput_'+safeId+'_'+escHtml(nama)+'" placeholder="contoh: Real Madrid" value="'+escHtml(mi.club||'')+'">'
+        +'<label class="admin-club-check"><input type="checkbox" id="ftCheck_'+safeId+'_'+escHtml(nama)+'" '+(mi.isFullTransfer?'checked':'')+'>Full Transfer</label>'
+        +'<button class="btn-save-club" onclick="simpanKlub(\''+matchId+'\',\''+escHtml(nama)+'\',\''+safeId+'\')">💾 Simpan Klub</button></div>';
+}
+
+async function simpanKlub(matchId, nama, safeId) {
+    const clubInput = document.getElementById('clubInput_'+safeId+'_'+nama);
+    const ftCheck   = document.getElementById('ftCheck_'+safeId+'_'+nama);
+    if (!clubInput||!ftCheck) return;
+    const clubVal=clubInput.value.trim(), ftVal=ftCheck.checked;
+    try {
+        await sbUpsert('match_info', { match_id: matchId, player_name: nama, club: clubVal, is_full_transfer: ftVal }, 'match_id,player_name');
+        if (!matchInfoData[matchId]) matchInfoData[matchId]={};
+        matchInfoData[matchId][nama]={club:clubVal,isFullTransfer:ftVal};
+        alert('✅ Klub '+nama+' disimpan!');
+        // Re-render body modal
+        const mc=allMatchesCache[matchId];
+        const st=(mc&&mc.standings)?mc.standings.find(p=>p.name===nama)||{}:{};
+        const w=parseInt(st.w)||0,d=parseInt(st.d)||0,l=parseInt(st.l)||0;
+        const pl=w+d+l,pct=winPct(w,pl);
+        const body=document.getElementById('infoModalBody');
+        if(body) body.innerHTML='<div style="border:1.5px solid var(--border);border-radius:12px;overflow:hidden;"><div style="background:#f7f0ff;padding:10px 14px;"><span style="font-family:\'Barlow Condensed\',sans-serif;font-size:1rem;font-weight:800;">Liga '+ligaOrdinal(mc?mc.ligaNum:1)+' — '+(mc?mc.bulan:'')+'</span></div><div style="padding:12px 14px;">'+buildClubDisplay({club:clubVal,isFullTransfer:ftVal},w,d,l,pl,pct)+buildAdminClubEdit(matchId,nama)+'</div></div>';
+    } catch(e) { alert('❌ Gagal: '+e.message); }
+}
+
+function tutupInfoPlayer(){ document.getElementById('infoModal').classList.remove('on'); }
+
+// ============================================================
+// ALL TIME STANDING
+// ============================================================
+async function renderAllTime() {
+    document.getElementById('mainContent').innerHTML='<div class="empty-state">⏳ Memuat data...</div>';
+    const matches = await sbGet('matches', { mode: currentMode });
+    const stats = {};
+    ALL_PLAYERS.forEach(p=>{ stats[p]={pl:0,w:0,d:0,l:0,gf:0,ga:0,gd:0,pts:0}; });
+    matches.sort((a,b)=>a.timestamp-b.timestamp);
+    matches.forEach(m=>{
+        (m.standings||[]).forEach(p=>{
+            const n=p.name; if(!stats[n])return;
+            const w=parseInt(p.w)||0,d=parseInt(p.d)||0,l=parseInt(p.l)||0,f=parseInt(p.f)||0,a=parseInt(p.a)||0;
+            stats[n].pl+=w+d+l; stats[n].w+=w; stats[n].d+=d; stats[n].l+=l;
+            stats[n].gf+=f; stats[n].ga+=a; stats[n].gd+=f-a;
+            stats[n].pts+=parseInt(p.pts)||0;
+        });
+    });
+    const sorted=Object.keys(stats).map(name=>({name,...stats[name]})).filter(p=>p.pl>0).sort((a,b)=>b.pts-a.pts||b.gd-a.gd||b.gf-a.gf);
+    if(!sorted.length){
+        document.getElementById('mainContent').innerHTML='<div class="empty-state">Belum ada data untuk Mode '+currentMode+' Player.</div>';
+        return;
+    }
+    document.getElementById('mainContent').innerHTML=buildEplBlock(sorted,false,false,[],true,null,'unknown','at_'+Date.now());
+}
+
+// ============================================================
+// SIDEBAR
+// ============================================================
+async function updateSidebar(monthlyMatches) {
+    const ptsMonth={}, trophyMonth={};
+    activeSet=new Set();
+    Object.values(monthlyMatches||{}).forEach(match=>{
+        if(!match||!match.standings)return;
+        const s=sortStandings({standings:match.standings,manual_juara:match.manual_juara});
+        match.standings.forEach(p=>{ const n=p.name; activeSet.add(n); ptsMonth[n]=(ptsMonth[n]||0)+(p.pts||0); });
+        if(s[0]&&(s[0].pts||0)>0) trophyMonth[s[0].name]=(trophyMonth[s[0].name]||0)+1;
+    });
+    const list=modeAdmin?ALL_PLAYERS:Array.from(activeSet);
+    const savedOrder=trophyManualOrder[currentMonth];
+    let tList=list.map(n=>[n,trophyMonth[n]||0]);
+    if(savedOrder&&savedOrder.length) tList.sort((a,b)=>{ const ia=savedOrder.indexOf(a[0]),ib=savedOrder.indexOf(b[0]); if(ia===-1&&ib===-1)return 0; if(ia===-1)return 1; if(ib===-1)return -1; return ia-ib; });
+    else tList.sort((a,b)=>b[1]-a[1]||(ptsMonth[b[0]]||0)-(ptsMonth[a[0]]||0));
+
+    document.getElementById('sbTrophyMonthBody').innerHTML=tList.map(([n,t],i)=>
+        '<tr class="'+(i===0&&t>0?'sb-r1':'')+'">'
+        +'<td class="tl">'+(i===0&&t>0?'👑 ':'')+'<strong>'+escHtml(n)+'</strong></td>'
+        +'<td class="trophy-count">'+(t>0?t+'x 🏆':'—')+'</td>'
+        +'</tr>').join('');
+
+    document.getElementById('sbMonthBody').innerHTML=list.map(n=>[n,ptsMonth[n]||0])
+        .sort((a,b)=>b[1]-a[1]).map(([n,p],i)=>
+        '<tr class="'+(i===0&&p>0?'sb-r1':'')+'">'
+        +'<td class="tl">'+(i===0&&p>0?'👑 ':'')+'<strong>'+escHtml(n)+'</strong></td>'
+        +'<td class="sb-pts">'+p+'</td></tr>').join('');
+
+    const champ=tList.find(([,t])=>t>0);
+    const banner=document.getElementById('champBanner');
+    if(champ&&champ[1]>0) banner.innerHTML='🌟 CHAMPION '+currentMonth.toUpperCase()+': '+escHtml(champ[0])+' ('+champ[1]+'x🏆) 🌟';
+    else banner.innerHTML='Belum ada juara di bulan '+currentMonth;
+}
+
+async function updateSidebarAllTime() {
+    const matches = await sbGet('matches', { mode: currentMode });
+    const ptsAll={}, trophyAll={};
+    activeSet=new Set();
+    matches.forEach(m=>{
+        if(!m.standings)return;
+        const s=sortStandings({standings:m.standings,manual_juara:m.manual_juara});
+        m.standings.forEach(p=>{ const n=p.name; activeSet.add(n); ptsAll[n]=(ptsAll[n]||0)+(p.pts||0); });
+        if(s[0]&&(s[0].pts||0)>0) trophyAll[s[0].name]=(trophyAll[s[0].name]||0)+1;
+    });
+    const list=modeAdmin?ALL_PLAYERS:Array.from(activeSet);
+    const savedAll=trophyManualOrder['ALL TIME']||[];
+    let tList=list.map(n=>[n,trophyAll[n]||0]);
+    if(savedAll.length) tList.sort((a,b)=>{ const ia=savedAll.indexOf(a[0]),ib=savedAll.indexOf(b[0]); if(ia===-1&&ib===-1)return 0; if(ia===-1)return 1; if(ib===-1)return -1; return ia-ib; });
+    else tList.sort((a,b)=>b[1]-a[1]||(ptsAll[b[0]]||0)-(ptsAll[a[0]]||0));
+
+    document.getElementById('sbTrophyAllBody').innerHTML=tList.map(([n,t],i)=>
+        '<tr class="'+(i===0&&t>0?'sb-r1':'')+'">'
+        +'<td class="tl">'+(i===0&&t>0?'👑 ':'')+'<strong>'+escHtml(n)+'</strong></td>'
+        +'<td class="trophy-count">'+(t>0?t+'x 🏆':'—')+'</td></tr>').join('');
+
+    document.getElementById('sbAllTimeBody').innerHTML=list.map(n=>[n,ptsAll[n]||0])
+        .sort((a,b)=>b[1]-a[1]).map(([n,p],i)=>
+        '<tr class="'+(i===0&&p>0?'sb-r1':'')+'">'
+        +'<td class="tl">'+(i===0&&p>0?'👑 ':'')+'<strong>'+escHtml(n)+'</strong></td>'
+        +'<td class="sb-pts">'+p+'</td></tr>').join('');
+}
+
+// ============================================================
+// STATS PAGE
+// ============================================================
+function renderStatsPage() {
+    const el=document.getElementById('mainContent');
+    if(!el)return;
+    const gs=n=>statsData[n]||{score:0,assist:0,formText:''};
+    const list=modeAdmin?ALL_PLAYERS:(activeSet.size>0?Array.from(activeSet):ALL_PLAYERS);
+    const scSorted=[...list].sort((a,b)=>gs(b).score-gs(a).score);
+    const asSorted=[...list].sort((a,b)=>gs(b).assist-gs(a).assist);
+    function rc(i){return i===0?'r1':i===1?'r2':i===2?'r3':'';}
+    function rl(i){return i===0?'🥇':i===1?'🥈':i===2?'🥉':(i+1);}
+    el.innerHTML=`<div><div class="stats-page-header"><h2>📊 STATISTIK PLAYER</h2><p>All Time — ${escHtml(currentMode)} Player Mode</p></div>
+        <div class="stats-grid">
+            <div class="stats-section"><div class="stats-section-title">⚽ Top Scores</div>`
+        +scSorted.map((n,i)=>'<div class="stats-player-card"><div class="stats-player-rank '+rc(i)+'">'+rl(i)+'</div><div class="stats-player-info"><div class="stats-player-name">'+escHtml(n)+'</div><div class="stats-player-sub">'+gs(n).score+' gol</div></div><div class="stats-player-val goals">'+gs(n).score+'</div></div>').join('')
+        +'</div><div class="stats-section"><div class="stats-section-title">🎯 Top Assists</div>'
+        +asSorted.map((n,i)=>'<div class="stats-player-card"><div class="stats-player-rank '+rc(i)+'">'+rl(i)+'</div><div class="stats-player-info"><div class="stats-player-name">'+escHtml(n)+'</div><div class="stats-player-sub">'+gs(n).assist+' assist</div></div><div class="stats-player-val assists">'+gs(n).assist+'</div></div>').join('')
+        +'</div></div></div>';
+    renderStatsCards();
+}
+
+function renderStatsCards() {
+    const adminTool=document.getElementById('adminStatsTool');
+    if(!adminTool)return;
+    adminTool.innerHTML=(modeAdmin&&currentMonth==='STATS')
+        ?'<div style="padding:10px;"><button onclick="editStats()" style="width:100%;padding:9px;border-radius:8px;border:none;background:#fdbb2d;font-weight:700;cursor:pointer;color:#37003c;font-family:\'Barlow\',sans-serif;">✏️ Edit Stats Manual</button></div>'
+        :'';
+}
+
+function editStats() {
+    editingStats=true;
+    const gs=n=>statsData[n]||{score:0,assist:0,formText:''};
+    editFormArr={};
+    ALL_PLAYERS.forEach(n=>{
+        const ft=(gs(n).formText||'').toUpperCase().replace(/[^WDL]/g,'');
+        editFormArr[n]=Array.from({length:5},(_,i)=>ft[i]||null);
+    });
+    const el=document.getElementById('mainContent');
+    el.innerHTML='<div><div class="stats-page-header"><h2>✏️ EDIT STATISTIK</h2><p>Edit manual</p></div><div class="stats-grid">'
+        +'<div class="stats-section"><div class="stats-section-title">⚽ Goals</div>'
+        +ALL_PLAYERS.map(n=>'<div class="stats-player-card"><div class="stats-player-info"><div class="stats-player-name">'+escHtml(n)+'</div></div><input type="number" id="es-'+n+'" min="0" value="'+gs(n).score+'" style="width:60px;padding:5px;border:1.5px solid var(--border);border-radius:6px;font-size:0.95rem;font-weight:700;text-align:center;color:var(--win);"></div>').join('')
+        +'</div><div class="stats-section"><div class="stats-section-title">🎯 Assists</div>'
+        +ALL_PLAYERS.map(n=>'<div class="stats-player-card"><div class="stats-player-info"><div class="stats-player-name">'+escHtml(n)+'</div></div><input type="number" id="ea-'+n+'" min="0" value="'+gs(n).assist+'" style="width:60px;padding:5px;border:1.5px solid var(--border);border-radius:6px;font-size:0.95rem;font-weight:700;text-align:center;color:var(--pink);"></div>').join('')
+        +'</div></div></div>';
+    const adminTool=document.getElementById('adminStatsTool');
+    if(adminTool) adminTool.innerHTML='<div style="padding:10px;">'
+        +'<button onclick="saveStats()" style="width:100%;padding:9px;border-radius:8px;border:none;background:#00c853;color:white;font-weight:700;cursor:pointer;font-family:\'Barlow\',sans-serif;margin-bottom:6px;">💾 Simpan Stats</button>'
+        +'<button onclick="batalEditStats()" style="width:100%;padding:9px;border-radius:8px;border:none;background:#eee;color:#666;font-weight:700;cursor:pointer;font-family:\'Barlow\',sans-serif;">✖ Batal</button>'
+        +'</div>';
+}
+
+function batalEditStats(){ editingStats=false; editFormArr={}; renderStatsPage(); }
+
+async function saveStats() {
+    const updates=[];
+    ALL_PLAYERS.forEach(n=>{
+        const score=parseInt(document.getElementById('es-'+n)?.value)||0;
+        const assist=parseInt(document.getElementById('ea-'+n)?.value)||0;
+        updates.push({ mode:currentMode, player_name:n, score, assist, form_text:'' });
+    });
+    try {
+        await sbUpsert('all_time_stats', updates, 'mode,player_name');
+        editingStats=false; editFormArr={};
+        await loadStats();
+        renderStatsPage();
+    } catch(e){ alert('❌ Gagal simpan: '+e.message); }
+}
+
+// ============================================================
+// ADMIN AREA
+// ============================================================
+function renderAdminArea() {
+    const adminArea=document.getElementById('adminArea');
+    if(!adminArea)return;
+    if(!modeAdmin){ adminArea.innerHTML=''; return; }
+    if(['ALL TIME STANDING','STATS','DATABASE'].includes(currentMonth)){
+        adminArea.innerHTML='<div class="admin-panel"><h3>⚙️ Admin Mode</h3><p style="font-size:0.85rem;color:#999;margin-bottom:12px;">Pilih bulan untuk membuat liga baru.</p><button class="btn-adm btn-off" onclick="matikanAdmin()">🔒 Nonaktifkan Admin</button></div>';
+        return;
+    }
+    adminArea.innerHTML='<div class="admin-panel">'
+        +'<h3>⚙️ Buat Liga — '+currentMonth+'</h3>'
+        +'<p style="font-size:0.82rem;color:#666;margin-bottom:6px;">Centang tepat <strong>'+currentMode+' pemain</strong>:</p>'
+        +'<div class="p-checks">'+ALL_PLAYERS.map(p=>'<label><input type="checkbox" class="p-check" value="'+p+'" checked> '+p+'</label>').join('')+'</div>'
+        +'<select id="newDate" class="adm-select">'+Array.from({length:31},(_,i)=>'<option value="'+(i+1)+'">Tanggal '+(i+1)+'</option>').join('')+'</select>'
+        +'<p style="font-size:0.72rem;font-weight:700;color:var(--sub);text-transform:uppercase;margin-bottom:8px;">Tipe Liga:</p>'
+        +'<div class="liga-type-group">'
+        +'<div id="btnTipeKlub" class="liga-type-card" onclick="pilihTipeLiga(\'klub\')"><span class="ltc-icon">⚽</span><span class="ltc-label">Klub</span><span class="ltc-desc">Klub tetap</span></div>'
+        +'<div id="btnTipeFT"   class="liga-type-card" onclick="pilihTipeLiga(\'ft\')"><span class="ltc-icon">🔀</span><span class="ltc-label">Full Transfer</span><span class="ltc-desc">Bebas pilih klub</span></div>'
+        +'</div>'
+        +'<div id="clubInputsAdmin" class="club-inputs-admin"><p style="font-size:0.7rem;font-weight:700;color:#2e7d32;margin-bottom:8px;text-transform:uppercase;">⚽ Nama Klub:</p><div id="clubInputRows"></div></div>'
+        +'<button class="btn-adm btn-create" onclick="buatLiga()">➕ Buat Liga</button>'
+        +'<button class="btn-adm btn-off" onclick="matikanAdmin()" style="margin-top:6px;">🔒 Nonaktifkan Admin</button>'
+        +'</div>';
+    tipeLiga=null;
+}
+
+function pilihTipeLiga(tipe) {
+    tipeLiga=tipe;
+    const isKlub=tipe==='klub', isFT=tipe==='ft';
+    const bK=document.getElementById('btnTipeKlub'), bF=document.getElementById('btnTipeFT');
+    if(bK)bK.className='liga-type-card'+(isKlub?' aktif-klub':'');
+    if(bF)bF.className='liga-type-card'+(isFT?' aktif-ft':'');
+    const ci=document.getElementById('clubInputsAdmin'), cr=document.getElementById('clubInputRows');
+    if(ci)ci.style.display=isKlub?'block':'none';
+    if(isKlub&&cr){
+        const checked=Array.from(document.querySelectorAll('.p-check:checked')).map(c=>c.value);
+        cr.innerHTML=checked.map(n=>'<div class="club-input-row"><label>'+escHtml(n)+'</label><input id="clubFor_'+n+'" class="club-input-field" placeholder="cth: Real Madrid"></div>').join('');
+    }
+}
+
+async function buatLiga() {
+    const checked=Array.from(document.querySelectorAll('.p-check:checked')).map(c=>c.value);
+    const tgl=document.getElementById('newDate')?.value;
+    if(!tgl)return alert('Tanggal tidak ditemukan!');
+    if(checked.length!==parseInt(currentMode)) return alert('Mode '+currentMode+' Player: Centang TEPAT '+currentMode+' pemain!');
+    if(!tipeLiga) return alert('Pilih Tipe Liga: ⚽ Klub atau 🔀 Full Transfer');
+    const isFT=tipeLiga==='ft';
+    const clubMap={};
+    if(!isFT) checked.forEach(n=>{ clubMap[n]=(document.getElementById('clubFor_'+n)?.value||'').trim(); });
+
+    const standings=checked.map((n,i)=>({name:n,w:0,d:0,l:0,f:0,a:0,gd:0,pts:0,manualRank:i+1}));
+    try {
+        const row=await sbInsert('matches',{ mode:currentMode, bulan:currentMonth, tanggal:parseInt(tgl), timestamp:Date.now(), standings, manual_juara:null });
+        const infoRows=checked.map(n=>({ match_id:row.id, player_name:n, club:isFT?'':( clubMap[n]||''), is_full_transfer:isFT }));
+        await sb.from('match_info').insert(infoRows);
+        localData[row.id]=row;
+        allMatchesCache[row.id]={bulan:currentMonth,tanggal:row.tanggal,ligaNum:1,standings,manualJuara:null};
+        tipeLiga=null; renderAdminArea();
+        await loadMonthlyMatches();
+        alert('✅ Liga berhasil dibuat!');
+    } catch(e){ alert('❌ Gagal: '+e.message); }
+}
+
+// ============================================================
+// ADMIN TOGGLE (klik 5x)
+// ============================================================
+let _clickCount=0, _clickTimer=null;
+function cekAdmin(){
+    _clickCount++;
+    clearTimeout(_clickTimer);
+    _clickTimer=setTimeout(()=>{ _clickCount=0; },3000);
+    if(_clickCount>=5){ _clickCount=0; document.getElementById('loginModal').classList.add('on'); }
+}
+function aktifkanAdmin(){ modeAdmin=true; tutupLogin(); renderAdminArea(); renderStatsCards(); alert('✅ Admin aktif!'); }
+function matikanAdmin() { modeAdmin=false; renderAdminArea(); renderStatsCards(); alert('🔒 Admin dinonaktifkan.'); }
+function tutupLogin()   { document.getElementById('loginModal').classList.remove('on'); }
+
+// ============================================================
+// DATABASE PEMAIN
+// ============================================================
+function renderDatabasePage() {
+    const el=document.getElementById('mainContent');
+    if(!el)return;
+    if(!dbCurrentPlayer) dbCurrentPlayer=DB_PLAYERS[0];
+    const tabsHtml=DB_PLAYERS.map(pk=>'<button class="db-player-tab'+(pk===dbCurrentPlayer?' on':'')+'" onclick="dbSwitchPlayer(\''+pk+'\')">'+escHtml(pk)+'</button>').join('');
+    const allPositions=['GK','CB','LB','RB','DMF','CMF','AMF','RMF','LMF','LWF','RWF','SS','CF'];
+    const posOpts='<option value="">Semua Posisi</option>'+allPositions.map(p=>'<option value="'+p+'"'+(dbFilterPos===p?' selected':'')+'>'+p+'</option>').join('');
+    const adminTools=modeAdmin?'<button class="btn-db-add" onclick="bukaDbModalTambah()">➕ Tambah</button>':'';
+    el.innerHTML=`<div>
+        <div class="db-page-header"><h2>👥 DATABASE PEMAIN</h2><p>Skuad aktif — ${escHtml(currentMode)} Player Mode</p></div>
+        <div class="db-player-tabs">${tabsHtml}</div>
+        <div class="db-stat-row" id="dbStatRow"></div>
+        <div class="db-toolbar">
+            <div class="db-toolbar-left">
+                <input class="db-search" placeholder="🔍 Cari nama / klub..." value="${escHtml(dbSearchQ)}" oninput="dbOnSearch(this.value)">
+                <select class="db-filter-pos" onchange="dbOnFilter(this.value)">${posOpts}</select>
+                <span class="db-stat-chip" id="dbCount"></span>
+            </div>
+            ${adminTools}
+        </div>
+        <div class="db-table-wrap"><table class="db-tbl">
+            <thead><tr>
+                <th onclick="dbSort('num')">#</th>
+                <th onclick="dbSort('name')">Nama Pemain</th>
+                <th onclick="dbSort('club')">Klub</th>
+                <th onclick="dbSort('pos')">Pos</th>
+                ${modeAdmin?'<th>Aksi</th>':''}
+            </tr></thead>
+            <tbody id="dbTbody"></tbody>
+        </table></div>
+    </div>`;
+    dbRenderTable();
+}
+
+function dbSwitchPlayer(pk){ dbCurrentPlayer=pk; dbSearchQ=''; dbFilterPos=''; dbSortCol='num'; dbSortDir='asc'; renderDatabasePage(); }
+function dbOnSearch(q){ dbSearchQ=q; dbRenderTable(); }
+function dbOnFilter(pos){ dbFilterPos=pos; dbRenderTable(); }
+function dbSort(col){
+    if(dbSortCol===col) dbSortDir=dbSortDir==='asc'?'desc':'asc';
+    else{ dbSortCol=col; dbSortDir='asc'; }
+    dbRenderTable();
+}
+
+function dbRenderTable(){
+    const tbody=document.getElementById('dbTbody');
+    const countEl=document.getElementById('dbCount');
+    const statRow=document.getElementById('dbStatRow');
+    if(!tbody)return;
+    const raw=dbData[dbCurrentPlayer]||{};
+    let pkData=Object.entries(raw).map(([id,p])=>({id,...p}));
+    const POS_ORDER=['GK','CB','LB','RB','DMF','CMF','AMF','RMF','LMF','LWF','RWF','SS','CF'];
+    const q=dbSearchQ.toLowerCase();
+    let filtered=pkData.filter(p=>{
+        const mq=!q||(p.name||'').toLowerCase().includes(q)||(p.club||'').toLowerCase().includes(q);
+        const mp=!dbFilterPos||p.pos===dbFilterPos;
+        return mq&&mp;
+    });
+    filtered.sort((a,b)=>{
+        let va=a[dbSortCol]||'', vb=b[dbSortCol]||'';
+        if(dbSortCol==='num'){va=parseInt(va)||0;vb=parseInt(vb)||0;}
+        else if(dbSortCol==='pos'){const ia=POS_ORDER.indexOf(va),ib=POS_ORDER.indexOf(vb); return dbSortDir==='asc'?(ia===-1?99:ia)-(ib===-1?99:ib):(ib===-1?99:ib)-(ia===-1?99:ia);}
+        else{va=String(va).toLowerCase();vb=String(vb).toLowerCase();}
+        return dbSortDir==='asc'?va<vb?-1:va>vb?1:0:va>vb?-1:va<vb?1:0;
+    });
+    if(countEl)countEl.innerHTML='<span>'+filtered.length+' pemain</span>';
+    if(statRow){
+        const pc={};pkData.forEach(p=>{const pos=p.pos||'?';pc[pos]=(pc[pos]||0)+1;});
+        statRow.innerHTML='<span class="db-stat-chip">Total <span>'+pkData.length+'</span></span>'
+            +POS_ORDER.filter(p=>pc[p]).map(p=>'<span class="db-stat-chip">'+p+' <span>'+pc[p]+'</span></span>').join('');
+    }
+    if(!filtered.length){tbody.innerHTML='<tr><td colspan="'+(modeAdmin?5:4)+'" style="padding:40px;text-align:center;color:#999;">Tidak ada pemain ditemukan.</td></tr>';return;}
+    tbody.innerHTML=filtered.map(p=>{
+        const posCls='db-pos-'+(p.pos||'CF').replace(/[^A-Z]/g,'');
+        const logoUrl=getClubLogo(p.club||'');
+        const logoHtml=logoUrl?'<img src="'+logoUrl+'" class="db-club-logo" onerror="this.style.display=\'none\'">':'';
+        const noteBadge=p.note?'<span class="db-trade-badge">⚡ '+escHtml(p.note)+'</span>':'';
+        const adminCols=modeAdmin
+            ?'<td><button class="db-action-btn db-edit-btn" onclick="bukaDbModalEdit(\''+p.id+'\')">✏️</button>'
+              +'<button class="db-action-btn db-del-btn" onclick="hapusDbPemain(\''+p.id+'\')">🗑️</button></td>'
+            :'';
+        return '<tr>'
+            +'<td><span class="db-num">'+(p.num||'')+'</span></td>'
+            +'<td><strong>'+escHtml(p.name||'')+'</strong>'+noteBadge+'</td>'
+            +'<td><div class="db-club-cell">'+logoHtml+'<span class="db-club-name">'+escHtml(p.club||'')+'</span></div></td>'
+            +'<td><span class="db-pos-badge '+posCls+'">'+escHtml(p.pos||'')+'</span></td>'
+            +adminCols+'</tr>';
+    }).join('');
+}
+
+function bukaDbModalTambah(){
+    dbEditId=null;
+    document.getElementById('dbModalTitle').textContent='➕ Tambah Pemain — '+dbCurrentPlayer;
+    ['dbFormNum','dbFormName','dbFormClub','dbFormRating','dbFormNote'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+    document.getElementById('dbFormPos').value='';
+    document.getElementById('dbModal').classList.add('on');
+}
+function bukaDbModalEdit(id){
+    const p=(dbData[dbCurrentPlayer]||{})[id];
+    if(!p)return;
+    dbEditId=id;
+    document.getElementById('dbModalTitle').textContent='✏️ Edit Pemain — '+dbCurrentPlayer;
+    document.getElementById('dbFormNum').value=p.num||'';
+    document.getElementById('dbFormName').value=p.name||'';
+    document.getElementById('dbFormClub').value=p.club||'';
+    document.getElementById('dbFormPos').value=p.pos||'';
+    document.getElementById('dbFormRating').value=p.rating||'';
+    document.getElementById('dbFormNote').value=p.note||'';
+    document.getElementById('dbModal').classList.add('on');
+}
+function tutupDbModal(){ document.getElementById('dbModal').classList.remove('on'); }
+
+async function simpanDbPemain(){
+    const num=parseInt(document.getElementById('dbFormNum').value)||0;
+    const name=document.getElementById('dbFormName').value.trim();
+    const club=document.getElementById('dbFormClub').value.trim();
+    const pos=document.getElementById('dbFormPos').value;
+    const note=document.getElementById('dbFormNote').value.trim();
+    const rRaw=parseInt(document.getElementById('dbFormRating').value)||0;
+    const rating=rRaw>0?Math.min(99,Math.max(1,rRaw)):0;
+    if(!name)return alert('Nama pemain wajib diisi!');
+    if(!pos)return alert('Posisi wajib dipilih!');
+    const payload={mode:currentMode,player_key:dbCurrentPlayer,num,name,club,pos,note,rating};
+    try{
+        if(dbEditId) await sbUpdate('database_pemain',dbEditId,payload);
+        else await sbInsert('database_pemain',payload);
+        tutupDbModal();
+    }catch(e){alert('❌ Gagal simpan: '+e.message);}
+}
+
+async function hapusDbPemain(id){
+    if(!confirm('Hapus pemain ini?'))return;
+    try{ await sbDelete('database_pemain',id); }
+    catch(e){alert('❌ Gagal hapus: '+e.message);}
+}
+</script>
+</body>
+</html>
