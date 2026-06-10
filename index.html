@@ -1306,7 +1306,7 @@
 // INISIALISASI SUPABASE
 // ==========================================
 const supabaseUrl = 'https://qtvptqafmurpvyfnexfr.supabase.co';
-const supabaseKey = 'sb_publishable_taquImSZ_-EVwERdODDAbA_62thC36K';
+const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF0dnB0cWFmbXVycHZ5Zm5leGZyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk3NzQ4ODAsImV4cCI6MjA5NTM1MDg4MH0.HUMUASWuFOPb-o0UoPxThLmsx-EZBsk3Z0MxHP8VL8I';
 const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
 
 // ==========================================
@@ -1320,37 +1320,9 @@ supabase.auth.onAuthStateChange((event, session) => {
     renderAdminArea();
     renderStatsCards();
     
-    // PENTING: loadData() harus kamu refaktor nanti 
-    // karena pemanggilan tabel di Supabase berbeda dengan Firebase
-    // loadData(); 
+if (currentMode) { loadData(); } 
 });
 
-// Mengganti prosesLogin()
-function prosesLogin() {
-    const email = document.getElementById('adminEmail').value.trim();
-    const pass  = document.getElementById('adminPass').value;
-    if (!email || !pass) return alert('Email dan password harus diisi!');
-
-    // Memanggil API Supabase Auth
-    supabase.auth.signInWithPassword({ email: email, password: pass })
-        .then(({ data, error }) => {
-            if (error) {
-                alert('❌ Gagal Login: Email/Password salah.');
-                console.error(error);
-            } else {
-                alert('✅ Login Berhasil! Mode Admin Terbuka.');
-                tutupLogin();
-            }
-        });
-}
-
-// Mengganti matikanAdmin()
-function matikanAdmin() {
-    supabase.auth.signOut().then(({ error }) => {
-        if (error) alert('❌ Gagal logout: ' + error.message);
-        else alert('🔒 Berhasil keluar dari Mode Admin.');
-    });
-}
 
 const MONTHS      = ["Januari","Februari","Maret","April","Mei","Juni","Juli","Agustus","September","Oktober","November","Desember"];
 const ALL_PLAYERS = ["Toxx","Stive","Alfa","Kobe"];
@@ -1701,6 +1673,7 @@ function kembaliKeMenuAwal() {
     const prevMode = currentMode;
     if (matchesRef) { matchesRef.off(); matchesRef = null; }
     if (statsRef)   { statsRef.off();   statsRef   = null; }
+    ['matchesSub','statsSub','trophySub'].forEach(k => { if(window[k]) supabase.removeChannel(window[k]); });
     editingId    = null;
     editingStats = false;
     tipeLiga     = null;
@@ -1781,7 +1754,7 @@ function gantiBulan(m) {
 }
 
 function loadData() {
-    if (!currentMode) return; // FIX: guard — don't run before mode selected
+    if (!currentMode) return;
     const banner = document.getElementById('champBanner');
 
     if (currentMonth === 'DATABASE') {
@@ -1878,13 +1851,16 @@ function loadData() {
     fetchMatches();
 
     // Aktifkan Realtime untuk tabel klasemen liga
-    if (window.matchesSub) supabase.removeChannel(window.matchesSub);
-    window.matchesSub = supabase
-        .channel('public:league_matches')
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'league_matches' }, payload => {
-            fetchMatches();
-        })
-        .subscribe();
+    if (window.matchesSub) {
+    supabase.removeChannel(window.matchesSub);
+    window.matchesSub = null;
+}
+window.matchesSub = supabase
+    .channel('matches_' + currentMode + '_' + currentMonth.replace(/\s/g,'_'))
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'league_matches' }, payload => {
+        fetchMatches();
+    })
+    .subscribe();
 }
 
 async function listenStats() {
@@ -1913,7 +1889,7 @@ async function listenStats() {
 
     // Realtime listener
     if (window.statsSub) supabase.removeChannel(window.statsSub);
-    window.statsSub = supabase.channel('public:all_time_stats')
+    window.statsSub = supabase.channel('stats_' + currentMode)
         .on('postgres_changes', { event: '*', schema: 'public', table: 'all_time_stats' }, fetchStats)
         .subscribe();
 }
@@ -3131,16 +3107,21 @@ function prosesLogin() {
     const email = document.getElementById('adminEmail').value.trim();
     const pass  = document.getElementById('adminPass').value;
     if (!email || !pass) return alert('Email dan password harus diisi!');
-    auth.signInWithEmailAndPassword(email, pass)
-        .then(() => { alert('✅ Login Berhasil! Mode Admin Terbuka.'); tutupLogin(); })
-        .catch(() => alert('❌ Gagal Login: Email/Password salah.'));
+    supabase.auth.signInWithPassword({ email, password: pass })
+        .then(({ error }) => {
+            if (error) alert('❌ Gagal Login: Email/Password salah.');
+            else { alert('✅ Login Berhasil!'); tutupLogin(); }
+        });
 }
 
 function matikanAdmin() {
-    auth.signOut()
-        .then(() => { alert('🔒 Berhasil keluar dari Mode Admin.'); })
-        .catch(e => alert('❌ Gagal logout: ' + e.message));
+    supabase.auth.signOut()
+        .then(({ error }) => {
+            if (error) alert('❌ Gagal logout: ' + error.message);
+            else alert('🔒 Berhasil keluar dari Mode Admin.');
+        });
 }
+
 /* ===================== DATABASE PEMAIN ===================== */
 
 const DB_PLAYERS = ['Toxx', 'Stive', 'Alfa', 'Kobe', 'NON USER', 'ALL PLAYER'];
@@ -3367,14 +3348,22 @@ const DB_DEFAULT_4 = {
   ]
 };
 
+let dbRealtimeChannel = null; // tambahkan di top-level variables
+
 async function listenDatabase() {
     if (!currentMode) return;
+
+    // Tutup channel lama jika ada
+    if (dbRealtimeChannel) {
+        await supabase.removeChannel(dbRealtimeChannel);
+        dbRealtimeChannel = null;
+    }
 
     async function fetchPlayers() {
         const { data, error } = await supabase
             .from('players')
             .select('*')
-            .eq('mode', currentMode); // Memfilter pemain berdasarkan mode aktif
+            .eq('mode', currentMode);
             
         if (error) {
             console.error('Error fetching players:', error);
@@ -3382,13 +3371,10 @@ async function listenDatabase() {
         }
 
         if (!data || data.length === 0) {
-            // Jika kosong saat pertama kali diload, reset ke default
             resetDatabaseKeDefault(false);
             return;
         }
 
-        // Format ulang array dari Supabase kembali ke bentuk JSON Object yang lama
-        // Agar fitur seperti Lineup dan Trade tidak perlu ditulis ulang!
         const formattedData = {};
         data.forEach(p => {
             if (!formattedData[p.owner]) formattedData[p.owner] = {};
@@ -3406,16 +3392,14 @@ async function listenDatabase() {
         if (currentMonth === 'DATABASE') renderDatabasePage();
     }
 
-    // Ambil data pertama kali
     await fetchPlayers();
 
-    // Aktifkan Realtime (menggantikan .on('value') milik Firebase)
-    supabase
-      .channel('public:players')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'players' }, payload => {
-          fetchPlayers(); 
-      })
-      .subscribe();
+    dbRealtimeChannel = supabase
+        .channel('players_mode_' + currentMode) // nama unik per mode!
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'players' }, payload => {
+            fetchPlayers();
+        })
+        .subscribe();
 }
 
 async function resetDatabaseKeDefault(konfirmasi) {
@@ -3423,7 +3407,7 @@ async function resetDatabaseKeDefault(konfirmasi) {
         if (!confirm('⚠️ Reset semua pemain ke data default?\nSemua data pemain yang ada akan diganti. Lanjutkan?')) return;
     }
     const DB_DEFAULT = currentMode === '3' ? DB_DEFAULT_3 : DB_DEFAULT_4;
-    const realPlayers = DB_PLAYERS.filter(pk => pk !== 'ALL PLAYER' && pk !== 'NON USER');
+    const realPlayers = DB_PLAYERS.filter(pk => pk !== 'ALL PLAYER' && pk !== 'NON USER' && pk !== 'COMPARE');
     
     // Hapus semua pemain di mode ini
     await supabase.from('players').delete().eq('mode', currentMode);
@@ -3454,6 +3438,12 @@ function renderDatabasePage() {
     if (!el) return;
     const banner = document.getElementById('champBanner');
     banner.classList.add('hidden');
+
+    // FIX: Handle COMPARE di awal
+    if (dbCurrentPlayer === 'COMPARE') {
+        renderComparePage();
+        return;
+    }
 
     if (!dbCurrentPlayer) dbCurrentPlayer = DB_PLAYERS[0];
 
@@ -3532,7 +3522,7 @@ function renderComparePage() {
     const el = document.getElementById('mainContent');
     if (!el) return;
 
-    const realPlayers = DB_PLAYERS.filter(pk => pk !== 'ALL PLAYER' && pk !== 'COMPARE');
+    const realPlayers = DB_PLAYERS.filter(pk => pk !== 'ALL PLAYER' && pk !== 'COMPARE' && pk !== 'NON USER');
 
     // Init default: select all real players (up to 4)
     if (!h2hSelected.length || !h2hSelected.every(p => realPlayers.includes(p))) {
@@ -3578,7 +3568,7 @@ function renderComparePage() {
 }
 
 function renderH2HPills() {
-    const realPlayers = DB_PLAYERS.filter(pk => pk !== 'ALL PLAYER' && pk !== 'COMPARE');
+    const realPlayers = DB_PLAYERS.filter(pk => pk !== 'ALL PLAYER' && pk !== 'COMPARE' && pk !== 'NON USER');
     const COLORS = ['#e91e63','#1976d2','#388e3c','#f57c00'];
     const pillsEl = document.getElementById('h2hPills');
     const hintEl  = document.getElementById('h2hHint');
@@ -3603,7 +3593,7 @@ function renderH2HPills() {
 }
 
 function h2hTogglePlayer(pk) {
-    const realPlayers = DB_PLAYERS.filter(p => p !== 'ALL PLAYER' && p !== 'COMPARE');
+    const realPlayers = DB_PLAYERS.filter(p => p !== 'ALL PLAYER' && p !== 'COMPARE' && p !== 'NON USER');
     const idx = h2hSelected.indexOf(pk);
     if (idx !== -1) {
         // Deselect — tapi minimal 2 harus tetap terpilih
@@ -3981,7 +3971,7 @@ if (dbCurrentPlayer === 'ALL PLAYER') {
         if (dbData[pk] && typeof dbData[pk] === 'object') {
             Object.entries(dbData[pk]).forEach(([uid, p]) => {
                 pkData.push({
-                    uid: pk + '_' + uid,
+                    uid: uid,        // FIX: gunakan uid asli Supabase, bukan gabungan
                     _owner: pk,
                     _isNonUser: pk === 'NON USER',
                     ...p
@@ -4044,7 +4034,14 @@ if (dbCurrentPlayer === 'ALL PLAYER') {
             ).join('')
             + lineupBtn;
     }
-    const totalCols = (modeAdmin && !isAll) ? (isNonUserTab ? 7 : 6) : (isAll ? 6 : 5);
+        // num + name + club + pos + rating = 5 base
+        // + owner col jika ALL PLAYER = +1
+        // + fromPlayer jika NON USER = +1
+        // + aksi jika admin dan bukan ALL PLAYER = +1
+        const totalCols = 5
+            + (isAll ? 1 : 0)
+            + (isNonUserTab ? 1 : 0)
+            + (modeAdmin && !isAll ? 1 : 0);
     if (!filtered.length) {
         tbody.innerHTML = '<tr><td colspan="' + totalCols + '" class="db-empty">' + (isNonUserTab ? '📦 Belum ada pemain di Non User.' : 'Tidak ada pemain ditemukan.') + '</td></tr>';
         return;
@@ -4092,8 +4089,12 @@ if (dbCurrentPlayer === 'ALL PLAYER') {
                 : '<span style="font-size:0.75rem;font-weight:800;color:#1565c0;background:#e3f2fd;padding:2px 8px;border-radius:6px;border:1px solid #90caf9;">' + escHtml(p._owner||'') + '</span>')
             + '</td>'
             : '';
+        // Parse "Dari: PlayerName" dari field note
+        const fromPlayerName = (p.note || '').startsWith('Dari: ')
+            ? p.note.replace('Dari: ', '')
+            : (p._fromPlayer || '?');
         const fromPlayerCol = isNonUserTab
-            ? '<td><span style="font-size:0.7rem;font-weight:700;color:#e65100;background:#fff3e0;padding:2px 8px;border-radius:6px;border:1px solid #ffb74d;">' + escHtml(p._fromPlayer || '?') + '</span></td>'
+            ? '<td><span style="font-size:0.7rem;font-weight:700;color:#e65100;background:#fff3e0;padding:2px 8px;border-radius:6px;border:1px solid #ffb74d;">' + escHtml(fromPlayerName) + '</span></td>'
             : '';
         const ratingCol = '<td>' + ratingBadgeHtml(p.rating || 0) + '</td>';
 
@@ -4200,7 +4201,6 @@ async function pindahKeNonUser(uid) {
     if (!p) return alert('Data pemain tidak ditemukan!');
     if (!confirm('📦 Pindahkan ' + (p.name||'pemain ini') + ' ke Non User?\nPemain akan dihapus dari skuad ' + dbCurrentPlayer + ' dan disimpan di Non User.')) return;
 
-    // Di Supabase, kita cukup mengubah nama 'owner' ke 'NON USER'
     const { error } = await supabase.from('players')
         .update({ owner: 'NON USER', note: 'Dari: ' + dbCurrentPlayer })
         .eq('id', uid);
@@ -4208,7 +4208,6 @@ async function pindahKeNonUser(uid) {
     if (error) alert('❌ Gagal pindah: ' + error.message);
 }
 
-/* Pindahkan pemain dari NON USER kembali ke player tertentu */
 async function pindahDariNonUser(uid) {
     const targetPk = document.getElementById('pindahTo_' + uid)?.value;
     if (!targetPk) return alert('Pilih player tujuan terlebih dahulu!');
@@ -4227,7 +4226,7 @@ async function pindahDariNonUser(uid) {
 /* ===================== TRADE PEMAIN ===================== */
 function bukaTradePemain() {
     document.getElementById('tradeModeLabel').textContent = currentMode + ' Player Mode';
-    const realPlayers = DB_PLAYERS.filter(pk => pk !== 'ALL PLAYER');
+    const realPlayers = DB_PLAYERS.filter(pk => pk !== 'ALL PLAYER' && pk !== 'COMPARE');
     const opts = '<option value="">-- Pilih Player --</option>'
         + realPlayers.map(p => '<option value="' + escHtml(p) + '">' + escHtml(p) + '</option>').join('');
     document.getElementById('tradePlayerA').innerHTML = opts;
@@ -4302,11 +4301,12 @@ async function konfirmasiTrade() {
     if (!konfirm) return;
 
     // Supabase: Tukar kolom 'owner' dan tambahkan catatan Trade, tanpa mengubah 'id' barisnya
-    const payloadA = { owner: pkA, note: 'Trade: ' + pA.name };
-    const payloadB = { owner: pkB, note: 'Trade: ' + pB.name };
-
-    const { error: err1 } = await supabase.from('players').update(payloadB).eq('id', uidA);
-    const { error: err2 } = await supabase.from('players').update(payloadA).eq('id', uidB);
+    const { error: err1 } = await supabase.from('players')
+    .update({ owner: pkB, note: 'Trade: ' + pA.name }) // uidA pindah ke pkB, note = nama pemain yg dipindah
+    .eq('id', uidA);
+    const { error: err2 } = await supabase.from('players')
+    .update({ owner: pkA, note: 'Trade: ' + pB.name }) // uidB pindah ke pkA
+    .eq('id', uidB)
 
     if (err1 || err2) {
         alert('❌ Gagal trade: ' + (err1?.message || err2?.message));
@@ -4930,7 +4930,7 @@ async function loadTrophyOrder() {
     fetchTrophy();
 
     if (window.trophySub) supabase.removeChannel(window.trophySub);
-    window.trophySub = supabase.channel('public:trophy_order')
+    window.trophySub = supabase.channel('trophy_' + currentMode)
         .on('postgres_changes', { event: '*', schema: 'public', table: 'trophy_order' }, fetchTrophy)
         .subscribe();
 }
@@ -4938,7 +4938,7 @@ async function loadTrophyOrder() {
 function moveTrophyAllRow(idx, dir) {
     const rows = document.querySelectorAll('#sbTrophyAllBody tr');
     let currentOrder = Array.from(rows).map(tr => {
-        const td = tr.querySelector('td.tl strong');
+        const td = tr.querySelector('td.tl span.clickable-name');
         return td ? td.textContent.trim() : null;
     }).filter(Boolean);
 
@@ -4960,7 +4960,7 @@ function moveTrophyRow(bulan, idx, dir) {
     // Ambil urutan saat ini dari tampilan
     const rows = document.querySelectorAll('#sbTrophyMonthBody tr');
     let currentOrder = Array.from(rows).map(tr => {
-        const td = tr.querySelector('td.tl strong');
+        const td = tr.querySelector('td.tl span.clickable-name');
         return td ? td.textContent.trim() : null;
     }).filter(Boolean);
 
@@ -5059,32 +5059,34 @@ function loadSheetJS(callback) {
     document.head.appendChild(script);
 }
 
-document.getElementById('importFileInput') && document.getElementById('importFileInput').addEventListener('change', function(e) {
-    const file = e.target.files[0];
-    if (!file) return;
-    loadSheetJS(() => {
-        const reader = new FileReader();
-        reader.onload = function(ev) {
-            try {
-                const data = new Uint8Array(ev.target.result);
-                const workbook = XLSX.read(data, {type:'array'});
-                const sheet = workbook.Sheets[workbook.SheetNames[0]];
-                const rows = XLSX.utils.sheet_to_json(sheet, {defval:''});
-                importParsedData = rows.map((r, i) => ({
-                    num:    parseInt(r.num || r.No || r.NUMBER || i+1) || i+1,
-                    name:   String(r.name || r.Name || r.NAMA || r.nama || '').trim(),
-                    club:   String(r.club || r.Club || r.KLUB || r.klub || '').trim(),
-                    pos:    String(r.pos  || r.Pos  || r.POS  || r.posisi || '').trim().toUpperCase(),
-                    rating: parseInt(r.rating || r.Rating || r.RATING || 0) || 0,
-                    note:   String(r.note  || r.Note  || r.NOTE  || r.catatan || '').trim(),
-                })).filter(p => p.name);
-                tampilkanPreviewImport();
-            } catch(err) {
-                alert('❌ Gagal baca file: ' + err.message);
-            }
-        };
-        reader.readAsArrayBuffer(file);
-    });
+document.addEventListener('change', function(e) {
+    if (e.target && e.target.id === 'importFileInput') {
+        const file = e.target.files[0];
+        if (!file) return;
+        loadSheetJS(() => {
+            const reader = new FileReader();
+            reader.onload = function(ev) {
+                try {
+                    const data = new Uint8Array(ev.target.result);
+                    const workbook = XLSX.read(data, {type:'array'});
+                    const sheet = workbook.Sheets[workbook.SheetNames[0]];
+                    const rows = XLSX.utils.sheet_to_json(sheet, {defval:''});
+                    importParsedData = rows.map((r, i) => ({
+                        num:    parseInt(r.num || r.No || r.NUMBER || i+1) || i+1,
+                        name:   String(r.name || r.Name || r.NAMA || r.nama || '').trim(),
+                        club:   String(r.club || r.Club || r.KLUB || r.klub || '').trim(),
+                        pos:    String(r.pos  || r.Pos  || r.POS  || r.posisi || '').trim().toUpperCase(),
+                        rating: parseInt(r.rating || r.Rating || r.RATING || 0) || 0,
+                        note:   String(r.note  || r.Note  || r.NOTE  || r.catatan || '').trim(),
+                    })).filter(p => p.name);
+                    tampilkanPreviewImport();
+                } catch(err) {
+                    alert('❌ Gagal baca file: ' + err.message);
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        });
+    }
 });
 
 function tampilkanPreviewImport() {
@@ -5202,7 +5204,7 @@ async function bukaDetailStats(nama, tipe) {
 async function bukaDetailJuara(nama) {
     document.getElementById('infoModalTitle').innerHTML = '🏆 Riwayat Juara All Time: ' + escHtml(nama);
     document.getElementById('infoModalBody').innerHTML = '<div style="padding:20px;text-align:center;">Memuat data dari Supabase...</div>';
-    bukaInfoModal();
+    document.getElementById('infoModal').classList.add('on');
 
     // Tarik semua data liga dari Supabase untuk mode ini
     const { data, error } = await supabase.from('league_matches').select('*').eq('mode', currentMode);
@@ -5289,7 +5291,7 @@ async function bukaDetailJuara(nama) {
 async function bukaDetailJuaraBulan(nama, bulan) {
     document.getElementById('infoModalTitle').innerHTML = '🏆 Riwayat Juara ' + escHtml(bulan) + ': ' + escHtml(nama);
     document.getElementById('infoModalBody').innerHTML = '<div style="padding:20px;text-align:center;">Memuat data dari Supabase...</div>';
-    bukaInfoModal();
+    document.getElementById('infoModal').classList.add('on');
 
     // Filter langsung berdasarkan bulan menggunakan .eq('bulan', bulan)
     const { data, error } = await supabase.from('league_matches').select('*').eq('mode', currentMode).eq('bulan', bulan);
