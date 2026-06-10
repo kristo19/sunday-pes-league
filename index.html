@@ -1295,13 +1295,13 @@
 // ==========================================
 const supabaseUrl = 'https://qtvptqafmurpvyfnexfr.supabase.co';
 const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF0dnB0cWFmbXVycHZ5Zm5leGZyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk3NzQ4ODAsImV4cCI6MjA5NTM1MDg4MH0.HUMUASWuFOPb-o0UoPxThLmsx-EZBsk3Z0MxHP8VL8I';
-const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+const sb = window.supabase.createClient(supabaseUrl, supabaseKey);
 
 // ==========================================
 // AUTHENTICATION (LOGIN & LOGOUT)
 // ==========================================
 // Mengganti auth.onAuthStateChanged
-supabase.auth.onAuthStateChange((event, session) => {
+sb.auth.onAuthStateChange((event, session) => {
     const user = session?.user;
     modeAdmin = !!user;
     if (!user) { editingId = null; editingStats = false; }
@@ -1661,7 +1661,7 @@ function kembaliKeMenuAwal() {
     const prevMode = currentMode;
     if (matchesRef) { matchesRef.off(); matchesRef = null; }
     if (statsRef)   { statsRef.off();   statsRef   = null; }
-    ['matchesSub','statsSub','trophySub'].forEach(k => { if(window[k]) supabase.removeChannel(window[k]); });
+    ['matchesSub','statsSub','trophySub'].forEach(k => { if(window[k]) sb.removechannel(window[k]); });
     editingId    = null;
     editingStats = false;
     tipeLiga     = null;
@@ -1840,7 +1840,7 @@ function loadData() {
 
     // Aktifkan Realtime untuk tabel klasemen liga
     if (window.matchesSub) {
-    supabase.removeChannel(window.matchesSub);
+    sb.removechannel(window.matchesSub);
     window.matchesSub = null;
 }
 window.matchesSub = supabase
@@ -1853,7 +1853,7 @@ window.matchesSub = supabase
 
 async function listenStats() {
     async function fetchStats() {
-        const { data, error } = await supabase.from('all_time_stats').select('*');
+        const { data, error } = await sb.from('all_time_stats').select('*');
         if (error) return console.error(error);
         
         statsData = {};
@@ -1876,8 +1876,8 @@ async function listenStats() {
     fetchStats();
 
     // Realtime listener
-    if (window.statsSub) supabase.removeChannel(window.statsSub);
-    window.statsSub = supabase.channel('stats_' + currentMode)
+    if (window.statsSub) sb.removechannel(window.statsSub);
+    window.statsSub = sb.channel('stats_' + currentMode)
         .on('postgres_changes', { event: '*', schema: 'public', table: 'all_time_stats' }, fetchStats)
         .subscribe();
 }
@@ -2381,7 +2381,7 @@ function simpan(id) {
         return { name: name, w: w, d: d, l: l, f: f, a: a, gd: f - a, pts: w * 3 + d, manualRank: r };
     });
 
-    supabase.from('league_matches')
+    sb.from('league_matches')
         .update({ tanggal: parseInt(tgl), standings: standings, manual_juara: null })
         .eq('id', id)
         .then(({ error }) => {
@@ -2454,7 +2454,7 @@ async function bukaInfoPlayerAllTime(nama) {
     document.getElementById('infoModalBody').innerHTML     = '<div class="no-club" style="text-align:center;padding:20px;">⏳ Memuat data dari Supabase...</div>';
     document.getElementById('infoModal').classList.add('on');
 
-    const { data, error } = await supabase.from('league_matches').select('*').eq('mode', currentMode);
+    const { data, error } = await sb.from('league_matches').select('*').eq('mode', currentMode);
     if (error) {
         document.getElementById('infoModalBody').innerHTML = '<div class="no-club" style="color:red;padding:20px;">Error: ' + error.message + '</div>';
         return;
@@ -2672,7 +2672,7 @@ function tutupInfoModalOutside(e) { if (e.target === document.getElementById('in
 
 async function updateSidebar(monthlyMatches) {
     // Tarik daftar pemain yang sedang aktif
-    const { data, error } = await supabase.from('league_matches').select('standings').eq('mode', currentMode);
+    const { data, error } = await sb.from('league_matches').select('standings').eq('mode', currentMode);
     
     let ptsMonth = {}, trophyMonth = {};
     activeSet = new Set();
@@ -2759,7 +2759,7 @@ async function updateSidebar(monthlyMatches) {
 }
 
 async function updateSidebarAllTime() {
-    const { data, error } = await supabase.from('league_matches').select('*').eq('mode', currentMode);
+    const { data, error } = await sb.from('league_matches').select('*').eq('mode', currentMode);
 
     let ptsAll = {}, trophyAll = {};
     activeSet = new Set();
@@ -2939,7 +2939,7 @@ async function saveStats() {
         });
     });
 
-    const { error } = await supabase.from('all_time_stats').upsert(dataToUpsert);
+    const { error } = await sb.from('all_time_stats').upsert(dataToUpsert);
     
     if (error) {
         alert('❌ Gagal simpan: ' + error.message);
@@ -3058,7 +3058,7 @@ function buatLiga() {
         match_info: initialMatchInfo
     };
 
-    supabase.from('league_matches').insert([payloadMatch])
+    sb.from('league_matches').insert([payloadMatch])
         .then(({ error }) => {
             if (error) throw error;
             tipeLiga = null;
@@ -3095,7 +3095,7 @@ function prosesLogin() {
     const email = document.getElementById('adminEmail').value.trim();
     const pass  = document.getElementById('adminPass').value;
     if (!email || !pass) return alert('Email dan password harus diisi!');
-    supabase.auth.signInWithPassword({ email, password: pass })
+    sb.auth.signInWithPassword({ email, password: pass })
         .then(({ error }) => {
             if (error) alert('❌ Gagal Login: Email/Password salah.');
             else { alert('✅ Login Berhasil!'); tutupLogin(); }
@@ -3103,7 +3103,7 @@ function prosesLogin() {
 }
 
 function matikanAdmin() {
-    supabase.auth.signOut()
+    sb.auth.signOut()
         .then(({ error }) => {
             if (error) alert('❌ Gagal logout: ' + error.message);
             else alert('🔒 Berhasil keluar dari Mode Admin.');
@@ -3343,7 +3343,7 @@ async function listenDatabase() {
 
     // Tutup channel lama jika ada
     if (dbRealtimeChannel) {
-        await supabase.removeChannel(dbRealtimeChannel);
+        await sb.removechannel(dbRealtimeChannel);
         dbRealtimeChannel = null;
     }
 
@@ -3398,7 +3398,7 @@ async function resetDatabaseKeDefault(konfirmasi) {
     const realPlayers = DB_PLAYERS.filter(pk => pk !== 'ALL PLAYER' && pk !== 'NON USER' && pk !== 'COMPARE');
     
     // Hapus semua pemain di mode ini
-    await supabase.from('players').delete().eq('mode', currentMode);
+    await sb.from('players').delete().eq('mode', currentMode);
     
     const inserts = [];
     realPlayers.forEach(owner => {
@@ -3416,7 +3416,7 @@ async function resetDatabaseKeDefault(konfirmasi) {
         });
     });
     
-    const { error } = await supabase.from('players').insert(inserts);
+    const { error } = await sb.from('players').insert(inserts);
     if (error) alert('❌ Gagal reset: ' + error.message);
     else alert('✅ Database berhasil di-reset ke data default!');
 }
@@ -4156,11 +4156,11 @@ async function simpanDbPemain() {
 
     if (dbEditUid) {
         // Mode Edit: Update baris yang ada berdasarkan ID
-        const { error } = await supabase.from('players').update(payload).eq('id', dbEditUid);
+        const { error } = await sb.from('players').update(payload).eq('id', dbEditUid);
         if (error) errorMsg = error.message;
     } else {
         // Mode Tambah: Masukkan baris baru
-        const { error } = await supabase.from('players').insert([payload]);
+        const { error } = await sb.from('players').insert([payload]);
         if (error) errorMsg = error.message;
     }
 
@@ -4189,7 +4189,7 @@ async function pindahKeNonUser(uid) {
     if (!p) return alert('Data pemain tidak ditemukan!');
     if (!confirm('📦 Pindahkan ' + (p.name||'pemain ini') + ' ke Non User?\nPemain akan dihapus dari skuad ' + dbCurrentPlayer + ' dan disimpan di Non User.')) return;
 
-    const { error } = await supabase.from('players')
+    const { error } = await sb.from('players')
         .update({ owner: 'NON USER', note: 'Dari: ' + dbCurrentPlayer })
         .eq('id', uid);
         
@@ -4204,7 +4204,7 @@ async function pindahDariNonUser(uid) {
     if (!p) return alert('Data pemain tidak ditemukan!');
     if (!confirm('↩️ Pindahkan ' + (p.name||'pemain ini') + ' ke skuad ' + targetPk + '?')) return;
 
-    const { error } = await supabase.from('players')
+    const { error } = await sb.from('players')
         .update({ owner: targetPk, note: null })
         .eq('id', uid);
         
@@ -4289,10 +4289,10 @@ async function konfirmasiTrade() {
     if (!konfirm) return;
 
     // Supabase: Tukar kolom 'owner' dan tambahkan catatan Trade, tanpa mengubah 'id' barisnya
-    const { error: err1 } = await supabase.from('players')
+    const { error: err1 } = await sb.from('players')
     .update({ owner: pkB, note: 'Trade: ' + pA.name }) // uidA pindah ke pkB, note = nama pemain yg dipindah
     .eq('id', uidA);
-    const { error: err2 } = await supabase.from('players')
+    const { error: err2 } = await sb.from('players')
     .update({ owner: pkA, note: 'Trade: ' + pB.name }) // uidB pindah ke pkA
     .eq('id', uidB);
 
@@ -4867,7 +4867,7 @@ async function simpanLineup() {
         slotCustomPos: JSON.parse(JSON.stringify(lineupSlotCustomPos)),
     };
 
-    const { error } = await supabase.from('lineups').upsert({
+    const { error } = await sb.from('lineups').upsert({
         player_name: lineupCurrentPlayer,
         formation: lineupFormation,
         assignments: lineupAssignments,
@@ -4886,7 +4886,7 @@ async function simpanLineup() {
 }
 
 async function loadLineupData() {
-    const { data, error } = await supabase.from('lineups').select('*');
+    const { data, error } = await sb.from('lineups').select('*');
     if (error) return console.error('Error load lineup:', error);
     
     if (data) {
@@ -4902,7 +4902,7 @@ async function loadLineupData() {
 
 async function loadTrophyOrder() {
     async function fetchTrophy() {
-        const { data, error } = await supabase.from('trophy_order').select('*');
+        const { data, error } = await sb.from('trophy_order').select('*');
         if (error) return console.error(error);
         
         trophyManualOrder = {};
@@ -4917,8 +4917,8 @@ async function loadTrophyOrder() {
 
     fetchTrophy();
 
-    if (window.trophySub) supabase.removeChannel(window.trophySub);
-    window.trophySub = supabase.channel('trophy_' + currentMode)
+    if (window.trophySub) sb.removechannel(window.trophySub);
+    window.trophySub = sb.channel('trophy_' + currentMode)
         .on('postgres_changes', { event: '*', schema: 'public', table: 'trophy_order' }, fetchTrophy)
         .subscribe();
 }
@@ -4938,7 +4938,7 @@ function moveTrophyAllRow(idx, dir) {
     currentOrder[newIdx] = tmp;
 
     trophyManualOrder['ALL TIME'] = currentOrder;
-    supabase.from('trophy_order').upsert({ bulan: 'ALL TIME', order_data: currentOrder })
+    sb.from('trophy_order').upsert({ bulan: 'ALL TIME', order_data: currentOrder })
         .then(({error}) => { if(error) console.error(error); })
 
     updateSidebarAllTime();
@@ -4962,7 +4962,7 @@ function moveTrophyRow(bulan, idx, dir) {
 
     // Simpan ke Firebase dan local
     trophyManualOrder[bulan] = currentOrder;
-    supabase.from('trophy_order').upsert({ bulan: bulan, order_data: currentOrder })
+    sb.from('trophy_order').upsert({ bulan: bulan, order_data: currentOrder })
         .then(({error}) => { if(error) console.error(error); });
 
     // Re-render sidebar langsung tanpa tunggu Firebase
@@ -4976,7 +4976,7 @@ async function cekManualJuara() {
         return alert('Pilih bulan dulu!');
     }
     
-    const { data, error } = await supabase.from('league_matches').select('id, manual_juara').eq('mode', currentMode).eq('bulan', currentMonth);
+    const { data, error } = await sb.from('league_matches').select('id, manual_juara').eq('mode', currentMode).eq('bulan', currentMonth);
     if (error) return alert('Error: ' + error.message);
     
     let hasil = 'ManualJuara di bulan ' + currentMonth + ':\n\n';
@@ -5000,7 +5000,7 @@ async function resetSemuaManualJuara() {
     }
     if (!confirm('Reset semua manualJuara di bulan ' + currentMonth + '? Juara akan ditentukan otomatis berdasarkan poin/GD/GF.')) return;
     
-    const { error } = await supabase.from('league_matches').update({ manual_juara: null }).eq('mode', currentMode).eq('bulan', currentMonth);
+    const { error } = await sb.from('league_matches').update({ manual_juara: null }).eq('mode', currentMode).eq('bulan', currentMonth);
     
     if (error) {
         alert('\u274c Gagal: ' + error.message);
@@ -5107,7 +5107,7 @@ async function prosesImport() {
 
     try {
         if (mode === 'replace') {
-            await supabase.from('players').delete().eq('mode', currentMode).eq('owner', targetPk);
+            await sb.from('players').delete().eq('mode', currentMode).eq('owner', targetPk);
         }
 
         const inserts = importParsedData.map((p) => ({
@@ -5121,7 +5121,7 @@ async function prosesImport() {
             rating: p.rating || null
         }));
 
-        const { error } = await supabase.from('players').insert(inserts);
+        const { error } = await sb.from('players').insert(inserts);
         if (error) throw error;
 
         tutupImportModal();
@@ -5137,7 +5137,7 @@ async function bukaDetailStats(nama, tipe) {
     document.getElementById('infoModalBody').innerHTML = '<div class="empty-state">Memuat data...</div>';
     document.getElementById('infoModal').classList.add('on');
 
-    const { data, error } = await supabase.from('league_matches').select('*').eq('mode', currentMode);
+    const { data, error } = await sb.from('league_matches').select('*').eq('mode', currentMode);
     if (error) return;
 
     let history = [];
@@ -5195,7 +5195,7 @@ async function bukaDetailJuara(nama) {
     document.getElementById('infoModal').classList.add('on');
 
     // Tarik semua data liga dari Supabase untuk mode ini
-    const { data, error } = await supabase.from('league_matches').select('*').eq('mode', currentMode);
+    const { data, error } = await sb.from('league_matches').select('*').eq('mode', currentMode);
     
     if (error) {
         document.getElementById('infoModalBody').innerHTML = '<div style="padding:20px;text-align:center;color:red;">Error: ' + error.message + '</div>';
@@ -5282,7 +5282,7 @@ async function bukaDetailJuaraBulan(nama, bulan) {
     document.getElementById('infoModal').classList.add('on');
 
     // Filter langsung berdasarkan bulan menggunakan .eq('bulan', bulan)
-    const { data, error } = await supabase.from('league_matches').select('*').eq('mode', currentMode).eq('bulan', bulan);
+    const { data, error } = await sb.from('league_matches').select('*').eq('mode', currentMode).eq('bulan', bulan);
     
     if (error) {
         document.getElementById('infoModalBody').innerHTML = '<div style="padding:20px;text-align:center;color:red;">Error: ' + error.message + '</div>';
