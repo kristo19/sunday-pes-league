@@ -4,9 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>LIGA PES</title>
-    <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#37003c">
-    <link rel="apple-touch-icon" href="192.jpg">
     <!-- v3-fixed -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700;800;900&family=Barlow+Condensed:wght@400;600;700;800;900&display=swap" rel="stylesheet">
@@ -969,15 +966,6 @@
         .msb-chip.assist { background: rgba(233,0,82,0.12); color: #e90052; border: 1px solid rgba(233,0,82,0.25); }
         .msb-chip strong { font-weight: 900; }
     </style>
-<script>
-      if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-          navigator.serviceWorker.register('./sw.js')
-            .then(reg => console.log('Service Worker berhasil didaftarkan!', reg.scope))
-            .catch(err => console.error('Service Worker gagal didaftarkan:', err));
-        });
-      }
-    </script>
 </head>
 <body>
 
@@ -4306,7 +4294,7 @@ async function konfirmasiTrade() {
     .eq('id', uidA);
     const { error: err2 } = await supabase.from('players')
     .update({ owner: pkA, note: 'Trade: ' + pB.name }) // uidB pindah ke pkA
-    .eq('id', uidB)
+    .eq('id', uidB);
 
     if (err1 || err2) {
         alert('❌ Gagal trade: ' + (err1?.message || err2?.message));
@@ -4314,7 +4302,7 @@ async function konfirmasiTrade() {
         tutupTradeModal();
         alert('✅ Trade berhasil!\n' + pkA + ' mendapat ' + pB.name + '\n' + pkB + ' mendapat ' + pA.name);
     }
-}}
+}
 
 
 /* ===================== LINE UP FEATURE ===================== */
