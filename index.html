@@ -1601,13 +1601,6 @@ function showModeSwitch(fromMode, toMode, callback) {
     }, 2400);
 }
 
-auth.onAuthStateChanged((user) => {
-    modeAdmin = !!user;
-    if (!user) { editingId = null; editingStats = false; }
-    renderAdminArea();
-    renderStatsCards();
-    loadData();
-});
 
 /* FIX: normalize player name aliases */
 const NAME_ALIASES = { 'Ito': 'Toxx', 'Ipo': 'Stive' };
@@ -1892,33 +1885,6 @@ function loadData() {
             fetchMatches();
         })
         .subscribe();
-}
-
-function listenMatchInfo() {
-    if (!dbPath) return;
-    db.ref(dbPath + '/matchInfo').on('value', snap => {
-        matchInfoData = snap.val() || {};
-        if (currentMonth !== 'ALL TIME STANDING' && currentMonth !== 'STATS' && localData && Object.keys(localData).length) {
-            renderMonthly(localData);
-        }
-        if (currentMonth === 'STATS') renderStatsPage();
-    });
-}
-
-function listenMatchStats() {
-    if (!dbPath) return;
-    if (matchStatsRef) { matchStatsRef.off(); matchStatsRef = null; }
-    
-    matchStatsRef = db.ref(dbPath + '/matchStats');
-    matchStatsRef.on('value', snap => {
-        matchStatsData = snap.val() || {};
-        if (currentMonth !== 'ALL TIME STANDING' && currentMonth !== 'STATS' 
-            && currentMonth !== 'DATABASE' && localData && Object.keys(localData).length) {
-            renderMonthly(localData);
-        }
-        if (currentMonth === 'STATS') renderStatsPage();
-        if (currentMonth === 'ALL TIME STANDING') renderAllTime();
-    });
 }
 
 async function listenStats() {
@@ -2518,129 +2484,129 @@ function bukaInfoPlayerMatch(nama, matchId) {
     document.getElementById('infoModal').classList.add('on');
 }
 
-function bukaInfoPlayerAllTime(nama) {
+async function bukaInfoPlayerAllTime(nama) {
     document.getElementById('infoModalTitle').innerText    = nama;
     document.getElementById('infoModalSubtitle').innerText = '🏆 Statistik per Klub — All Time';
-    document.getElementById('infoModalBody').innerHTML     = '<div class="no-club" style="text-align:center;padding:20px;">⏳ Memuat data...</div>';
+    document.getElementById('infoModalBody').innerHTML     = '<div class="no-club" style="text-align:center;padding:20px;">⏳ Memuat data dari Supabase...</div>';
     document.getElementById('infoModal').classList.add('on');
 
-    db.ref(dbPath).once('value', snap => {
-        const root = snap.val() || {};
-        const clubStats = {};
-        let grandTotalW=0, grandTotalD=0, grandTotalL=0, grandTotalPl=0, grandLiga=0, grandJuara=0;
-        let grandTS=0, grandTA=0;
+    const { data, error } = await supabase.from('league_matches').select('*').eq('mode', currentMode);
+    if (error) {
+        document.getElementById('infoModalBody').innerHTML = '<div class="no-club" style="color:red;padding:20px;">Error: ' + error.message + '</div>';
+        return;
+    }
 
-        MONTHS.forEach(bulan => {
-            if (!root[bulan] || !root[bulan].matches) return;
-            Object.keys(root[bulan].matches).forEach(id => {
-                const match = root[bulan].matches[id];
-                if (!match || !match.standings || !Array.isArray(match.standings)) return;
-                const st = match.standings.find(p => fix(p.name) === nama);
-                if (!st) return;
-                const mi   = (matchInfoData[id] || {})[nama] || {};
-                const isFT = mi.isFullTransfer || false;
-                const club = isFT ? '__FULL_TRANSFER__' : ((mi.club || '').trim() || '(Tidak Diisi)');
-                const w    = parseInt(st.w) || 0;
-                const d    = parseInt(st.d) || 0;
-                const l    = parseInt(st.l) || 0;
-                const pl   = w + d + l;
-                const pts  = parseInt(st.pts) || (w*3 + d);
+    const clubStats = {};
+    let grandTotalW=0, grandTotalD=0, grandTotalL=0, grandTotalPl=0, grandLiga=0, grandJuara=0;
+    let grandTS=0, grandTA=0;
 
-                if (!clubStats[club]) clubStats[club] = { liga:0, w:0, d:0, l:0, pl:0, pts:0, juara:0, isFT, ts:0, ta:0 };
-                const sorted  = sortStandings(match);
-                const isJuara = sorted.length > 0 && fix(sorted[0].name) === nama && (sorted[0].pts || 0) > 0;
+    if (data) {
+        data.forEach(match => {
+            if (!match.standings || !Array.isArray(match.standings)) return;
+            const st = match.standings.find(p => fix(p.name) === nama);
+            if (!st) return;
+            
+            const mi   = (match.match_info || {})[nama] || {};
+            const isFT = mi.isFullTransfer || false;
+            const club = isFT ? '__FULL_TRANSFER__' : ((mi.club || '').trim() || '(Tidak Diisi)');
+            const w    = parseInt(st.w) || 0;
+            const d    = parseInt(st.d) || 0;
+            const l    = parseInt(st.l) || 0;
+            const pl   = w + d + l;
+            const pts  = parseInt(st.pts) || (w*3 + d);
 
-                clubStats[club].liga  += 1;
-                clubStats[club].w     += w; clubStats[club].d += d; clubStats[club].l += l;
-                clubStats[club].pl    += pl; clubStats[club].pts += pts;
-                clubStats[club].juara += isJuara ? 1 : 0;
-                
-                const ms = matchStatsData[id] || {};
-                if (ms.topScorer === nama) { clubStats[club].ts += 1; grandTS += 1; }
-                if (ms.topAssist === nama) { clubStats[club].ta += 1; grandTA += 1; }
+            if (!clubStats[club]) clubStats[club] = { liga:0, w:0, d:0, l:0, pl:0, pts:0, juara:0, isFT, ts:0, ta:0 };
+            const sorted  = sortStandings(match);
+            const isJuara = sorted.length > 0 && fix(sorted[0].name) === nama && (sorted[0].pts || 0) > 0;
 
-                grandTotalW  += w; grandTotalD += d; grandTotalL += l; grandTotalPl += pl;
-                grandLiga    += 1; if (isJuara) grandJuara += 1;
-            });
+            clubStats[club].liga  += 1;
+            clubStats[club].w     += w; clubStats[club].d += d; clubStats[club].l += l;
+            clubStats[club].pl    += pl; clubStats[club].pts += pts;
+            clubStats[club].juara += isJuara ? 1 : 0;
+            
+            const ms = match.match_stats || {};
+            if (ms.topScorer === nama) { clubStats[club].ts += 1; grandTS += 1; }
+            if (ms.topAssist === nama) { clubStats[club].ta += 1; grandTA += 1; }
+
+            grandTotalW  += w; grandTotalD += d; grandTotalL += l; grandTotalPl += pl;
+            grandLiga    += 1; if (isJuara) grandJuara += 1;
         });
+    }
 
-        const clubs = Object.keys(clubStats);
-        if (!clubs.length) {
-            return document.getElementById('infoModalBody').innerHTML =
-                '<div class="no-club" style="text-align:center;padding:20px;">Belum ada data klub untuk ' + escHtml(nama) + '.</div>';
-        }
-        clubs.sort((a, b) => {
-            if (a === '__FULL_TRANSFER__') return -1;
-            if (b === '__FULL_TRANSFER__') return 1;
-            if (clubStats[b].liga !== clubStats[a].liga) return clubStats[b].liga - clubStats[a].liga;
-            const wrA = clubStats[a].pl > 0 ? clubStats[a].w / clubStats[a].pl : 0;
-            const wrB = clubStats[b].pl > 0 ? clubStats[b].w / clubStats[b].pl : 0;
-            return wrB - wrA;
-        });
-
-        const grandPct = winPct(grandTotalW, grandTotalPl);
-        const grandPts = grandTotalW * 3 + grandTotalD;
-
-        // Grand Total UI — Menyusun urutan Scorer & Assist setelah Win%
-        let html = '<div style="background:linear-gradient(135deg,#37003c,#6a0dad);border-radius:12px;padding:14px 16px;margin-bottom:16px;color:white;">'
-            + '<div style="font-size:0.68rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;opacity:0.7;margin-bottom:10px;">📊 Grand Total — ' + grandLiga + ' Liga</div>'
-            + '<div style="display:flex;gap:10px;flex-wrap:wrap;">'
-            + '<div style="text-align:center;background:rgba(255,215,0,0.25);border-radius:8px;padding:8px 14px;min-width:50px;border:1px solid rgba(255,215,0,0.4);"><div style="font-size:1.4rem;font-weight:900;color:#ffd700;">' + grandJuara + '</div><div style="font-size:0.58rem;font-weight:700;opacity:0.8;text-transform:uppercase;margin-top:2px;">🏆 Juara</div></div>'
-            + '<div style="text-align:center;background:rgba(255,255,255,0.12);border-radius:8px;padding:8px 14px;min-width:50px;"><div style="font-size:1.4rem;font-weight:900;color:white;">' + grandTotalPl + '</div><div style="font-size:0.58rem;font-weight:700;opacity:0.7;text-transform:uppercase;margin-top:2px;">Main</div></div>'
-            + '<div style="text-align:center;background:rgba(255,255,255,0.12);border-radius:8px;padding:8px 14px;min-width:50px;"><div style="font-size:1.4rem;font-weight:900;color:#00ff85;">' + grandTotalW + '</div><div style="font-size:0.58rem;font-weight:700;opacity:0.7;text-transform:uppercase;margin-top:2px;">Win</div></div>'
-            + '<div style="text-align:center;background:rgba(255,255,255,0.12);border-radius:8px;padding:8px 14px;min-width:50px;"><div style="font-size:1.4rem;font-weight:900;color:#d0d0d0;">' + grandTotalD + '</div><div style="font-size:0.58rem;font-weight:700;opacity:0.7;text-transform:uppercase;margin-top:2px;">Draw</div></div>'
-            + '<div style="text-align:center;background:rgba(255,255,255,0.12);border-radius:8px;padding:8px 14px;min-width:50px;"><div style="font-size:1.4rem;font-weight:900;color:#ff6b6b;">' + grandTotalL + '</div><div style="font-size:0.58rem;font-weight:700;opacity:0.7;text-transform:uppercase;margin-top:2px;">Loss</div></div>'
-            + '<div style="text-align:center;background:rgba(255,255,255,0.12);border-radius:8px;padding:8px 14px;min-width:50px;"><div style="font-size:1.4rem;font-weight:900;color:#fdbb2d;">' + grandPts + '</div><div style="font-size:0.58rem;font-weight:700;opacity:0.7;text-transform:uppercase;margin-top:2px;">Pts</div></div>'
-            + '<div style="text-align:center;background:rgba(233,0,82,0.4);border-radius:8px;padding:8px 14px;min-width:50px;"><div style="font-size:1.4rem;font-weight:900;color:#fff;">' + grandPct + '%</div><div style="font-size:0.58rem;font-weight:700;opacity:0.7;text-transform:uppercase;margin-top:2px;">Win%</div></div>'
-            + '<div style="text-align:center;background:rgba(0,255,133,0.15);border-radius:8px;padding:8px 14px;min-width:50px;border:1px solid rgba(0,255,133,0.3);"><div style="font-size:1.4rem;font-weight:900;color:#00ff85;">' + grandTS + '</div><div style="font-size:0.58rem;font-weight:700;opacity:0.8;text-transform:uppercase;margin-top:2px;">⚽ Scorer</div></div>'
-            + '<div style="text-align:center;background:rgba(233,0,82,0.3);border-radius:8px;padding:8px 14px;min-width:50px;border:1px solid rgba(233,0,82,0.4);"><div style="font-size:1.4rem;font-weight:900;color:#ff80ab;">' + grandTA + '</div><div style="font-size:0.58rem;font-weight:700;opacity:0.8;text-transform:uppercase;margin-top:2px;">🎯 Assist</div></div>'
-            + '</div></div>';
-
-        clubs.forEach((club, idx) => {
-            const cs       = clubStats[club];
-            const pct      = winPct(cs.w, cs.pl);
-            const isUnknown = club === '(Tidak Diisi)';
-            const isFTBucket = club === '__FULL_TRANSFER__';
-            const isBest   = idx === 0 && !isUnknown && !isFTBucket;
-            const logoUrl  = !isFTBucket ? getClubLogo(club) : null;
-            const logoHtml = (!isFTBucket && !isUnknown && logoUrl)
-                ? '<img src="' + logoUrl + '" style="width:32px;height:32px;object-fit:contain;vertical-align:middle;margin-right:8px;" onerror="this.style.display=\'none\'" title="' + escHtml(club) + '">'
-                : '';
-            const clubDisplayName = isFTBucket ? '🔀 Full Transfer' : (isUnknown ? '(Tidak Diisi)' : ('⚽ ' + escHtml(club)));
-            const barColor = pct >= 60
-                ? 'linear-gradient(90deg,var(--win),#00e676)'
-                : pct >= 40
-                    ? 'linear-gradient(90deg,#888,#bbb)'
-                    : 'linear-gradient(90deg,var(--loss),#ff8a80)';
-            const badgeBg  = pct >= 60 ? 'var(--win)' : pct >= 40 ? '#888' : 'var(--loss)';
-
-            // Per Klub/FT UI — Menyusun urutan Pill Scorer & Assist setelah Win%
-            html += '<div class="league-card" style="margin-bottom:10px;">'
-                + '<div class="league-card-head" style="' + (isBest ? 'background:linear-gradient(90deg,#fff9c4,#fff3e0);' : isFTBucket ? 'background:linear-gradient(90deg,#fff0f3,#ffe8ed);' : '') + '">'
-                + '<div style="display:flex;align-items:center;">' + logoHtml
-                + '<div><span class="lc-title" style="' + (isUnknown ? 'color:#aaa;font-style:italic;' : isFTBucket ? 'color:#c62828;' : '') + '">' + (isBest ? '🥇 ' : '') + clubDisplayName + '</span>'
-                + '<div style="font-size:0.68rem;color:var(--sub);margin-top:2px;">' + cs.liga + 'x Liga dipakai</div>'
-                + '</div></div>'
-                + '<span class="lc-badge" style="background:' + badgeBg + ';">' + pct + '% WR</span>'
-                + '</div>'
-                + '<div class="league-card-body"><div class="stat-pills">'
-                + '<div class="stat-pill" style="background:' + (cs.juara > 0 ? '#fffde7' : '#f5f5f5') + ';' + (cs.juara > 0 ? 'border:1px solid #ffd700;' : '') + '"><span class="sp-val" style="color:' + (cs.juara > 0 ? '#c6a000' : '#bbb') + ';">' + cs.juara + '🏆</span><span class="sp-lbl">Juara</span></div>'
-                + '<div class="stat-pill"><span class="sp-val">' + cs.pl + '</span><span class="sp-lbl">Main</span></div>'
-                + '<div class="stat-pill"><span class="sp-val win">' + cs.w + '</span><span class="sp-lbl">Win</span></div>'
-                + '<div class="stat-pill"><span class="sp-val draw">' + cs.d + '</span><span class="sp-lbl">Draw</span></div>'
-                + '<div class="stat-pill"><span class="sp-val loss">' + cs.l + '</span><span class="sp-lbl">Loss</span></div>'
-                + '<div class="stat-pill"><span class="sp-val" style="color:#fdbb2d;">' + cs.pts + '</span><span class="sp-lbl">Pts</span></div>'
-                + '<div class="stat-pill"><span class="sp-val pct">' + pct + '%</span><span class="sp-lbl">Win%</span></div>'
-                + '<div class="stat-pill" style="background:' + (cs.ts > 0 ? '#e8f5e9' : '#f5f5f5') + ';' + (cs.ts > 0 ? 'border:1px solid #a5d6a7;' : '') + '"><span class="sp-val" style="color:' + (cs.ts > 0 ? 'var(--win)' : '#bbb') + ';">' + cs.ts + '⚽</span><span class="sp-lbl">Scorer</span></div>'
-                + '<div class="stat-pill" style="background:' + (cs.ta > 0 ? '#fce4ec' : '#f5f5f5') + ';' + (cs.ta > 0 ? 'border:1px solid #f48fb1;' : '') + '"><span class="sp-val" style="color:' + (cs.ta > 0 ? 'var(--pink)' : '#bbb') + ';">' + cs.ta + '🎯</span><span class="sp-lbl">Assist</span></div>'
-                + '</div><div class="win-bar-wrap">'
-                + '<div class="win-bar-label"><span>Win Rate</span><span>' + cs.w + 'W · ' + cs.d + 'D · ' + cs.l + 'L dari ' + cs.pl + ' pertandingan</span></div>'
-                + '<div class="win-bar-bg"><div class="win-bar-fill" style="width:' + pct + '%;background:' + barColor + '"></div></div>'
-                + '</div></div></div>';
-        });
-
-        document.getElementById('infoModalBody').innerHTML = html;
+    const clubs = Object.keys(clubStats);
+    if (!clubs.length) {
+        return document.getElementById('infoModalBody').innerHTML =
+            '<div class="no-club" style="text-align:center;padding:20px;">Belum ada data klub untuk ' + escHtml(nama) + '.</div>';
+    }
+    clubs.sort((a, b) => {
+        if (a === '__FULL_TRANSFER__') return -1;
+        if (b === '__FULL_TRANSFER__') return 1;
+        if (clubStats[b].liga !== clubStats[a].liga) return clubStats[b].liga - clubStats[a].liga;
+        const wrA = clubStats[a].pl > 0 ? clubStats[a].w / clubStats[a].pl : 0;
+        const wrB = clubStats[b].pl > 0 ? clubStats[b].w / clubStats[b].pl : 0;
+        return wrB - wrA;
     });
+
+    const grandPct = winPct(grandTotalW, grandTotalPl);
+    const grandPts = grandTotalW * 3 + grandTotalD;
+
+    let html = '<div style="background:linear-gradient(135deg,#37003c,#6a0dad);border-radius:12px;padding:14px 16px;margin-bottom:16px;color:white;">'
+        + '<div style="font-size:0.68rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;opacity:0.7;margin-bottom:10px;">📊 Grand Total — ' + grandLiga + ' Liga</div>'
+        + '<div style="display:flex;gap:10px;flex-wrap:wrap;">'
+        + '<div style="text-align:center;background:rgba(255,215,0,0.25);border-radius:8px;padding:8px 14px;min-width:50px;border:1px solid rgba(255,215,0,0.4);"><div style="font-size:1.4rem;font-weight:900;color:#ffd700;">' + grandJuara + '</div><div style="font-size:0.58rem;font-weight:700;opacity:0.8;text-transform:uppercase;margin-top:2px;">🏆 Juara</div></div>'
+        + '<div style="text-align:center;background:rgba(255,255,255,0.12);border-radius:8px;padding:8px 14px;min-width:50px;"><div style="font-size:1.4rem;font-weight:900;color:white;">' + grandTotalPl + '</div><div style="font-size:0.58rem;font-weight:700;opacity:0.7;text-transform:uppercase;margin-top:2px;">Main</div></div>'
+        + '<div style="text-align:center;background:rgba(255,255,255,0.12);border-radius:8px;padding:8px 14px;min-width:50px;"><div style="font-size:1.4rem;font-weight:900;color:#00ff85;">' + grandTotalW + '</div><div style="font-size:0.58rem;font-weight:700;opacity:0.7;text-transform:uppercase;margin-top:2px;">Win</div></div>'
+        + '<div style="text-align:center;background:rgba(255,255,255,0.12);border-radius:8px;padding:8px 14px;min-width:50px;"><div style="font-size:1.4rem;font-weight:900;color:#d0d0d0;">' + grandTotalD + '</div><div style="font-size:0.58rem;font-weight:700;opacity:0.7;text-transform:uppercase;margin-top:2px;">Draw</div></div>'
+        + '<div style="text-align:center;background:rgba(255,255,255,0.12);border-radius:8px;padding:8px 14px;min-width:50px;"><div style="font-size:1.4rem;font-weight:900;color:#ff6b6b;">' + grandTotalL + '</div><div style="font-size:0.58rem;font-weight:700;opacity:0.7;text-transform:uppercase;margin-top:2px;">Loss</div></div>'
+        + '<div style="text-align:center;background:rgba(255,255,255,0.12);border-radius:8px;padding:8px 14px;min-width:50px;"><div style="font-size:1.4rem;font-weight:900;color:#fdbb2d;">' + grandPts + '</div><div style="font-size:0.58rem;font-weight:700;opacity:0.7;text-transform:uppercase;margin-top:2px;">Pts</div></div>'
+        + '<div style="text-align:center;background:rgba(233,0,82,0.4);border-radius:8px;padding:8px 14px;min-width:50px;"><div style="font-size:1.4rem;font-weight:900;color:#fff;">' + grandPct + '%</div><div style="font-size:0.58rem;font-weight:700;opacity:0.7;text-transform:uppercase;margin-top:2px;">Win%</div></div>'
+        + '<div style="text-align:center;background:rgba(0,255,133,0.15);border-radius:8px;padding:8px 14px;min-width:50px;border:1px solid rgba(0,255,133,0.3);"><div style="font-size:1.4rem;font-weight:900;color:#00ff85;">' + grandTS + '</div><div style="font-size:0.58rem;font-weight:700;opacity:0.8;text-transform:uppercase;margin-top:2px;">⚽ Scorer</div></div>'
+        + '<div style="text-align:center;background:rgba(233,0,82,0.3);border-radius:8px;padding:8px 14px;min-width:50px;border:1px solid rgba(233,0,82,0.4);"><div style="font-size:1.4rem;font-weight:900;color:#ff80ab;">' + grandTA + '</div><div style="font-size:0.58rem;font-weight:700;opacity:0.8;text-transform:uppercase;margin-top:2px;">🎯 Assist</div></div>'
+        + '</div></div>';
+
+    clubs.forEach((club, idx) => {
+        const cs       = clubStats[club];
+        const pct      = winPct(cs.w, cs.pl);
+        const isUnknown = club === '(Tidak Diisi)';
+        const isFTBucket = club === '__FULL_TRANSFER__';
+        const isBest   = idx === 0 && !isUnknown && !isFTBucket;
+        const logoUrl  = !isFTBucket ? getClubLogo(club) : null;
+        const logoHtml = (!isFTBucket && !isUnknown && logoUrl)
+            ? '<img src="' + logoUrl + '" style="width:32px;height:32px;object-fit:contain;vertical-align:middle;margin-right:8px;" onerror="this.style.display=\'none\'" title="' + escHtml(club) + '">'
+            : '';
+        const clubDisplayName = isFTBucket ? '🔀 Full Transfer' : (isUnknown ? '(Tidak Diisi)' : ('⚽ ' + escHtml(club)));
+        const barColor = pct >= 60
+            ? 'linear-gradient(90deg,var(--win),#00e676)'
+            : pct >= 40
+                ? 'linear-gradient(90deg,#888,#bbb)'
+                : 'linear-gradient(90deg,var(--loss),#ff8a80)';
+        const badgeBg  = pct >= 60 ? 'var(--win)' : pct >= 40 ? '#888' : 'var(--loss)';
+
+        html += '<div class="league-card" style="margin-bottom:10px;">'
+            + '<div class="league-card-head" style="' + (isBest ? 'background:linear-gradient(90deg,#fff9c4,#fff3e0);' : isFTBucket ? 'background:linear-gradient(90deg,#fff0f3,#ffe8ed);' : '') + '">'
+            + '<div style="display:flex;align-items:center;">' + logoHtml
+            + '<div><span class="lc-title" style="' + (isUnknown ? 'color:#aaa;font-style:italic;' : isFTBucket ? 'color:#c62828;' : '') + '">' + (isBest ? '🥇 ' : '') + clubDisplayName + '</span>'
+            + '<div style="font-size:0.68rem;color:var(--sub);margin-top:2px;">' + cs.liga + 'x Liga dipakai</div>'
+            + '</div></div>'
+            + '<span class="lc-badge" style="background:' + badgeBg + ';">' + pct + '% WR</span>'
+            + '</div>'
+            + '<div class="league-card-body"><div class="stat-pills">'
+            + '<div class="stat-pill" style="background:' + (cs.juara > 0 ? '#fffde7' : '#f5f5f5') + ';' + (cs.juara > 0 ? 'border:1px solid #ffd700;' : '') + '"><span class="sp-val" style="color:' + (cs.juara > 0 ? '#c6a000' : '#bbb') + ';">' + cs.juara + '🏆</span><span class="sp-lbl">Juara</span></div>'
+            + '<div class="stat-pill"><span class="sp-val">' + cs.pl + '</span><span class="sp-lbl">Main</span></div>'
+            + '<div class="stat-pill"><span class="sp-val win">' + cs.w + '</span><span class="sp-lbl">Win</span></div>'
+            + '<div class="stat-pill"><span class="sp-val draw">' + cs.d + '</span><span class="sp-lbl">Draw</span></div>'
+            + '<div class="stat-pill"><span class="sp-val loss">' + cs.l + '</span><span class="sp-lbl">Loss</span></div>'
+            + '<div class="stat-pill"><span class="sp-val" style="color:#fdbb2d;">' + cs.pts + '</span><span class="sp-lbl">Pts</span></div>'
+            + '<div class="stat-pill"><span class="sp-val pct">' + pct + '%</span><span class="sp-lbl">Win%</span></div>'
+            + '<div class="stat-pill" style="background:' + (cs.ts > 0 ? '#e8f5e9' : '#f5f5f5') + ';' + (cs.ts > 0 ? 'border:1px solid #a5d6a7;' : '') + '"><span class="sp-val" style="color:' + (cs.ts > 0 ? 'var(--win)' : '#bbb') + ';">' + cs.ts + '⚽</span><span class="sp-lbl">Scorer</span></div>'
+            + '<div class="stat-pill" style="background:' + (cs.ta > 0 ? '#fce4ec' : '#f5f5f5') + ';' + (cs.ta > 0 ? 'border:1px solid #f48fb1;' : '') + '"><span class="sp-val" style="color:' + (cs.ta > 0 ? 'var(--pink)' : '#bbb') + ';">' + cs.ta + '🎯</span><span class="sp-lbl">Assist</span></div>'
+            + '</div><div class="win-bar-wrap">'
+            + '<div class="win-bar-label"><span>Win Rate</span><span>' + cs.w + 'W · ' + cs.d + 'D · ' + cs.l + 'L dari ' + cs.pl + ' pertandingan</span></div>'
+            + '<div class="win-bar-bg"><div class="win-bar-fill" style="width:' + pct + '%;background:' + barColor + '"></div></div>'
+            + '</div></div></div>';
+    });
+
+    document.getElementById('infoModalBody').innerHTML = html;
 }
 
 function buildClubDisplay(mi, w, d, l, pl, pct) {
@@ -3452,25 +3418,35 @@ async function listenDatabase() {
       .subscribe();
 }
 
-function resetDatabaseKeDefault(konfirmasi) {
+async function resetDatabaseKeDefault(konfirmasi) {
     if (konfirmasi) {
         if (!confirm('⚠️ Reset semua pemain ke data default?\nSemua data pemain yang ada akan diganti. Lanjutkan?')) return;
     }
-    const DB_DEFAULT = dbPath === 'liga3' ? DB_DEFAULT_3 : DB_DEFAULT_4;
+    const DB_DEFAULT = currentMode === '3' ? DB_DEFAULT_3 : DB_DEFAULT_4;
     const realPlayers = DB_PLAYERS.filter(pk => pk !== 'ALL PLAYER' && pk !== 'NON USER');
-    // Hapus dulu semua data lama, lalu isi ulang
-    db.ref(dbPath + '/database').remove().then(() => {
-        const updates = {};
-        realPlayers.forEach(pk => {
-            (DB_DEFAULT[pk] || []).forEach((p, i) => {
-                const uid = 'p' + (i+1).toString().padStart(3,'0');
-                updates[dbPath + '/database/' + pk + '/' + uid] = p;
+    
+    // Hapus semua pemain di mode ini
+    await supabase.from('players').delete().eq('mode', currentMode);
+    
+    const inserts = [];
+    realPlayers.forEach(owner => {
+        (DB_DEFAULT[owner] || []).forEach((p) => {
+            inserts.push({
+                mode: currentMode,
+                owner: owner,
+                num: p.num,
+                name: p.name,
+                club: p.club,
+                pos: p.pos,
+                note: p.note,
+                rating: null
             });
         });
-        return db.ref().update(updates);
-    }).then(() => {
-        alert('✅ Database berhasil di-reset ke data default!');
-    }).catch(e => alert('❌ Gagal reset: ' + e.message));
+    });
+    
+    const { error } = await supabase.from('players').insert(inserts);
+    if (error) alert('❌ Gagal reset: ' + error.message);
+    else alert('✅ Database berhasil di-reset ke data default!');
 }
 
 function renderDatabasePage() {
@@ -4218,22 +4194,22 @@ async function hapusDbPemain(uid) {
 }
 
 /* Pindahkan pemain dari tab aktif ke NON USER */
-function pindahKeNonUser(uid) {
+async function pindahKeNonUser(uid) {
     const pkData = dbData[dbCurrentPlayer] || {};
     const p = pkData[uid];
     if (!p) return alert('Data pemain tidak ditemukan!');
     if (!confirm('📦 Pindahkan ' + (p.name||'pemain ini') + ' ke Non User?\nPemain akan dihapus dari skuad ' + dbCurrentPlayer + ' dan disimpan di Non User.')) return;
 
-    const payload = { ...p, _fromPlayer: dbCurrentPlayer };
-    const newRef = db.ref(dbPath + '/database/NON USER').push();
-    newRef.set(payload)
-        .then(() => db.ref(dbPath + '/database/' + dbCurrentPlayer + '/' + uid).remove())
-        .then(() => { /* Firebase listener will re-render */ })
-        .catch(e => alert('❌ Gagal pindah: ' + e.message));
+    // Di Supabase, kita cukup mengubah nama 'owner' ke 'NON USER'
+    const { error } = await supabase.from('players')
+        .update({ owner: 'NON USER', note: 'Dari: ' + dbCurrentPlayer })
+        .eq('id', uid);
+        
+    if (error) alert('❌ Gagal pindah: ' + error.message);
 }
 
 /* Pindahkan pemain dari NON USER kembali ke player tertentu */
-function pindahDariNonUser(uid) {
+async function pindahDariNonUser(uid) {
     const targetPk = document.getElementById('pindahTo_' + uid)?.value;
     if (!targetPk) return alert('Pilih player tujuan terlebih dahulu!');
     const pkData = dbData['NON USER'] || {};
@@ -4241,12 +4217,11 @@ function pindahDariNonUser(uid) {
     if (!p) return alert('Data pemain tidak ditemukan!');
     if (!confirm('↩️ Pindahkan ' + (p.name||'pemain ini') + ' ke skuad ' + targetPk + '?')) return;
 
-    const { _fromPlayer, ...cleanPayload } = p;
-    const newRef = db.ref(dbPath + '/database/' + targetPk).push();
-    newRef.set(cleanPayload)
-        .then(() => db.ref(dbPath + '/database/NON USER/' + uid).remove())
-        .then(() => { /* Firebase listener will re-render */ })
-        .catch(e => alert('❌ Gagal pindah: ' + e.message));
+    const { error } = await supabase.from('players')
+        .update({ owner: targetPk, note: null })
+        .eq('id', uid);
+        
+    if (error) alert('❌ Gagal pindah: ' + error.message);
 }
 
 /* ===================== TRADE PEMAIN ===================== */
@@ -4304,7 +4279,7 @@ function updateTradePreview() {
     });
 }
 
-function konfirmasiTrade() {
+async function konfirmasiTrade() {
     const pkA  = document.getElementById('tradePlayerA').value;
     const pkB  = document.getElementById('tradePlayerB').value;
     const uidA = document.getElementById('tradePemainA').value;
@@ -4326,21 +4301,20 @@ function konfirmasiTrade() {
     );
     if (!konfirm) return;
 
-    /* Swap: tukar data antar player, pertahankan num (nomor punggung) masing-masing */
-    const newA = { name: pB.name, club: pB.club, pos: pB.pos, note: 'Trade: ' + pA.name, num: pA.num };
-    const newB = { name: pA.name, club: pA.club, pos: pA.pos, note: 'Trade: ' + pB.name, num: pB.num };
+    // Supabase: Tukar kolom 'owner' dan tambahkan catatan Trade, tanpa mengubah 'id' barisnya
+    const payloadA = { owner: pkA, note: 'Trade: ' + pA.name };
+    const payloadB = { owner: pkB, note: 'Trade: ' + pB.name };
 
-    const updates = {};
-    updates[dbPath + '/database/' + pkA + '/' + uidA] = newA;
-    updates[dbPath + '/database/' + pkB + '/' + uidB] = newB;
+    const { error: err1 } = await supabase.from('players').update(payloadB).eq('id', uidA);
+    const { error: err2 } = await supabase.from('players').update(payloadA).eq('id', uidB);
 
-    db.ref().update(updates)
-        .then(() => {
-            tutupTradeModal();
-            alert('✅ Trade berhasil!\n' + pkA + ' mendapat ' + pB.name + '\n' + pkB + ' mendapat ' + pA.name);
-        })
-        .catch(e => alert('❌ Gagal trade: ' + e.message));
-}
+    if (err1 || err2) {
+        alert('❌ Gagal trade: ' + (err1?.message || err2?.message));
+    } else {
+        tutupTradeModal();
+        alert('✅ Trade berhasil!\n' + pkA + ' mendapat ' + pB.name + '\n' + pkB + ' mendapat ' + pA.name);
+    }
+}}
 
 
 /* ===================== LINE UP FEATURE ===================== */
@@ -5009,73 +4983,49 @@ function moveTrophyRow(bulan, idx, dir) {
 
 
 /* ===================== CEK & RESET MANUAL JUARA ===================== */
-function cekManualJuara() {
+async function cekManualJuara() {
     if (!currentMonth || currentMonth === 'ALL TIME STANDING' || currentMonth === 'STATS' || currentMonth === 'DATABASE') {
         return alert('Pilih bulan dulu!');
     }
-    db.ref(dbPath + '/' + currentMonth + '/matches').once('value', snap => {
-        const matches = snap.val() || {};
-        let hasil = 'ManualJuara di bulan ' + currentMonth + ':\n\n';
-        let ada = false;
-        Object.entries(matches).forEach(([id, m]) => {
-            if (m && m.manualJuara) {
+    
+    const { data, error } = await supabase.from('league_matches').select('id, manual_juara').eq('mode', currentMode).eq('bulan', currentMonth);
+    if (error) return alert('Error: ' + error.message);
+    
+    let hasil = 'ManualJuara di bulan ' + currentMonth + ':\n\n';
+    let ada = false;
+    
+    if (data) {
+        data.forEach(m => {
+            if (m.manual_juara) {
                 ada = true;
-                hasil += 'ID: ' + id + ' => manualJuara: "' + m.manualJuara + '"\n';
+                hasil += 'ID: ' + m.id + ' => manualJuara: "' + m.manual_juara + '"\n';
             }
         });
-        if (!ada) hasil += '(Tidak ada manualJuara yang terisi)';
-        alert(hasil);
-    });
+    }
+    if (!ada) hasil += '(Tidak ada manualJuara yang terisi)';
+    alert(hasil);
 }
 
-function resetSemuaManualJuara() {
+async function resetSemuaManualJuara() {
     if (!currentMonth || currentMonth === 'ALL TIME STANDING' || currentMonth === 'STATS' || currentMonth === 'DATABASE') {
         return alert('Pilih bulan dulu!');
     }
     if (!confirm('Reset semua manualJuara di bulan ' + currentMonth + '? Juara akan ditentukan otomatis berdasarkan poin/GD/GF.')) return;
-    db.ref(dbPath + '/' + currentMonth + '/matches').once('value', snap => {
-        const matches = snap.val() || {};
-        const updates = {};
-        Object.keys(matches).forEach(id => {
-            updates[dbPath + '/' + currentMonth + '/matches/' + id + '/manualJuara'] = null;
-        });
-        if (!Object.keys(updates).length) return alert('Tidak ada data match ditemukan.');
-        db.ref().update(updates)
-            .then(() => {
-                alert('\u2705 Semua manualJuara di bulan ' + currentMonth + ' berhasil di-reset! Juara sekarang ditentukan otomatis.');
-                loadData();
-            })
-            .catch(e => alert('\u274c Gagal: ' + e.message));
-    });
+    
+    const { error } = await supabase.from('league_matches').update({ manual_juara: null }).eq('mode', currentMode).eq('bulan', currentMonth);
+    
+    if (error) {
+        alert('\u274c Gagal: ' + error.message);
+    } else {
+        alert('\u2705 Semua manualJuara di bulan ' + currentMonth + ' berhasil di-reset! Juara sekarang ditentukan otomatis.');
+        loadData();
+    }
 }
 
 
 // Tambahkan di sini ↓
 function cleanupOrphanMatchStats() {
-    if (!confirm('Hapus matchStats yang matchId-nya sudah tidak ada?\nIni akan memperbaiki hitungan Top Scorer/Assist.')) return;
-    
-    db.ref(dbPath).once('value', snap => {
-        const root = snap.val() || {};
-        const validMatchIds = new Set();
-        
-        Object.keys(root).forEach(bulan => {
-            if (root[bulan] && root[bulan].matches) {
-                Object.keys(root[bulan].matches).forEach(id => validMatchIds.add(id));
-            }
-        });
-        
-        const orphanStats = root.matchStats || {};
-        const toDelete = Object.keys(orphanStats).filter(id => !validMatchIds.has(id));
-        
-        if (!toDelete.length) return alert('✅ Tidak ada orphan data ditemukan!');
-        
-        const updates = {};
-        toDelete.forEach(id => { updates[dbPath + '/matchStats/' + id] = null; });
-        
-        db.ref().update(updates)
-            .then(() => alert('✅ Berhasil hapus ' + toDelete.length + ' orphan matchStats!'))
-            .catch(e => alert('❌ Gagal: ' + e.message));
-    });
+    alert('✅ Di Supabase, data statisik otomatis terhapus bersamaan jika liga dihapus. Tidak perlu cleanup manual!');
 }
 
 
@@ -5156,7 +5106,7 @@ function tampilkanPreviewImport() {
         + '</table>';
 }
 
-function prosesImport() {
+async function prosesImport() {
     if (!importParsedData.length) return alert('Pilih file Excel/CSV terlebih dahulu!');
     const mode = document.getElementById('importMode').value;
     const targetPk = dbCurrentPlayer;
@@ -5165,123 +5115,88 @@ function prosesImport() {
         if (!confirm('⚠️ Semua data pemain ' + targetPk + ' akan dihapus dan diganti dengan data import. Lanjutkan?')) return;
     }
 
-    const doImport = () => {
-        const updates = {};
-        importParsedData.forEach((p, i) => {
-            const uid = 'imp' + Date.now() + '_' + i;
-            const payload = { num: p.num, name: p.name, club: p.club, pos: p.pos, note: p.note };
-            if (p.rating) payload.rating = p.rating;
-            updates[dbPath + '/database/' + targetPk + '/' + uid] = payload;
-        });
-        db.ref().update(updates)
-            .then(() => {
-                tutupImportModal();
-                alert('✅ Berhasil import ' + importParsedData.length + ' pemain ke ' + targetPk + '!');
-            })
-            .catch(e => alert('❌ Gagal import: ' + e.message));
-    };
+    try {
+        if (mode === 'replace') {
+            await supabase.from('players').delete().eq('mode', currentMode).eq('owner', targetPk);
+        }
 
-    if (mode === 'replace') {
-        db.ref(dbPath + '/database/' + targetPk).remove().then(doImport).catch(e => alert('❌ Gagal hapus data lama: ' + e.message));
-    } else {
-        doImport();
+        const inserts = importParsedData.map((p) => ({
+            mode: currentMode,
+            owner: targetPk,
+            num: p.num,
+            name: p.name,
+            club: p.club,
+            pos: p.pos,
+            note: p.note,
+            rating: p.rating || null
+        }));
+
+        const { error } = await supabase.from('players').insert(inserts);
+        if (error) throw error;
+
+        tutupImportModal();
+        alert('✅ Berhasil import ' + importParsedData.length + ' pemain ke ' + targetPk + '!');
+    } catch (err) {
+        alert('❌ Gagal import: ' + err.message);
     }
 }
 
-function bukaDetailStats(nama, tipe) {
-    // Siapkan Modal
+async function bukaDetailStats(nama, tipe) {
     document.getElementById('infoModalTitle').innerText = nama;
     document.getElementById('infoModalSubtitle').innerText = (tipe === 'scorer' ? '⚽ Riwayat Top Scorer' : '🎯 Riwayat Top Assist') + ' - Memuat...';
     document.getElementById('infoModalBody').innerHTML = '<div class="empty-state">Memuat data...</div>';
     document.getElementById('infoModal').classList.add('on');
 
-    // Tarik data seluruh match
-    db.ref(dbPath).once('value', snap => {
-        const root = snap.val() || {};
-        let history = [];
-        
-        // Cek semua bulan
-        MONTHS.forEach(bulan => {
-            if (!root[bulan] || !root[bulan].matches) return;
-            
-            // Urutkan berdasarkan tanggal & timestamp agar nomor liga valid
-            const matchIds = Object.keys(root[bulan].matches).sort((a, b) => {
-                const tglA = root[bulan].matches[a].tanggal || 0;
-                const tglB = root[bulan].matches[b].tanggal || 0;
-                if (tglA !== tglB) return tglA - tglB;
-                return (root[bulan].matches[a].timestamp || 0) - (root[bulan].matches[b].timestamp || 0);
-            });
-            
-            let counters = {};
-            
-            matchIds.forEach(id => {
-                const match = root[bulan].matches[id];
-                counters[match.tanggal] = (counters[match.tanggal] || 0) + 1;
-                const ligaNum = counters[match.tanggal];
-                
-                // Ambil info dari matchStatsData
-                const ms = matchStatsData[id] || {};
-                const isScorer = (tipe === 'scorer' && ms.topScorer === nama);
-                const isAssist = (tipe === 'assist' && ms.topAssist === nama);
-                
-                if (isScorer || isAssist) {
-                    // Tarik info Klub / Full Transfer untuk player ini di match bersangkutan
-                    const mi = (matchInfoData[id] || {})[nama] || {};
-                    const isFT = mi.isFullTransfer || false;
-                    const ket = isFT ? '🔀 Full Transfer' : (mi.club ? '⚽ ' + mi.club : '⚽ (Tidak Diisi)');
+    const { data, error } = await supabase.from('league_matches').select('*').eq('mode', currentMode);
+    if (error) return;
 
-                    history.push({
-                        bulan: bulan,
-                        tanggal: match.tanggal,
-                        ligaNum: ligaNum,
-                        timestamp: match.timestamp || 0,
-                        keterangan: ket
-                    });
-                }
-            });
-        });
-        
-        // Urutkan riwayat secara KRONOLOGIS (Bulan paling awal -> Tanggal paling awal -> Liga paling awal)
-        history.sort((a, b) => {
+    let history = [];
+    let counters = {};
+
+    if (data) {
+        data.sort((a, b) => {
             const mA = MONTHS.indexOf(a.bulan);
             const mB = MONTHS.indexOf(b.bulan);
             if (mA !== mB) return mA - mB;
             if (a.tanggal !== b.tanggal) return a.tanggal - b.tanggal;
             return a.timestamp - b.timestamp;
         });
-        
-        // Update subtitle dengan total hitungan
-        document.getElementById('infoModalSubtitle').innerText = (tipe === 'scorer' ? '⚽ Riwayat Top Scorer' : '🎯 Riwayat Top Assist') + ' (' + history.length + 'x)';
-        
-        // Jika kosong (walau harusnya ada)
-        if (!history.length) {
-            document.getElementById('infoModalBody').innerHTML = '<div class="empty-state">Belum ada riwayat tercatat.</div>';
-            return;
-        }
-        
-        // Buat tabel output riwayat
-        let html = '<div class="league-card"><div class="league-card-body" style="padding:0;">';
-        html += '<table style="width:100%; border-collapse:collapse;">';
-        html += '<tr style="background:#f7f0ff; border-bottom:2px solid var(--border);">'
-              + '<th style="padding:10px; text-align:left; font-size:0.8rem; color:var(--purple);">Bulan</th>'
-              + '<th style="padding:10px; text-align:left; font-size:0.8rem; color:var(--purple);">Tanggal</th>'
-              + '<th style="padding:10px; text-align:left; font-size:0.8rem; color:var(--purple);">Liga</th>'
-              + '<th style="padding:10px; text-align:left; font-size:0.8rem; color:var(--purple);">Keterangan</th>'
-              + '</tr>';
-        
-        history.forEach(h => {
-            const hari = getNamaHari(h.tanggal, h.bulan);
-            html += '<tr style="border-bottom:1px solid var(--border); transition:background 0.2s;" onmouseover="this.style.background=\'#f3eaff\'" onmouseout="this.style.background=\'transparent\'">';
-            html += '<td style="padding:10px; font-size:0.9rem; font-weight:700;">' + h.bulan + '</td>';
-            html += '<td style="padding:10px; font-size:0.85rem; color:var(--sub);">' + hari + ', ' + h.tanggal + '</td>';
-            html += '<td style="padding:10px; font-size:0.85rem; font-weight:700; color:var(--pink);">Liga ' + ligaOrdinal(h.ligaNum) + '</td>';
-            html += '<td style="padding:10px; font-size:0.85rem; font-weight:600; color:var(--purple);">' + escHtml(h.keterangan) + '</td>';
-            html += '</tr>';
+
+        data.forEach(match => {
+            const mKey = match.bulan + '_' + match.tanggal;
+            counters[mKey] = (counters[mKey] || 0) + 1;
+
+            const ms = match.match_stats || {};
+            const isScorer = (tipe === 'scorer' && ms.topScorer === nama);
+            const isAssist = (tipe === 'assist' && ms.topAssist === nama);
+
+            if (isScorer || isAssist) {
+                const mi = (match.match_info || {})[nama] || {};
+                const isFT = mi.isFullTransfer || false;
+                const ket = isFT ? '🔀 Full Transfer' : (mi.club ? '⚽ ' + mi.club : '⚽ (Tidak Diisi)');
+
+                history.push({
+                    bulan: match.bulan,
+                    tanggal: match.tanggal,
+                    ligaNum: counters[mKey],
+                    timestamp: match.timestamp || 0,
+                    keterangan: ket
+                });
+            }
         });
-        
-        html += '</table></div></div>';
-        document.getElementById('infoModalBody').innerHTML = html;
+    }
+
+    document.getElementById('infoModalSubtitle').innerText = (tipe === 'scorer' ? '⚽ Riwayat Top Scorer' : '🎯 Riwayat Top Assist') + ' (' + history.length + 'x)';
+    if (!history.length) return document.getElementById('infoModalBody').innerHTML = '<div class="empty-state">Belum ada riwayat tercatat.</div>';
+
+    let html = '<div class="league-card"><div class="league-card-body" style="padding:0;"><table style="width:100%; border-collapse:collapse;"><tr style="background:#f7f0ff; border-bottom:2px solid var(--border);"><th style="padding:10px; text-align:left; font-size:0.8rem; color:var(--purple);">Bulan</th><th style="padding:10px; text-align:left; font-size:0.8rem; color:var(--purple);">Tanggal</th><th style="padding:10px; text-align:left; font-size:0.8rem; color:var(--purple);">Liga</th><th style="padding:10px; text-align:left; font-size:0.8rem; color:var(--purple);">Keterangan</th></tr>';
+    
+    history.forEach(h => {
+        const hari = typeof getNamaHari === 'function' ? getNamaHari(h.tanggal, h.bulan) : '';
+        html += '<tr style="border-bottom:1px solid var(--border);"><td style="padding:10px; font-size:0.9rem; font-weight:700;">' + h.bulan + '</td><td style="padding:10px; font-size:0.85rem; color:var(--sub);">' + hari + ', ' + h.tanggal + '</td><td style="padding:10px; font-size:0.85rem; font-weight:700; color:var(--pink);">Liga ' + (typeof ligaOrdinal === 'function' ? ligaOrdinal(h.ligaNum) : h.ligaNum) + '</td><td style="padding:10px; font-size:0.85rem; font-weight:600; color:var(--purple);">' + escHtml(h.keterangan) + '</td></tr>';
     });
+
+    document.getElementById('infoModalBody').innerHTML = html + '</table></div></div>';
 }
 
 async function bukaDetailJuara(nama) {
