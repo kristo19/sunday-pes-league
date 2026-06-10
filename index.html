@@ -1745,9 +1745,7 @@ function kembaliKeMenuAwal() {
     });
 }
 
-//function applyMode() {
-    /* FIX: detach old database listener before changing dbPath */
-    if (dbPath) db.ref(dbPath + '/database').off();
+function applyMode() {
     dbData = {};
     dbCurrentPlayer = null;
     h2hSelected = [];
@@ -1759,10 +1757,9 @@ function kembaliKeMenuAwal() {
     document.getElementById('btnStats').classList.remove('active');
     document.getElementById('btnAllTime').classList.add('active');
     buildMonthSelect();
+    
     loadData();
     listenStats();
-    listenMatchInfo();
-    listenMatchStats();
     listenDatabase();
     loadTrophyOrder();
     loadLineupData();
@@ -2044,54 +2041,56 @@ const adminTool = document.getElementById('adminStatsTool');
     }
 }
 
-function renderAllTime() {
+async function renderAllTime() {
     document.getElementById('mainContent').innerHTML = '<div class="empty-state">Memuat data...</div>';
-    db.ref(dbPath).once('value', snap => {
-        const root = snap.val() || {};
-        const stats = {};
-        ALL_PLAYERS.forEach(p => { stats[p] = { pl:0, w:0, d:0, l:0, gf:0, ga:0, gd:0, pts:0, form:[] }; });
-        let allMatches = [];
-        MONTHS.forEach(m => {
-            if (root[m] && root[m].matches) {
-                Object.values(root[m].matches).forEach(match => {
-                    if (match && match.standings) allMatches.push(match);
-                });
-            }
-        });
-        allMatches.sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0));
-        allMatches.forEach(match => {
-            (match.standings || []).forEach(p => {
-                const n = fix(p.name);
-                if (!stats[n]) return;
-                const w=parseInt(p.w)||0, d=parseInt(p.d)||0, l=parseInt(p.l)||0, f=parseInt(p.f)||0, a=parseInt(p.a)||0;
-                stats[n].pl  += w+d+l;
-                stats[n].w   += w; stats[n].d += d; stats[n].l += l;
-                stats[n].gf  += f; stats[n].ga += a; stats[n].gd += f-a;
-                stats[n].pts += parseInt(p.pts) || 0;
-            });
-        });
-        Object.keys(stats).forEach(n => {
-            stats[n].form = (statsData[n]?.formText || '').toUpperCase().replace(/[^WDL]/g, '').split('').slice(-5);
-        });
-        
-        const sorted = Object.keys(stats)
-            .map(name => ({name, ...stats[name]}))
-            .filter(p => p.pl > 0)
-            .sort((a, b) => b.pts - a.pts || b.gd - a.gd || b.gf - a.gf);
-            
-        if (!sorted.length) {
-            return document.getElementById('mainContent').innerHTML = '<div class="empty-state">Belum ada data untuk Mode ' + currentMode + ' Player.</div>';
-        }
+    
+    // Tarik semua data pertandingan dari Supabase
+    const { data, error } = await supabase
+        .from('league_matches')
+        .select('*')
+        .eq('mode', currentMode);
 
-        // TAMBAHAN: Beri penanda isWin = true khusus untuk peringkat 1 (index 0)
-        const finalData = sorted.map((p, i) => ({
-            ...p,
-            isWin: i === 0 && p.pts > 0
-        }));
+    if (error) {
+        return document.getElementById('mainContent').innerHTML = '<div class="empty-state">Gagal memuat data: ' + error.message + '</div>';
+    }
 
-        // Render tabel menggunakan finalData yang sudah memiliki status juara (isWin)
-        document.getElementById('mainContent').innerHTML = buildEplBlock(finalData, true, false, [], true, null, 'unknown');
+    const stats = {};
+    ALL_PLAYERS.forEach(p => { stats[p] = { pl:0, w:0, d:0, l:0, gf:0, ga:0, gd:0, pts:0, form:[] }; });
+    
+    let allMatches = data || [];
+    allMatches.sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0));
+    
+    allMatches.forEach(match => {
+        (match.standings || []).forEach(p => {
+            const n = fix(p.name);
+            if (!stats[n]) return;
+            const w=parseInt(p.w)||0, d=parseInt(p.d)||0, l=parseInt(p.l)||0, f=parseInt(p.f)||0, a=parseInt(p.a)||0;
+            stats[n].pl  += w+d+l;
+            stats[n].w   += w; stats[n].d += d; stats[n].l += l;
+            stats[n].gf  += f; stats[n].ga += a; stats[n].gd += f-a;
+            stats[n].pts += parseInt(p.pts) || 0;
+        });
     });
+    
+    Object.keys(stats).forEach(n => {
+        stats[n].form = (statsData[n]?.formText || '').toUpperCase().replace(/[^WDL]/g, '').split('').slice(-5);
+    });
+    
+    const sorted = Object.keys(stats)
+        .map(name => ({name, ...stats[name]}))
+        .filter(p => p.pl > 0)
+        .sort((a, b) => b.pts - a.pts || b.gd - a.gd || b.gf - a.gf);
+        
+    if (!sorted.length) {
+        return document.getElementById('mainContent').innerHTML = '<div class="empty-state">Belum ada data untuk Mode ' + currentMode + ' Player.</div>';
+    }
+
+    const finalData = sorted.map((p, i) => ({
+        ...p,
+        isWin: i === 0 && p.pts > 0
+    }));
+
+    document.getElementById('mainContent').innerHTML = buildEplBlock(finalData, true, false, [], true, null, 'unknown');
 }
 
 function renderMonthly(matches) {
@@ -2741,165 +2740,155 @@ async function simpanKlub(matchId, nama, safeId) {
 function tutupInfoPlayer() { document.getElementById('infoModal').classList.remove('on'); }
 function tutupInfoModalOutside(e) { if (e.target === document.getElementById('infoModal')) tutupInfoPlayer(); }
 
-function updateSidebar(monthlyMatches) {
-    db.ref(dbPath).once('value', snap => {
-        const root = snap.val() || {};
-        let ptsMonth = {}, trophyMonth = {};
-        activeSet = new Set();
+async function updateSidebar(monthlyMatches) {
+    // Tarik daftar pemain yang sedang aktif
+    const { data, error } = await supabase.from('league_matches').select('standings').eq('mode', currentMode);
+    
+    let ptsMonth = {}, trophyMonth = {};
+    activeSet = new Set();
 
-        Object.values(root).forEach(m => {
-            if (m && m.matches) {
-                Object.values(m.matches).forEach(match => {
-                    if (match && match.standings) {
-                        match.standings.forEach(p => activeSet.add(fix(p.name)));
-                    }
-                });
+    if (data) {
+        data.forEach(match => {
+            if (match && match.standings) {
+                match.standings.forEach(p => activeSet.add(fix(p.name)));
             }
         });
+    }
 
-        if (monthlyMatches) {
-            Object.values(monthlyMatches).forEach(match => {
-                if (!match || !match.standings) return;
-                const s = sortStandings(match);
-                match.standings.forEach(p => { const n = fix(p.name); ptsMonth[n] = (ptsMonth[n] || 0) + (p.pts || 0); });
-                if (s[0] && (s[0].pts || 0) > 0) trophyMonth[fix(s[0].name)] = (trophyMonth[fix(s[0].name)] || 0) + 1;
-            });
-        }
+    if (monthlyMatches) {
+        Object.values(monthlyMatches).forEach(match => {
+            if (!match || !match.standings) return;
+            const s = sortStandings(match);
+            match.standings.forEach(p => { const n = fix(p.name); ptsMonth[n] = (ptsMonth[n] || 0) + (p.pts || 0); });
+            if (s[0] && (s[0].pts || 0) > 0) trophyMonth[fix(s[0].name)] = (trophyMonth[fix(s[0].name)] || 0) + 1;
+        });
+    }
 
-        const list = modeAdmin ? ALL_PLAYERS : Array.from(activeSet);
+    const list = modeAdmin ? ALL_PLAYERS : Array.from(activeSet);
+    const savedOrder = trophyManualOrder[currentMonth];
+    let trophyList = list.map(n => [n, trophyMonth[n] || 0]);
+    
+    if (savedOrder && savedOrder.length) {
+        trophyList.sort((a, b) => {
+            const ia = savedOrder.indexOf(a[0]);
+            const ib = savedOrder.indexOf(b[0]);
+            if (ia === -1 && ib === -1) return 0;
+            if (ia === -1) return 1;
+            if (ib === -1) return -1;
+            return ia - ib;
+        });
+    } else {
+        trophyList.sort((a, b) => {
+            if (b[1] !== a[1]) return b[1] - a[1];
+            return (ptsMonth[b[0]] || 0) - (ptsMonth[a[0]] || 0);
+        });
+    }
+    
+    document.getElementById('sbTrophyMonthBody').innerHTML = trophyList
+        .map(([n, t], i) => {
+            const moveBtns = modeAdmin
+                ? '<td style="padding:4px 6px;"><div class="trophy-move-btns">'
+                  + '<button class="trophy-move-btn" ' + (i === 0 ? 'disabled' : '') + ' onclick="moveTrophyRow(\''+currentMonth+'\','+i+',-1)" title="Naik">\u25b2</button>'
+                  + '<button class="trophy-move-btn" ' + (i === trophyList.length-1 ? 'disabled' : '') + ' onclick="moveTrophyRow(\''+currentMonth+'\','+i+',1)" title="Turun">\u25bc</button>'
+                  + '</div></td>'
+                : '';
+            return '<tr class="' + (i === 0 && t > 0 ? 'sb-r1' : '') + '">'
+                + '<td class="tl">' + (i === 0 && t > 0 ? '👑 ' : '') + '<span class="clickable-name" onclick="bukaDetailJuaraBulan(\'' + escHtml(n) + '\',\'' + escHtml(currentMonth) + '\')" title="Klik untuk lihat riwayat juara bulan ini">' + escHtml(n) + '</span></td>'
+                + '<td class="trophy-count">' + (t > 0 ? t + 'x 🏆' : '—') + '</td>'
+                + moveBtns
+                + '</tr>';
+        }).join('');
 
-        // Gunakan manual order jika ada, kalau tidak pakai auto sort
-        const savedOrder = trophyManualOrder[currentMonth];
-        let trophyList = list.map(n => [n, trophyMonth[n] || 0]);
-        if (savedOrder && savedOrder.length) {
-            trophyList.sort((a, b) => {
-                const ia = savedOrder.indexOf(a[0]);
-                const ib = savedOrder.indexOf(b[0]);
-                if (ia === -1 && ib === -1) return 0;
-                if (ia === -1) return 1;
-                if (ib === -1) return -1;
-                return ia - ib;
-            });
-        } else {
-            trophyList.sort((a, b) => {
-                if (b[1] !== a[1]) return b[1] - a[1];
-                return (ptsMonth[b[0]] || 0) - (ptsMonth[a[0]] || 0);
-            });
-        }
-        document.getElementById('sbTrophyMonthBody').innerHTML = trophyList
-            .map(([n, t], i) => {
-                const moveBtns = modeAdmin
-                    ? '<td style="padding:4px 6px;"><div class="trophy-move-btns">'
-                      + '<button class="trophy-move-btn" ' + (i === 0 ? 'disabled' : '') + ' onclick="moveTrophyRow(\''+currentMonth+'\','+i+',-1)" title="Naik">\u25b2</button>'
-                      + '<button class="trophy-move-btn" ' + (i === trophyList.length-1 ? 'disabled' : '') + ' onclick="moveTrophyRow(\''+currentMonth+'\','+i+',1)" title="Turun">\u25bc</button>'
-                      + '</div></td>'
-                    : '';
-                return '<tr class="' + (i === 0 && t > 0 ? 'sb-r1' : '') + '">'
-                    + '<td class="tl">' + (i === 0 && t > 0 ? '👑 ' : '') + '<span class="clickable-name" onclick="bukaDetailJuaraBulan(\'' + escHtml(n) + '\',\'' + escHtml(currentMonth) + '\')" title="Klik untuk lihat riwayat juara bulan ini">' + escHtml(n) + '</span></td>'
-                    + '<td class="trophy-count">' + (t > 0 ? t + 'x 🏆' : '—') + '</td>'
-                    + moveBtns
-                    + '</tr>';
-            })
-            .join('');
+    document.getElementById('sbMonthBody').innerHTML = list
+        .map(n => [n, ptsMonth[n] || 0])
+        .sort((a, b) => b[1] - a[1])
+        .map(([n, p], i) => '<tr class="' + (i === 0 ? 'sb-r1' : '') + '">'
+            + '<td class="tl">' + (i === 0 && p > 0 ? '👑 ' : '') + '<strong>' + escHtml(n) + '</strong></td>'
+            + '<td class="sb-pts">' + p + '</td></tr>')
+        .join('');
 
-        document.getElementById('sbMonthBody').innerHTML = list
-            .map(n => [n, ptsMonth[n] || 0])
-            .sort((a, b) => b[1] - a[1])
-            .map(([n, p], i) => '<tr class="' + (i === 0 ? 'sb-r1' : '') + '">'
-                + '<td class="tl">' + (i === 0 && p > 0 ? '👑 ' : '') + '<strong>' + escHtml(n) + '</strong></td>'
-                + '<td class="sb-pts">' + p + '</td></tr>')
-            .join('');
-
-        const banner = document.getElementById('champBanner');
-        // Jika ada manual order, gunakan posisi pertama sebagai champion
-        const savedOrd = trophyManualOrder[currentMonth];
-        let champName = null;
-        if (savedOrd && savedOrd.length) {
-            // Cari player pertama di manual order yang punya trophy > 0
-            champName = savedOrd.find(n => (trophyMonth[n] || 0) > 0) || null;
-        }
-        if (!champName) {
-            // Fallback ke auto: trophy terbanyak, tiebreaker poin
-            const tList = Object.entries(trophyMonth).sort((a, b) => {
-                if (b[1] !== a[1]) return b[1] - a[1];
-                return (ptsMonth[b[0]] || 0) - (ptsMonth[a[0]] || 0);
-            });
-            if (tList.length > 0 && tList[0][1] > 0) champName = tList[0][0];
-        }
-        if (champName && (trophyMonth[champName] || 0) > 0) {
-            banner.innerHTML = '🌟 CHAMPION ' + currentMonth.toUpperCase() + ': '
-                + champName + ' (' + trophyMonth[champName] + 'x🏆) 🌟';
-        } else {
-            banner.innerHTML = 'Belum ada juara di bulan ' + currentMonth;
-        }
-        renderStatsCards();
-    });
+    const banner = document.getElementById('champBanner');
+    const savedOrd = trophyManualOrder[currentMonth];
+    let champName = null;
+    if (savedOrd && savedOrd.length) {
+        champName = savedOrd.find(n => (trophyMonth[n] || 0) > 0) || null;
+    }
+    if (!champName) {
+        const tList = Object.entries(trophyMonth).sort((a, b) => {
+            if (b[1] !== a[1]) return b[1] - a[1];
+            return (ptsMonth[b[0]] || 0) - (ptsMonth[a[0]] || 0);
+        });
+        if (tList.length > 0 && tList[0][1] > 0) champName = tList[0][0];
+    }
+    if (champName && (trophyMonth[champName] || 0) > 0) {
+        banner.innerHTML = '🌟 CHAMPION ' + currentMonth.toUpperCase() + ': ' + champName + ' (' + trophyMonth[champName] + 'x🏆) 🌟';
+    } else {
+        banner.innerHTML = 'Belum ada juara di bulan ' + currentMonth;
+    }
+    renderStatsCards();
 }
 
-function updateSidebarAllTime() {
-    db.ref(dbPath).once('value', snap => {
-        const root = snap.val() || {};
-        let ptsAll = {}, trophyAll = {};
-        activeSet = new Set();
+async function updateSidebarAllTime() {
+    const { data, error } = await supabase.from('league_matches').select('*').eq('mode', currentMode);
 
-        Object.values(root).forEach(m => {
-            if (m && m.matches) {
-                Object.values(m.matches).forEach(match => {
-                    if (!match || !match.standings) return;
-                    const s = sortStandings(match);
-                    match.standings.forEach(p => {
-                        const n = fix(p.name);
-                        activeSet.add(n);
-                        ptsAll[n] = (ptsAll[n] || 0) + (p.pts || 0);
-                    });
-                    if (s[0] && (s[0].pts || 0) > 0) {
-                        trophyAll[fix(s[0].name)] = (trophyAll[fix(s[0].name)] || 0) + 1;
-                    }
-                });
+    let ptsAll = {}, trophyAll = {};
+    activeSet = new Set();
+
+    if (data) {
+        data.forEach(match => {
+            if (!match || !match.standings) return;
+            const s = sortStandings(match);
+            match.standings.forEach(p => {
+                const n = fix(p.name);
+                activeSet.add(n);
+                ptsAll[n] = (ptsAll[n] || 0) + (p.pts || 0);
+            });
+            if (s[0] && (s[0].pts || 0) > 0) {
+                trophyAll[fix(s[0].name)] = (trophyAll[fix(s[0].name)] || 0) + 1;
             }
         });
+    }
 
-        const list = modeAdmin ? ALL_PLAYERS : Array.from(activeSet);
+    const list = modeAdmin ? ALL_PLAYERS : Array.from(activeSet);
+    const savedAllOrder = trophyManualOrder['ALL TIME'] || [];
+    let trophyAllList = list.map(n => [n, trophyAll[n] || 0]);
+    
+    if (savedAllOrder.length) {
+        trophyAllList.sort((a, b) => {
+            const ia = savedAllOrder.indexOf(a[0]);
+            const ib = savedAllOrder.indexOf(b[0]);
+            if (ia === -1 && ib === -1) return 0;
+            if (ia === -1) return 1;
+            if (ib === -1) return -1;
+            return ia - ib;
+        });
+    } else {
+        trophyAllList.sort((a, b) => b[1] - a[1] || (ptsAll[b[0]]||0) - (ptsAll[a[0]]||0));
+    }
+    
+    document.getElementById('sbTrophyAllBody').innerHTML = trophyAllList
+        .map(([n, t], i) => {
+            const moveBtns = modeAdmin
+                ? '<td style="padding:4px 6px;"><div class="trophy-move-btns">'
+                  + '<button class="trophy-move-btn" ' + (i === 0 ? 'disabled' : '') + ' onclick="moveTrophyAllRow(' + i + ',-1)" title="Naik">\u25b2</button>'
+                  + '<button class="trophy-move-btn" ' + (i === trophyAllList.length-1 ? 'disabled' : '') + ' onclick="moveTrophyAllRow(' + i + ',1)" title="Turun">\u25bc</button>'
+                  + '</div></td>'
+                : '';
+            return '<tr class="' + (i === 0 && t > 0 ? 'sb-r1' : '') + '">'
+                + '<td class="tl">' + (i === 0 && t > 0 ? '👑 ' : '') + '<span class="clickable-name" onclick="bukaDetailJuara(\'' + escHtml(n) + '\')" title="Klik untuk lihat riwayat juara">' + escHtml(n) + '</span></td>'
+                + '<td class="trophy-count">' + (t > 0 ? t + 'x 🏆' : '—') + '</td>'
+                + moveBtns + '</tr>';
+        }).join('');
 
-        const savedAllOrder = trophyManualOrder['ALL TIME'] || [];
-        let trophyAllList = list.map(n => [n, trophyAll[n] || 0]);
-        if (savedAllOrder.length) {
-            trophyAllList.sort((a, b) => {
-                const ia = savedAllOrder.indexOf(a[0]);
-                const ib = savedAllOrder.indexOf(b[0]);
-                if (ia === -1 && ib === -1) return 0;
-                if (ia === -1) return 1;
-                if (ib === -1) return -1;
-                return ia - ib;
-            });
-        } else {
-            trophyAllList.sort((a, b) => b[1] - a[1] || (ptsAll[b[0]]||0) - (ptsAll[a[0]]||0));
-        }
-        document.getElementById('sbTrophyAllBody').innerHTML = trophyAllList
-            .map(([n, t], i) => {
-                const moveBtns = modeAdmin
-                    ? '<td style="padding:4px 6px;"><div class="trophy-move-btns">'
-                      + '<button class="trophy-move-btn" ' + (i === 0 ? 'disabled' : '') + ' onclick="moveTrophyAllRow(' + i + ',-1)" title="Naik">\u25b2</button>'
-                      + '<button class="trophy-move-btn" ' + (i === trophyAllList.length-1 ? 'disabled' : '') + ' onclick="moveTrophyAllRow(' + i + ',1)" title="Turun">\u25bc</button>'
-                      + '</div></td>'
-                    : '';
-                return '<tr class="' + (i === 0 && t > 0 ? 'sb-r1' : '') + '">'
-                    + '<td class="tl">' + (i === 0 && t > 0 ? '👑 ' : '') + '<span class="clickable-name" onclick="bukaDetailJuara(\'' + escHtml(n) + '\')" title="Klik untuk lihat riwayat juara">' + escHtml(n) + '</span></td>'
-                    + '<td class="trophy-count">' + (t > 0 ? t + 'x 🏆' : '—') + '</td>'
-                    + moveBtns + '</tr>';
-            })
-            .join('');
+    document.getElementById('sbAllTimeBody').innerHTML = list
+        .map(n => [n, ptsAll[n] || 0])
+        .sort((a, b) => b[1] - a[1])
+        .map(([n, p], i) => '<tr class="' + (i === 0 ? 'sb-r1' : '') + '">'
+            + '<td class="tl">' + (i === 0 && p > 0 ? '👑 ' : '') + '<strong>' + escHtml(n) + '</strong></td>'
+            + '<td class="sb-pts">' + p + '</td></tr>')
+        .join('');
 
-        document.getElementById('sbAllTimeBody').innerHTML = list
-            .map(n => [n, ptsAll[n] || 0])
-            .sort((a, b) => b[1] - a[1])
-            .map(([n, p], i) => '<tr class="' + (i === 0 ? 'sb-r1' : '') + '">'
-                + '<td class="tl">' + (i === 0 && p > 0 ? '👑 ' : '') + '<strong>' + escHtml(n) + '</strong></td>'
-                + '<td class="sb-pts">' + p + '</td></tr>')
-            .join('');
-
-        renderStatsCards();
-    });
+    renderStatsCards();
 }
 
 function renderStatsCards() {
@@ -5295,183 +5284,175 @@ function bukaDetailStats(nama, tipe) {
     });
 }
 
-function bukaDetailJuara(nama) {
-    // Siapkan Modal
-    document.getElementById('infoModalTitle').innerText = nama;
-    document.getElementById('infoModalSubtitle').innerText = '🏆 Riwayat Juara Liga - Memuat...';
-    document.getElementById('infoModalBody').innerHTML = '<div class="empty-state">Memuat data...</div>';
-    document.getElementById('infoModal').classList.add('on');
+async function bukaDetailJuara(nama) {
+    document.getElementById('infoModalTitle').innerHTML = '🏆 Riwayat Juara All Time: ' + escHtml(nama);
+    document.getElementById('infoModalBody').innerHTML = '<div style="padding:20px;text-align:center;">Memuat data dari Supabase...</div>';
+    bukaInfoModal();
 
-    // Tarik data seluruh match
-    db.ref(dbPath).once('value', snap => {
-        const root = snap.val() || {};
-        let history = [];
-        
-        // Cek semua bulan
-        MONTHS.forEach(bulan => {
-            if (!root[bulan] || !root[bulan].matches) return;
-            
-            // Urutkan berdasarkan tanggal & timestamp agar nomor liga valid
-            const matchIds = Object.keys(root[bulan].matches).sort((a, b) => {
-                const tglA = root[bulan].matches[a].tanggal || 0;
-                const tglB = root[bulan].matches[b].tanggal || 0;
-                if (tglA !== tglB) return tglA - tglB;
-                return (root[bulan].matches[a].timestamp || 0) - (root[bulan].matches[b].timestamp || 0);
-            });
-            
-            let counters = {};
-            
-            matchIds.forEach(id => {
-                const match = root[bulan].matches[id];
-                counters[match.tanggal] = (counters[match.tanggal] || 0) + 1;
-                const ligaNum = counters[match.tanggal];
-                
-                // Urutkan klasemen liga ini untuk mencari tahu siapa juaranya
-                const s = sortStandings(match);
-                const isJuara = s.length > 0 && fix(s[0].name) === nama && (s[0].pts || 0) > 0;
-                
-                if (isJuara) {
-                    // Tarik info Klub / Full Transfer untuk player ini saat dia juara
-                    const mi = (matchInfoData[id] || {})[nama] || {};
-                    const isFT = mi.isFullTransfer || false;
-                    const ket = isFT ? '🔀 Full Transfer' : (mi.club ? '⚽ ' + mi.club : '⚽ (Tidak Diisi)');
-
-                    history.push({
-                        bulan: bulan,
-                        tanggal: match.tanggal,
-                        ligaNum: ligaNum,
-                        timestamp: match.timestamp || 0,
-                        keterangan: ket
-                    });
-                }
-            });
-        });
-        
-        // Urutkan riwayat secara KRONOLOGIS (Bulan paling awal -> Tanggal paling awal -> Liga paling awal)
-        history.sort((a, b) => {
-            const mA = MONTHS.indexOf(a.bulan);
-            const mB = MONTHS.indexOf(b.bulan);
-            if (mA !== mB) return mA - mB;
-            if (a.tanggal !== b.tanggal) return a.tanggal - b.tanggal;
-            return a.timestamp - b.timestamp;
-        });
-        
-        // Update subtitle dengan total hitungan juara
-        document.getElementById('infoModalSubtitle').innerText = '🏆 Riwayat Juara Liga (' + history.length + 'x)';
-        
-        // Jika belum pernah juara
-        if (!history.length) {
-            document.getElementById('infoModalBody').innerHTML = '<div class="empty-state">Belum ada riwayat juara yang tercatat.</div>';
-            return;
-        }
-        
-        // Buat tabel output riwayat
-        let html = '<div class="league-card"><div class="league-card-body" style="padding:0;">';
-        html += '<table style="width:100%; border-collapse:collapse;">';
-        html += '<tr style="background:#fff9c4; border-bottom:2px solid #fbc02d;">'
-              + '<th style="padding:10px; text-align:left; font-size:0.8rem; color:#f57f17;">Bulan</th>'
-              + '<th style="padding:10px; text-align:left; font-size:0.8rem; color:#f57f17;">Tanggal</th>'
-              + '<th style="padding:10px; text-align:left; font-size:0.8rem; color:#f57f17;">Liga</th>'
-              + '<th style="padding:10px; text-align:left; font-size:0.8rem; color:#f57f17;">Klub Saat Juara</th>'
-              + '</tr>';
-        
-        history.forEach(h => {
-            const hari = getNamaHari(h.tanggal, h.bulan);
-            html += '<tr style="border-bottom:1px solid var(--border); transition:background 0.2s;" onmouseover="this.style.background=\'#fffde7\'" onmouseout="this.style.background=\'transparent\'">';
-            html += '<td style="padding:10px; font-size:0.9rem; font-weight:700;">' + h.bulan + '</td>';
-            html += '<td style="padding:10px; font-size:0.85rem; color:var(--sub);">' + hari + ', ' + h.tanggal + '</td>';
-            html += '<td style="padding:10px; font-size:0.85rem; font-weight:700; color:var(--pink);">Liga ' + ligaOrdinal(h.ligaNum) + '</td>';
-            html += '<td style="padding:10px; font-size:0.85rem; font-weight:600; color:var(--purple);">' + escHtml(h.keterangan) + '</td>';
-            html += '</tr>';
-        });
-        
-        html += '</table></div></div>';
-        document.getElementById('infoModalBody').innerHTML = html;
-    });
-}
-
-function bukaDetailJuaraBulan(nama, bulan) {
-    if (!bulan || bulan === 'ALL TIME STANDING' || bulan === 'STATS' || bulan === 'DATABASE') return;
+    // Tarik semua data liga dari Supabase untuk mode ini
+    const { data, error } = await supabase.from('league_matches').select('*').eq('mode', currentMode);
     
-    // Siapkan Modal
-    document.getElementById('infoModalTitle').innerText = nama;
-    document.getElementById('infoModalSubtitle').innerText = '🏆 Juara Liga ' + bulan + ' - Memuat...';
-    document.getElementById('infoModalBody').innerHTML = '<div class="empty-state">Memuat data...</div>';
-    document.getElementById('infoModal').classList.add('on');
+    if (error) {
+        document.getElementById('infoModalBody').innerHTML = '<div style="padding:20px;text-align:center;color:red;">Error: ' + error.message + '</div>';
+        return;
+    }
 
-    // Tarik data match di bulan ini saja
-    db.ref(dbPath + '/' + bulan + '/matches').once('value', snap => {
-        const matches = snap.val() || {};
-        let history = [];
-        
-        // Urutkan berdasarkan tanggal & timestamp agar nomor liga valid
-        const matchIds = Object.keys(matches).sort((a, b) => {
-            const tglA = matches[a].tanggal || 0;
-            const tglB = matches[b].tanggal || 0;
+    let history = [];
+    let counters = {}; // Untuk menghitung urutan "Liga ke-X" per hari
+
+    if (data && data.length > 0) {
+        // Urutkan berdasarkan tanggal & timestamp agar urutan liganya presisi
+        data.sort((a, b) => {
+            const tglA = a.tanggal || 0;
+            const tglB = b.tanggal || 0;
             if (tglA !== tglB) return tglA - tglB;
-            return (matches[a].timestamp || 0) - (matches[b].timestamp || 0);
+            return (a.timestamp || 0) - (b.timestamp || 0);
         });
-        
-        let counters = {};
-        
-        matchIds.forEach(id => {
-            const match = matches[id];
-            counters[match.tanggal] = (counters[match.tanggal] || 0) + 1;
-            const ligaNum = counters[match.tanggal];
-            
-            // Urutkan klasemen liga ini untuk mencari tahu siapa juaranya
-            const s = sortStandings(match);
-            const isJuara = s.length > 0 && fix(s[0].name) === nama && (s[0].pts || 0) > 0;
-            
-            if (isJuara) {
-                // Tarik info Klub / Full Transfer untuk player ini saat dia juara
-                const mi = (matchInfoData[id] || {})[nama] || {};
-                const isFT = mi.isFullTransfer || false;
-                const ket = isFT ? '🔀 Full Transfer' : (mi.club ? '⚽ ' + mi.club : '⚽ (Tidak Diisi)');
 
+        data.forEach(match => {
+            // Hitung urutan liga di hari dan bulan tersebut
+            const mKey = match.bulan + '_' + match.tanggal;
+            counters[mKey] = (counters[mKey] || 0) + 1;
+
+            if (!match.standings) return;
+            const s = sortStandings(match);
+            let isWinner = false;
+            
+            // Cek apakah dia juara (manual atau otomatis)
+            if (match.manual_juara === fix(nama)) {
+                isWinner = true;
+            } else if (!match.manual_juara && s[0] && fix(s[0].name) === fix(nama) && (s[0].pts || 0) > 0) {
+                isWinner = true;
+            }
+
+            if (isWinner) {
+                const cInfo = match.match_info && match.match_info[fix(nama)];
                 history.push({
-                    bulan: bulan,
+                    bulan: match.bulan,
                     tanggal: match.tanggal,
-                    ligaNum: ligaNum,
-                    timestamp: match.timestamp || 0,
-                    keterangan: ket
+                    ligaNum: counters[mKey],
+                    club: cInfo && cInfo.club ? cInfo.club : ''
                 });
             }
         });
-        
-        // Urutkan riwayat secara kronologis berdasarkan tanggal
-        history.sort((a, b) => a.tanggal - b.tanggal || a.timestamp - b.timestamp);
-        
-        // Update subtitle dengan total hitungan juara
-        document.getElementById('infoModalSubtitle').innerText = '🏆 Juara Liga di Bulan ' + bulan + ' (' + history.length + 'x)';
-        
-        // Jika belum pernah juara di bulan ini
-        if (!history.length) {
-            document.getElementById('infoModalBody').innerHTML = '<div class="empty-state">Belum ada riwayat juara di bulan ini.</div>';
-            return;
+    }
+
+    if (history.length === 0) {
+        document.getElementById('infoModalBody').innerHTML = '<div style="padding:20px;text-align:center;">Belum ada riwayat juara.</div>';
+        return;
+    }
+
+    // Render HTML tabel persis dengan format asli aplikasimu
+    let html = '<div class="league-card" style="margin:0;"><div class="league-card-body" style="padding:0;">';
+    html += '<table style="width:100%; border-collapse:collapse;">';
+    html += '<tr style="background:#fff9c4; border-bottom:2px solid #fbc02d;">'
+          + '<th style="padding:10px; text-align:left; font-size:0.8rem; color:#f57f17;">Tanggal</th>'
+          + '<th style="padding:10px; text-align:left; font-size:0.8rem; color:#f57f17;">Liga</th>'
+          + '<th style="padding:10px; text-align:left; font-size:0.8rem; color:#f57f17;">Klub Saat Juara</th>'
+          + '</tr>';
+    
+    history.forEach(h => {
+        const hari = typeof getNamaHari === 'function' ? getNamaHari(h.tanggal, h.bulan) : '';
+        html += '<tr style="border-bottom:1px solid var(--border); transition:background 0.2s;" onmouseover="this.style.background=\'#fffde7\'" onmouseout="this.style.background=\'transparent\'">';
+        html += '<td style="padding:10px; font-size:0.85rem; color:var(--sub);">' + (hari ? hari + ', ' : '') + h.tanggal + ' ' + h.bulan + '</td>';
+        html += '<td style="padding:10px; font-size:0.85rem; font-weight:700; color:var(--purple);">' + (typeof ligaOrdinal === 'function' ? ligaOrdinal(h.ligaNum) : h.ligaNum) + '</td>';
+        html += '<td style="padding:10px; font-size:0.85rem; color:var(--sub);">';
+        if (h.club) {
+            html += '<div style="display:flex; align-items:center; gap:6px;">';
+            html += '<img src="https://ui-avatars.com/api/?name=' + encodeURIComponent(h.club) + '&background=random&color=fff&size=24" style="border-radius:50%; width:20px; height:20px;">';
+            html += '<span>' + escHtml(h.club) + '</span>';
+            html += '</div>';
+        } else {
+            html += '<em>Tidak Tercatat</em>';
         }
-        
-        // Buat tabel output riwayat
-        let html = '<div class="league-card"><div class="league-card-body" style="padding:0;">';
-        html += '<table style="width:100%; border-collapse:collapse;">';
-        html += '<tr style="background:#fff9c4; border-bottom:2px solid #fbc02d;">'
-              + '<th style="padding:10px; text-align:left; font-size:0.8rem; color:#f57f17;">Tanggal</th>'
-              + '<th style="padding:10px; text-align:left; font-size:0.8rem; color:#f57f17;">Liga</th>'
-              + '<th style="padding:10px; text-align:left; font-size:0.8rem; color:#f57f17;">Klub Saat Juara</th>'
-              + '</tr>';
-        
-        history.forEach(h => {
-            const hari = getNamaHari(h.tanggal, h.bulan);
-            html += '<tr style="border-bottom:1px solid var(--border); transition:background 0.2s;" onmouseover="this.style.background=\'#fffde7\'" onmouseout="this.style.background=\'transparent\'">';
-            html += '<td style="padding:10px; font-size:0.85rem; color:var(--sub);">' + hari + ', ' + h.tanggal + ' ' + h.bulan + '</td>';
-            html += '<td style="padding:10px; font-size:0.85rem; font-weight:700; color:var(--pink);">Liga ' + ligaOrdinal(h.ligaNum) + '</td>';
-            html += '<td style="padding:10px; font-size:0.85rem; font-weight:600; color:var(--purple);">' + escHtml(h.keterangan) + '</td>';
-            html += '</tr>';
-        });
-        
-        html += '</table></div></div>';
-        document.getElementById('infoModalBody').innerHTML = html;
+        html += '</td></tr>';
     });
+    html += '</table></div></div>';
+    document.getElementById('infoModalBody').innerHTML = html;
+}
+
+async function bukaDetailJuaraBulan(nama, bulan) {
+    document.getElementById('infoModalTitle').innerHTML = '🏆 Riwayat Juara ' + escHtml(bulan) + ': ' + escHtml(nama);
+    document.getElementById('infoModalBody').innerHTML = '<div style="padding:20px;text-align:center;">Memuat data dari Supabase...</div>';
+    bukaInfoModal();
+
+    // Filter langsung berdasarkan bulan menggunakan .eq('bulan', bulan)
+    const { data, error } = await supabase.from('league_matches').select('*').eq('mode', currentMode).eq('bulan', bulan);
+    
+    if (error) {
+        document.getElementById('infoModalBody').innerHTML = '<div style="padding:20px;text-align:center;color:red;">Error: ' + error.message + '</div>';
+        return;
+    }
+
+    let history = [];
+    let counters = {}; 
+
+    if (data && data.length > 0) {
+        data.sort((a, b) => {
+            const tglA = a.tanggal || 0;
+            const tglB = b.tanggal || 0;
+            if (tglA !== tglB) return tglA - tglB;
+            return (a.timestamp || 0) - (b.timestamp || 0);
+        });
+
+        data.forEach(match => {
+            const mKey = match.bulan + '_' + match.tanggal;
+            counters[mKey] = (counters[mKey] || 0) + 1;
+
+            if (!match.standings) return;
+            const s = sortStandings(match);
+            let isWinner = false;
+            
+            if (match.manual_juara === fix(nama)) {
+                isWinner = true;
+            } else if (!match.manual_juara && s[0] && fix(s[0].name) === fix(nama) && (s[0].pts || 0) > 0) {
+                isWinner = true;
+            }
+
+            if (isWinner) {
+                const cInfo = match.match_info && match.match_info[fix(nama)];
+                history.push({
+                    bulan: match.bulan,
+                    tanggal: match.tanggal,
+                    ligaNum: counters[mKey],
+                    club: cInfo && cInfo.club ? cInfo.club : ''
+                });
+            }
+        });
+    }
+
+    if (history.length === 0) {
+        document.getElementById('infoModalBody').innerHTML = '<div style="padding:20px;text-align:center;">Belum ada riwayat juara di bulan ini.</div>';
+        return;
+    }
+
+    // Render HTML tabel persis dengan format asli aplikasimu
+    let html = '<div class="league-card" style="margin:0;"><div class="league-card-body" style="padding:0;">';
+    html += '<table style="width:100%; border-collapse:collapse;">';
+    html += '<tr style="background:#fff9c4; border-bottom:2px solid #fbc02d;">'
+          + '<th style="padding:10px; text-align:left; font-size:0.8rem; color:#f57f17;">Tanggal</th>'
+          + '<th style="padding:10px; text-align:left; font-size:0.8rem; color:#f57f17;">Liga</th>'
+          + '<th style="padding:10px; text-align:left; font-size:0.8rem; color:#f57f17;">Klub Saat Juara</th>'
+          + '</tr>';
+    
+    history.forEach(h => {
+        const hari = typeof getNamaHari === 'function' ? getNamaHari(h.tanggal, h.bulan) : '';
+        html += '<tr style="border-bottom:1px solid var(--border); transition:background 0.2s;" onmouseover="this.style.background=\'#fffde7\'" onmouseout="this.style.background=\'transparent\'">';
+        html += '<td style="padding:10px; font-size:0.85rem; color:var(--sub);">' + (hari ? hari + ', ' : '') + h.tanggal + ' ' + h.bulan + '</td>';
+        html += '<td style="padding:10px; font-size:0.85rem; font-weight:700; color:var(--purple);">' + (typeof ligaOrdinal === 'function' ? ligaOrdinal(h.ligaNum) : h.ligaNum) + '</td>';
+        html += '<td style="padding:10px; font-size:0.85rem; color:var(--sub);">';
+        if (h.club) {
+            html += '<div style="display:flex; align-items:center; gap:6px;">';
+            html += '<img src="https://ui-avatars.com/api/?name=' + encodeURIComponent(h.club) + '&background=random&color=fff&size=24" style="border-radius:50%; width:20px; height:20px;">';
+            html += '<span>' + escHtml(h.club) + '</span>';
+            html += '</div>';
+        } else {
+            html += '<em>Tidak Tercatat</em>';
+        }
+        html += '</td></tr>';
+    });
+    html += '</table></div></div>';
+    document.getElementById('infoModalBody').innerHTML = html;
 }
 
 </script>
